@@ -32,6 +32,6 @@ namespace SpaceAge
         public int linesPerPage = 10;
 
         [GameParameters.CustomParameterUI("Newest First", toolTip = "Show most recent events first in the Chronicle (NOT IMPLEMENTED)")]
-        public bool newestFirst = false;
+        public bool newestFirst = true;
     }
 }
