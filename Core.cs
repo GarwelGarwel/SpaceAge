@@ -1,9 +1,13 @@
 ﻿using UnityEngine;
+using KSP.UI.Screens;
 
 namespace SpaceAge
 {
     class Core
     {
+        public static void ShowNotification(string msg)
+        { ScreenMessages.PostScreenMessage(msg); }
+
         /// <summary>
         /// Log levels:
         /// <list type="bullet">
