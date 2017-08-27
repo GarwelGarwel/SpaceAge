@@ -7,7 +7,7 @@ namespace SpaceAge
 {
     class VesselEvent : ChronicleEvent
     {
-        public enum EventType { Launch, Destroy };
+        public enum EventType { Launch, Recovery, Destroy };
         EventType type;
         string vesselName;
 
@@ -27,12 +27,14 @@ namespace SpaceAge
         {
             get
             {
-                switch (Type)
-                {
-                    case EventType.Launch: return "Launch";
-                    case EventType.Destroy: return "Destroy";
-                }
-                return "N/A";
+                return Type.ToString();
+                //switch (Type)
+                //{
+                //    case EventType.Launch: return "Launch";
+                //    case EventType.Recovery: return "Recovery";
+                //    case EventType.Destroy: return "Destroy";
+                //}
+                //return "N/A";
             }
         }
 
@@ -43,6 +45,7 @@ namespace SpaceAge
                 switch (Type)
                 {
                     case EventType.Launch: return VesselName + " launched.";
+                    case EventType.Recovery: return VesselName + " recovered.";
                     case EventType.Destroy: return VesselName + " destroyed.";
                 }
                 return null;
