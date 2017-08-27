@@ -25,6 +25,9 @@ namespace SpaceAge
         public override bool HasPresets
         { get { return false; } }
 
+        [GameParameters.CustomParameterUI("Use Blizzy's Toolbar", toolTip = "Show icon in Blizzy's Toolbar, if available, instead of stock AppLauncher")]
+        public bool UseBlizzysToolbar = true;
+
         [GameParameters.CustomParameterUI("Show Notifications", toolTip = "Show on-screen notifications when new items added to the Chronicle")]
         public bool showNotifications = true;
 

@@ -11,6 +11,7 @@ namespace SpaceAge
     {
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>();
 
+        IButton toolbarButton;
         ApplicationLauncherButton appLauncherButton;
         const float windowWidth = 500;
         int page = 1;
@@ -32,10 +33,23 @@ namespace SpaceAge
             GameEvents.OnTechnologyResearched.Add(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Add(OnSOIChanged);
 
-            Core.Log("Registering AppLauncher button...", Core.LogLevel.Important);
-            Texture2D icon = new Texture2D(38, 38);
-            icon.LoadImage(System.IO.File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon38.png")));
-            appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
+            // Adding buttons to Toolbar or AppLauncher
+            if (ToolbarManager.ToolbarAvailable && Core.UseBlizzysToolbar)
+            {
+                Core.Log("Registering Blizzy's Toolbar button...", Core.LogLevel.Important);
+                toolbarButton = ToolbarManager.Instance.add("SpaceAge", "SpaceAge");
+                toolbarButton.Text = "Space Age";
+                toolbarButton.TexturePath = "SpaceAge/icon24";
+                toolbarButton.ToolTip = "Space Age";
+                toolbarButton.OnClick += (e) => { if (window == null) DisplayData(); else UndisplayData(); };
+            }
+            else
+            {
+                Core.Log("Registering AppLauncher button...", Core.LogLevel.Important);
+                Texture2D icon = new Texture2D(38, 38);
+                icon.LoadImage(System.IO.File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon38.png")));
+                appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
+            }
         }
 
         public void OnDisable()
@@ -54,7 +68,8 @@ namespace SpaceAge
             GameEvents.OnTechnologyResearched.Remove(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Remove(OnSOIChanged);
 
-            // Removing AppLauncher button
+            // Removing Toolbar & AppLauncher buttons
+            if (toolbarButton != null) toolbarButton.Destroy();
             if ((appLauncherButton != null) && (ApplicationLauncher.Instance != null))
                 ApplicationLauncher.Instance.RemoveModApplication(appLauncherButton);
         }
@@ -97,6 +112,12 @@ namespace SpaceAge
         public void DisplayData()
         {
             Core.Log("DisplayData", Core.LogLevel.Important);
+            if (chronicle.Count == 0)
+            {
+                Core.Log("Chronicle is empty. Aborting.");
+                ScreenMessages.PostScreenMessage("You don't have any entries in the Chronicle yet. Do something first!");
+                return;
+            }
             if (page > PageCount) page = PageCount;
             List<DialogGUIBase> gridContents = new List<DialogGUIBase>(LinesPerPage);
             Core.Log("Displaying lines " + ((page - 1) * LinesPerPage + 1) + "-" + Math.Min(page * LinesPerPage, chronicle.Count) + "...");
