@@ -123,7 +123,7 @@ namespace SpaceAge
                     "Space Age Chronicle", 
                     HighLogic.UISkin,
                     windowPosition,
-                    new DialogGUIHorizontalLayout(new DialogGUIButton(" < ", PageUp, PageUpEnabled, false), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(" > ", PageDown, PageDownEnabled, false)),
+                    new DialogGUIHorizontalLayout(new DialogGUIButton("|<", FirstPage, PageUpEnabled, false), new DialogGUIButton(" < ", PageUp, PageUpEnabled, false), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(" > ", PageDown, PageDownEnabled, false), new DialogGUIButton(">|", LastPage, PageDownEnabled, false)),
                     new DialogGUIGridLayout(new RectOffset(0, 0, 0, 0), new Vector2(100, 30), new Vector2(20, 0), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Vertical, TextAnchor.MiddleCenter, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 1, gridContents.ToArray())),
                 false,
                 HighLogic.UISkin, 
@@ -140,6 +140,12 @@ namespace SpaceAge
             }
         }
 
+        public void Invalidate()
+        {
+            UndisplayData();
+            DisplayData();
+        }
+
         int LinesPerPage
         {
             get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().linesPerPage; }
@@ -154,8 +160,13 @@ namespace SpaceAge
         public void PageUp()
         {
             if (page > 1) page--;
-            UndisplayData();
-            DisplayData();
+            Invalidate();
+        }
+
+        public void FirstPage()
+        {
+            page = 1;
+            Invalidate();
         }
 
         public bool PageDownEnabled()
@@ -164,8 +175,13 @@ namespace SpaceAge
         public void PageDown()
         {
             if (page < PageCount) page++;
-            UndisplayData();
-            DisplayData();
+            Invalidate();
+        }
+
+        public void LastPage()
+        {
+            page = PageCount;
+            Invalidate();
         }
 
         // EVENT HANDLERS BELOW--USED TO TRACK AND RECORD EVENTS
