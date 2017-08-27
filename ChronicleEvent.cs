@@ -7,7 +7,7 @@ namespace SpaceAge
 {
     class ChronicleEvent
     {
-        public enum EventType { Launch, Recovery, Destroy, Death, FlagPlant };
+        public enum EventType { Launch, Recovery, Destroy, Death, FlagPlant, FacilityUpgraded, StructureCollapsed, TechnologyResearched, SOIChange };
 
         public double Time
         {
@@ -56,13 +56,17 @@ namespace SpaceAge
             {
                 switch (Type)
                 {
-                    case EventType.Launch: return GetString("vesselName") + " launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
-                    case EventType.Recovery: return GetString("vesselName") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
-                    case EventType.Destroy: return GetString("vesselName") + " was destroyed.";
-                    case EventType.Death: return GetString("kerbalName") + " was killed.";
+                    case EventType.Launch: return GetString("vessel") + " launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case EventType.Recovery: return GetString("vessel") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case EventType.Destroy: return GetString("vessel") + " was destroyed.";
+                    case EventType.Death: return GetString("kerbal") + " was killed.";
                     case EventType.FlagPlant: return "A flag was planted on " + GetString("body") + ".";
+                    case EventType.FacilityUpgraded: return GetString("facility") + " was upgraded to level " + GetString("level") + ".";
+                    case EventType.StructureCollapsed: return GetString("facility") + " collapsed.";
+                    case EventType.TechnologyResearched: return GetString("tech") + " was researched.";
+                    case EventType.SOIChange: return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influencce.";
                 }
-                return null;
+                return "Something happened.";
             }
         }
 
