@@ -98,25 +98,18 @@ namespace SpaceAge
         {
             Core.Log("DisplayData", Core.LogLevel.Important);
             if (page > PageCount) page = PageCount;
-            List<DialogGUIBase> gridContents = new List<DialogGUIBase>(LinesPerPage + 1);
-            // Creating column titles
-            //gridContents.Add(new DialogGUILabel("#", true));
-            //gridContents.Add(new DialogGUILabel("Date", true));
-            //gridContents.Add(new DialogGUILabel("Event", true));
+            List<DialogGUIBase> gridContents = new List<DialogGUIBase>(LinesPerPage);
             Core.Log("Displaying lines " + ((page - 1) * LinesPerPage + 1) + "-" + Math.Min(page * LinesPerPage, chronicle.Count) + "...");
             for (int i = (page - 1) * LinesPerPage; i < Math.Min(page * LinesPerPage, chronicle.Count); i++)
             {
                 Core.Log("chronicle[" + i + "]: " + chronicle[i].Description);
                 gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[i].Time, true) + "\t" + chronicle[i].Description, windowWidth));
-                //gridContents.Add(new DialogGUILabel((i + 1).ToString(), true));
-                //gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[i].Time, true), true));
-                //gridContents.Add(new DialogGUILabel(chronicle[i].Description, true));
             }
             Core.Log("Now displaying the window...");
 
             window = PopupDialog.SpawnPopupDialog(
-                new Vector2(0.5f, 0.5f), 
-                new Vector2(0.5f, 0.5f), 
+                new Vector2(1, 1),
+                new Vector2(1, 1),
                 new MultiOptionDialog(
                     "Space Age Chronicle", 
                     "", 
@@ -124,7 +117,7 @@ namespace SpaceAge
                     HighLogic.UISkin,
                     windowPosition,
                     new DialogGUIHorizontalLayout(new DialogGUIButton("|<", FirstPage, PageUpEnabled, false), new DialogGUIButton(" < ", PageUp, PageUpEnabled, false), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(" > ", PageDown, PageDownEnabled, false), new DialogGUIButton(">|", LastPage, PageDownEnabled, false)),
-                    new DialogGUIGridLayout(new RectOffset(0, 0, 0, 0), new Vector2(100, 30), new Vector2(20, 0), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Vertical, TextAnchor.MiddleCenter, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 1, gridContents.ToArray())),
+                    new DialogGUIVerticalLayout(gridContents.ToArray())),
                 false,
                 HighLogic.UISkin, 
                 false);
@@ -261,7 +254,7 @@ namespace SpaceAge
         {
             Core.Log("OnFacilityUpgraded('" + facility.name + "', " + level + ")");
             Core.ShowNotification("Facility upgrade detected!");
-            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.FacilityUpgraded, "facility", facility.name, "level", level.ToString()));
+            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.FacilityUpgraded, "facility", facility.name, "level", (level + 1).ToString()));
         }
 
         public void OnStructureCollapsed(DestructibleBuilding structure)
@@ -275,7 +268,7 @@ namespace SpaceAge
         {
             Core.Log("OnTechnologyResearched(<'" + a.host.name + "', '" + a.target.ToString() + "'>)");
             Core.ShowNotification("Technology discovery detected!");
-            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.TechnologyResearched, "tech", a.host.name));
+            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.TechnologyResearched, "tech", a.host.title));
         }
 
         public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> a)
