@@ -11,6 +11,10 @@ namespace SpaceAge
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>();
 
         ApplicationLauncherButton appLauncherButton;
+        const float windowWidth = 500;
+        Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
+        PopupDialog window;
+        List<DialogGUIBase> gridContents;
 
         public void Start()
         {
@@ -20,6 +24,8 @@ namespace SpaceAge
             GameEvents.onLaunch.Add(OnLaunch);
             GameEvents.onVesselRecovered.Add(OnVesselRecovery);
             GameEvents.onVesselWillDestroy.Add(OnVesselDestroy);
+            GameEvents.onCrewKilled.Add(OnCrewKilled);
+            //GameEvents.onCrash.Add(OnVesselCrash);
 
             Core.Log("Registering AppLauncher button...", Core.LogLevel.Important);
             Texture2D icon = new Texture2D(38, 38);
@@ -33,57 +39,15 @@ namespace SpaceAge
             GameEvents.onLaunch.Remove(OnLaunch);
             GameEvents.onVesselRecovered.Remove(OnVesselRecovery);
             GameEvents.onVesselWillDestroy.Remove(OnVesselDestroy);
+            GameEvents.onCrewKilled.Remove(OnCrewKilled);
             if ((appLauncherButton != null) && (ApplicationLauncher.Instance != null))
                 ApplicationLauncher.Instance.RemoveModApplication(appLauncherButton);
-        }
-
-        public void DisplayData()
-        {
-            string s = "";
-            int i = 0;
-            foreach (ChronicleEvent e in chronicle)
-            {
-                s += ++i + "\t";
-                s += KSPUtil.PrintDateCompact(e.Time, true) + "\t";
-                s += e.Description + "\r\n";
-            }
-            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Space Age Chronicle", s, MessageSystemButton.MessageButtonColor.BLUE, MessageSystemButton.ButtonIcons.ACHIEVE));
-        }
-
-        public void UndisplayData()
-        { }
-
-        public void OnLaunch(EventReport data)
-        {
-            Core.Log("OnLaunch");
-            ScreenMessages.PostScreenMessage("Launch detected!");
-            chronicle.Add(new VesselEvent(VesselEvent.EventType.Launch, FlightGlobals.ActiveVessel.vesselName));
-        }
-
-        public void OnVesselRecovery(ProtoVessel v, bool b)
-        {
-            Core.Log("OnVesselRecovery('" + v.vesselName + "', " + b + ")");
-            Core.Log("messionTime = " + v.missionTime + "; launchTime = " + v.launchTime + "; autoClean = " + v.autoClean);
-            ScreenMessages.PostScreenMessage("Vessel recovery detected!");
-            chronicle.Add(new VesselEvent(VesselEvent.EventType.Recovery, v.vesselName));
-        }
-
-        public void OnVesselDestroy(Vessel v)
-        {
-            Core.Log("OnVesselDestroy('" + v.vesselName + "')");
-            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.Flag))
-            {
-                Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.");
-                return;
-            }
-            ScreenMessages.PostScreenMessage("Vessel destruction detected!");
-            chronicle.Add(new VesselEvent(VesselEvent.EventType.Destroy, v.vesselName));
         }
 
         public override void OnSave(ConfigNode node)
         {
             Core.Log("SpaceAgeScenario.OnSave");
-            ConfigNode chronicleNode = new ConfigNode("Chronicle");
+            ConfigNode chronicleNode = new ConfigNode("CHRONICLE");
             foreach (ChronicleEvent e in chronicle)
                 chronicleNode.AddNode(e.ConfigNode);
             Core.Log(chronicleNode.CountNodes + " nodes saved in the chronicle.");
@@ -94,23 +58,118 @@ namespace SpaceAge
         {
             Core.Log("SpaceAgeScenario.OnLoad");
             chronicle.Clear();
-            if (!node.HasNode("Chronicle"))
+            if (!node.HasNode("CHRONICLE"))
             {
-                Core.Log("'Chronicle' node not found. Aborting OnLoad.", Core.LogLevel.Error);
+                Core.Log("'CHRONICLE' node not found. Aborting OnLoad.", Core.LogLevel.Error);
                 return;
             }
-            Core.Log(node.GetNode("Chronicle").CountNodes + " nodes found in Chronicle.");
+            Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Chronicle.");
             int i = 0;
-            foreach (ConfigNode n in node.GetNode("Chronicle").GetNodes())
+            foreach (ConfigNode n in node.GetNode("CHRONICLE").GetNodes())
             {
                 Core.Log("Processing chronicle node #" + ++i + "...");
                 switch (n.name)
                 {
-                    case "VesselEvent":
-                        chronicle.Add(new VesselEvent(n));
+                    case "EVENT":
+                        chronicle.Add(new ChronicleEvent(n));
                         break;
                 }
             }
+        }
+
+        // UI METHODS BELOW
+
+        public void DisplayData()
+        {
+            gridContents = new List<DialogGUIBase>(3 * (chronicle.Count + 1));
+            // Creating column titles
+            gridContents.Add(new DialogGUILabel("#", true));
+            gridContents.Add(new DialogGUILabel("Date", true));
+            gridContents.Add(new DialogGUILabel("Event", true));
+            int i = 1;
+            foreach (ChronicleEvent e in chronicle)
+            {
+                gridContents.Add(new DialogGUILabel(i++.ToString(), true));
+                gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(e.Time, true), true));
+                gridContents.Add(new DialogGUILabel(e.Description, true));
+            }
+            window = PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new MultiOptionDialog("Space Age Chronicle", "", "Space Age Chronicle", HighLogic.UISkin, windowPosition, new DialogGUIGridLayout(new RectOffset(0, 0, 0, 0), new Vector2(100, 30), new Vector2(20, 0), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleCenter, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 3, gridContents.ToArray())), false, HighLogic.UISkin, false);
+        }
+
+        public void UndisplayData()
+        {
+            if (window != null)
+            {
+                Vector3 v = window.RTrf.position;
+                windowPosition = new Rect(v.x / Screen.width + 0.5f, v.y / Screen.height + 0.5f, windowWidth, 50);
+                window.Dismiss();
+            }
+        }
+
+        // EVENT HANDLERS BELOW--USED TO TRACK AND RECORD EVENTS
+
+        public void OnLaunch(EventReport report)
+        {
+            Core.Log("OnLaunch");
+            ScreenMessages.PostScreenMessage("Launch detected!");
+            ChronicleEvent e = new ChronicleEvent(ChronicleEvent.EventType.Launch, "vesselName", FlightGlobals.ActiveVessel.vesselName);
+            if (FlightGlobals.ActiveVessel.GetCrewCount() > 0) e.Data.Add("crew", FlightGlobals.ActiveVessel.GetCrewCount().ToString());
+            chronicle.Add(e);
+
+        }
+
+        public void OnVesselRecovery(ProtoVessel v, bool b)
+        {
+            Core.Log("OnVesselRecovery('" + v.vesselName + "', " + b + ")");
+            Core.Log("missionTime = " + v.missionTime + "; launchTime = " + v.launchTime + "; autoClean = " + v.autoClean);
+            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.EVA) || (v.vesselType == VesselType.Flag))
+            {
+                Core.Log(v.vesselName + " is " + v.vesselType + ". NO adding to Chronicle.");
+                return;
+            }
+            if (v.missionTime <= 0)
+            {
+                Core.Log(v.vesselName + " has not been launched. NO adding to Chronicle.");
+                return;
+            }
+            ScreenMessages.PostScreenMessage("Vessel recovery detected!");
+            ChronicleEvent e = new ChronicleEvent(ChronicleEvent.EventType.Recovery, "vesselName", v.vesselName);
+            if (v.GetVesselCrew().Count > 0) e.Data.Add("crew", v.GetVesselCrew().Count.ToString());
+            chronicle.Add(e);
+        }
+
+        public void OnVesselDestroy(Vessel v)
+        {
+            Core.Log("OnVesselDestroy('" + v.vesselName + "')");
+            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.Flag) || (v.vesselType == VesselType.EVA))
+            {
+                Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.");
+                return;
+            }
+            ScreenMessages.PostScreenMessage("Vessel destruction detected!");
+            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.Destroy, "vesselName", v.vesselName));
+        }
+
+        public void OnVesselCrash(EventReport report)
+        {
+            Vessel v = report.origin.vessel;
+            Core.Log("OnVesselCrash('" + v.vesselName + "')");
+            Core.Log("EventReport: " + report.eventType + "; " + report.msg + "; " + report.origin + "; " + report.other + "; " + report.param + "; " + report.sender + "; " + report.stage);
+
+            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.Flag) || (v.vesselType == VesselType.EVA))
+            {
+                Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.");
+                return;
+            }
+            ScreenMessages.PostScreenMessage("Vessel crash detected!");
+            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.Destroy, "vesselName", v.vesselName));
+        }
+
+        public void OnCrewKilled(EventReport report)
+        {
+            Core.Log("OnCrewKilled");
+            ScreenMessages.PostScreenMessage("Crew kill detected!");
+            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.Death, "kerbalName", report.sender));
         }
     }
 }
