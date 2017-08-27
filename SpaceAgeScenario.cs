@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using KSP.UI.Screens;
 using UnityEngine;
@@ -12,9 +13,10 @@ namespace SpaceAge
 
         ApplicationLauncherButton appLauncherButton;
         const float windowWidth = 500;
+        int linesPerPage = 10;
+        int page = 1;
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
-        List<DialogGUIBase> gridContents;
 
         public void Start()
         {
@@ -25,6 +27,7 @@ namespace SpaceAge
             GameEvents.onVesselRecovered.Add(OnVesselRecovery);
             GameEvents.onVesselWillDestroy.Add(OnVesselDestroy);
             GameEvents.onCrewKilled.Add(OnCrewKilled);
+            GameEvents.onFlagPlant.Add(OnFlagPlanted);
             //GameEvents.onCrash.Add(OnVesselCrash);
 
             Core.Log("Registering AppLauncher button...", Core.LogLevel.Important);
@@ -81,19 +84,37 @@ namespace SpaceAge
 
         public void DisplayData()
         {
-            gridContents = new List<DialogGUIBase>(3 * (chronicle.Count + 1));
+            Core.Log("DisplayData", Core.LogLevel.Important);
+            List<DialogGUIBase> gridContents = new List<DialogGUIBase>(linesPerPage + 1);
             // Creating column titles
-            gridContents.Add(new DialogGUILabel("#", true));
-            gridContents.Add(new DialogGUILabel("Date", true));
-            gridContents.Add(new DialogGUILabel("Event", true));
-            int i = 1;
-            foreach (ChronicleEvent e in chronicle)
+            //gridContents.Add(new DialogGUILabel("#", true));
+            //gridContents.Add(new DialogGUILabel("Date", true));
+            //gridContents.Add(new DialogGUILabel("Event", true));
+            Core.Log("Displaying lines " + ((page - 1) * linesPerPage + 1) + "-" + Math.Min(page * linesPerPage, chronicle.Count) + "...");
+            for (int i = (page - 1) * linesPerPage; i < Math.Min(page * linesPerPage, chronicle.Count); i++)
             {
-                gridContents.Add(new DialogGUILabel(i++.ToString(), true));
-                gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(e.Time, true), true));
-                gridContents.Add(new DialogGUILabel(e.Description, true));
+                Core.Log("chronicle[" + i + "]: " + chronicle[i].Description);
+                gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[i].Time, true) + "\t" + chronicle[i].Description, windowWidth));
+                //gridContents.Add(new DialogGUILabel((i + 1).ToString(), true));
+                //gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[i].Time, true), true));
+                //gridContents.Add(new DialogGUILabel(chronicle[i].Description, true));
             }
-            window = PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new MultiOptionDialog("Space Age Chronicle", "", "Space Age Chronicle", HighLogic.UISkin, windowPosition, new DialogGUIGridLayout(new RectOffset(0, 0, 0, 0), new Vector2(100, 30), new Vector2(20, 0), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleCenter, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 3, gridContents.ToArray())), false, HighLogic.UISkin, false);
+            Core.Log("Now displaying the window...");
+
+            window = PopupDialog.SpawnPopupDialog(
+                new Vector2(0.5f, 0.5f), 
+                new Vector2(0.5f, 0.5f), 
+                new MultiOptionDialog(
+                    "Space Age Chronicle", 
+                    "", 
+                    "Space Age Chronicle", 
+                    HighLogic.UISkin, 
+                    windowPosition, 
+                    new DialogGUIGridLayout(new RectOffset(0, 0, 0, 0), new Vector2(100, 30), new Vector2(20, 0), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Vertical, TextAnchor.MiddleCenter, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 1, gridContents.ToArray()),
+                    new DialogGUIHorizontalLayout(new DialogGUIButton("<", PageDown), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(">", PageUp))),
+                false, 
+                HighLogic.UISkin, 
+                false);
         }
 
         public void UndisplayData()
@@ -104,6 +125,23 @@ namespace SpaceAge
                 windowPosition = new Rect(v.x / Screen.width + 0.5f, v.y / Screen.height + 0.5f, windowWidth, 50);
                 window.Dismiss();
             }
+        }
+
+        int PageCount
+        { get { return (int)System.Math.Ceiling((double)chronicle.Count / linesPerPage); } }
+
+        public void PageUp()
+        {
+            if (page > 1) page--;
+            UndisplayData();
+            DisplayData();
+        }
+
+        public void PageDown()
+        {
+            if (page < PageCount) page++;
+            UndisplayData();
+            DisplayData();
         }
 
         // EVENT HANDLERS BELOW--USED TO TRACK AND RECORD EVENTS
@@ -170,6 +208,13 @@ namespace SpaceAge
             Core.Log("OnCrewKilled");
             ScreenMessages.PostScreenMessage("Crew kill detected!");
             chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.Death, "kerbalName", report.sender));
+        }
+
+        public void OnFlagPlanted(Vessel v)
+        {
+            Core.Log("OnFlagPlanted('" + v.vesselName + "')");
+            ScreenMessages.PostScreenMessage("Flag planting detected!");
+            chronicle.Add(new SpaceAge.ChronicleEvent(ChronicleEvent.EventType.FlagPlant, "body", v.mainBody.name));
         }
     }
 }

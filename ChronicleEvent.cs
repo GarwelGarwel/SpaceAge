@@ -7,7 +7,7 @@ namespace SpaceAge
 {
     class ChronicleEvent
     {
-        public enum EventType { Launch, Recovery, Destroy, Death };
+        public enum EventType { Launch, Recovery, Destroy, Death, FlagPlant };
 
         public double Time
         {
@@ -60,6 +60,7 @@ namespace SpaceAge
                     case EventType.Recovery: return GetString("vesselName") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case EventType.Destroy: return GetString("vesselName") + " was destroyed.";
                     case EventType.Death: return GetString("kerbalName") + " was killed.";
+                    case EventType.FlagPlant: return "A flag was planted on " + GetString("body") + ".";
                 }
                 return null;
             }
