@@ -2,5 +2,6 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/obj/Debug
+/obj
+/bin
 /.vs/SpaceAge/v14
