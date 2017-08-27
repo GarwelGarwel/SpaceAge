@@ -59,7 +59,11 @@
     <Folder Include=".git\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChronicleEvent.cs" />
+    <Compile Include="Core.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpaceAgeScenario.cs" />
+    <Compile Include="VesselEvent.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
