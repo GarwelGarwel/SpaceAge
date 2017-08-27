@@ -6,7 +6,7 @@ namespace SpaceAge
     class Core
     {
         public static void ShowNotification(string msg)
-        { ScreenMessages.PostScreenMessage(msg); }
+        { if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications) ScreenMessages.PostScreenMessage(msg); }
 
         /// <summary>
         /// Log levels:

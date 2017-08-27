@@ -13,7 +13,6 @@ namespace SpaceAge
 
         ApplicationLauncherButton appLauncherButton;
         const float windowWidth = 500;
-        int linesPerPage = 10;
         int page = 1;
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
@@ -98,13 +97,14 @@ namespace SpaceAge
         public void DisplayData()
         {
             Core.Log("DisplayData", Core.LogLevel.Important);
-            List<DialogGUIBase> gridContents = new List<DialogGUIBase>(linesPerPage + 1);
+            if (page > PageCount) page = PageCount;
+            List<DialogGUIBase> gridContents = new List<DialogGUIBase>(LinesPerPage + 1);
             // Creating column titles
             //gridContents.Add(new DialogGUILabel("#", true));
             //gridContents.Add(new DialogGUILabel("Date", true));
             //gridContents.Add(new DialogGUILabel("Event", true));
-            Core.Log("Displaying lines " + ((page - 1) * linesPerPage + 1) + "-" + Math.Min(page * linesPerPage, chronicle.Count) + "...");
-            for (int i = (page - 1) * linesPerPage; i < Math.Min(page * linesPerPage, chronicle.Count); i++)
+            Core.Log("Displaying lines " + ((page - 1) * LinesPerPage + 1) + "-" + Math.Min(page * LinesPerPage, chronicle.Count) + "...");
+            for (int i = (page - 1) * LinesPerPage; i < Math.Min(page * LinesPerPage, chronicle.Count); i++)
             {
                 Core.Log("chronicle[" + i + "]: " + chronicle[i].Description);
                 gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[i].Time, true) + "\t" + chronicle[i].Description, windowWidth));
@@ -140,8 +140,13 @@ namespace SpaceAge
             }
         }
 
+        int LinesPerPage
+        {
+            get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().linesPerPage; }
+        }
+
         int PageCount
-        { get { return (int)System.Math.Ceiling((double)chronicle.Count / linesPerPage); } }
+        { get { return (int)System.Math.Ceiling((double)chronicle.Count / LinesPerPage); } }
 
         public bool PageUpEnabled()
         { return page > 1; }
