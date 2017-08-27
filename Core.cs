@@ -37,5 +37,10 @@ namespace SpaceAge
         /// <param name="messageLevel"><see cref="LogLevel"/> of the entry</param>
         public static void Log(string message, LogLevel messageLevel = LogLevel.Debug)
         { if (messageLevel <= Level) Debug.Log("[SpaceAge] " + message); }
+
+        public static bool NewestFirst
+        {
+            get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().newestFirst; }
+        }
     }
 }

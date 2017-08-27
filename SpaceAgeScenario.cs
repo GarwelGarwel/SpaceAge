@@ -102,8 +102,8 @@ namespace SpaceAge
             Core.Log("Displaying lines " + ((page - 1) * LinesPerPage + 1) + "-" + Math.Min(page * LinesPerPage, chronicle.Count) + "...");
             for (int i = (page - 1) * LinesPerPage; i < Math.Min(page * LinesPerPage, chronicle.Count); i++)
             {
-                Core.Log("chronicle[" + i + "]: " + chronicle[i].Description);
-                gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[i].Time, true) + "\t" + chronicle[i].Description, windowWidth));
+                Core.Log("chronicle[" + (Core.NewestFirst ? (chronicle.Count - i - 1) : i) + "]: " + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
+                gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, windowWidth));
             }
             Core.Log("Now displaying the window...");
 
@@ -116,7 +116,7 @@ namespace SpaceAge
                     "Space Age Chronicle", 
                     HighLogic.UISkin,
                     windowPosition,
-                    new DialogGUIHorizontalLayout(new DialogGUIButton("|<", FirstPage, PageUpEnabled, false), new DialogGUIButton(" < ", PageUp, PageUpEnabled, false), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(" > ", PageDown, PageDownEnabled, false), new DialogGUIButton(">|", LastPage, PageDownEnabled, false)),
+                    new DialogGUIHorizontalLayout(new DialogGUIButton(" << ", FirstPage, PageUpEnabled, false), new DialogGUIButton(" < ", PageUp, PageUpEnabled, false), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(" > ", PageDown, PageDownEnabled, false), new DialogGUIButton(" >> ", LastPage, PageDownEnabled, false)),
                     new DialogGUIVerticalLayout(gridContents.ToArray())),
                 false,
                 HighLogic.UISkin, 
