@@ -59,7 +59,7 @@ namespace SpaceAge
                     case EventType.Launch: return GetString("vessel") + " launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case EventType.Recovery: return GetString("vessel") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case EventType.Destroy: return GetString("vessel") + " was destroyed.";
-                    case EventType.Death: return GetString("kerbal") + " was killed.";
+                    case EventType.Death: return GetString("kerbal") + " died.";
                     case EventType.FlagPlant: return "A flag was planted on " + GetString("body") + ".";
                     case EventType.FacilityUpgraded: return GetString("facility") + " was upgraded to level " + GetString("level") + ".";
                     case EventType.StructureCollapsed: return GetString("facility") + " collapsed.";
