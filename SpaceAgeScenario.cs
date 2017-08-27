@@ -26,15 +26,21 @@ namespace SpaceAge
 
         public void OnLaunch(EventReport data)
         {
+            Core.Log("OnLaunch");
             ScreenMessages.PostScreenMessage("Launch detected!");
-            Core.Log("OnLaunch(EventReport): data.eventType = " + data.eventType + "; data.msg = " + data.msg + "; data.origin = " + data.origin + "; data.other = " + data.other + "; param = " + data.param + "; data.sender = " + data.sender + "; data.stage = " + data.stage);
             chronicle.Add(new VesselEvent(VesselEvent.EventType.Launch, FlightGlobals.ActiveVessel.name));
         }
 
         public void OnVesselDestroy(Vessel v)
         {
+            Core.Log("OnVesselDestroy('" + v.name + "')");
+            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.Flag))
+            {
+                Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.");
+                return;
+            }
             ScreenMessages.PostScreenMessage("Vessel destruction detected!");
-            chronicle.Add(new VesselEvent(VesselEvent.EventType.Destroy, v.name));
+            chronicle.Add(new VesselEvent(VesselEvent.EventType.Destroy, v.vesselName));
         }
 
         public override void OnSave(ConfigNode node)
