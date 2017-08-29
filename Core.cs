@@ -23,12 +23,7 @@ namespace SpaceAge
         /// Current <see cref="LogLevel"/>: either Debug or Important
         /// </summary>
         public static LogLevel Level
-        {
-            get
-            {
-                return LogLevel.Debug;
-            }
-        }
+        { get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().debugMode ? LogLevel.Debug : LogLevel.Important; } }
 
         /// <summary>
         /// Write into output_log.txt
