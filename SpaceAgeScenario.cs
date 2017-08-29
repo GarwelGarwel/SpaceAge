@@ -124,7 +124,7 @@ namespace SpaceAge
             for (int i = (page - 1) * LinesPerPage; i < Math.Min(page * LinesPerPage, chronicle.Count); i++)
             {
                 Core.Log("chronicle[" + (Core.NewestFirst ? (chronicle.Count - i - 1) : i) + "]: " + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
-                gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, windowWidth));
+                gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, windowWidth - 10));
             }
             Core.Log("Now displaying the window...");
 
@@ -137,8 +137,8 @@ namespace SpaceAge
                     "Space Age Chronicle", 
                     HighLogic.UISkin,
                     windowPosition,
-                    new DialogGUIHorizontalLayout(new DialogGUIButton(" << ", FirstPage, PageUpEnabled, false), new DialogGUIButton(" < ", PageUp, PageUpEnabled, false), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(" > ", PageDown, PageDownEnabled, false), new DialogGUIButton(" >> ", LastPage, PageDownEnabled, false)),
-                    new DialogGUIVerticalLayout(gridContents.ToArray())),
+                    new DialogGUIHorizontalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 5, 5), TextAnchor.MiddleCenter, new DialogGUIButton("<<", FirstPage, PageUpEnabled, false), new DialogGUIButton("<", PageUp, PageUpEnabled, false), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(">", PageDown, PageDownEnabled, false), new DialogGUIButton(">>", LastPage, PageDownEnabled, false)),
+                    new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 5, 5), TextAnchor.UpperLeft, gridContents.ToArray())),
                 false,
                 HighLogic.UISkin, 
                 false);
@@ -204,10 +204,9 @@ namespace SpaceAge
         {
             Core.Log("OnLaunch");
             Core.ShowNotification("Launch detected!");
-            ChronicleEvent e = new ChronicleEvent(ChronicleEvent.EventType.Launch, "vessel", FlightGlobals.ActiveVessel.vesselName);
+            ChronicleEvent e = new ChronicleEvent("Launch", "vessel", FlightGlobals.ActiveVessel.vesselName);
             if (FlightGlobals.ActiveVessel.GetCrewCount() > 0) e.Data.Add("crew", FlightGlobals.ActiveVessel.GetCrewCount().ToString());
             chronicle.Add(e);
-
         }
 
         public void OnVesselRecovery(ProtoVessel v, bool b)
@@ -225,7 +224,7 @@ namespace SpaceAge
                 return;
             }
             Core.ShowNotification("Vessel recovery detected!");
-            ChronicleEvent e = new ChronicleEvent(ChronicleEvent.EventType.Recovery, "vessel", v.vesselName);
+            ChronicleEvent e = new ChronicleEvent("Recovery", "vessel", v.vesselName);
             if (v.GetVesselCrew().Count > 0) e.Data.Add("crew", v.GetVesselCrew().Count.ToString());
             chronicle.Add(e);
         }
@@ -233,70 +232,55 @@ namespace SpaceAge
         public void OnVesselDestroy(Vessel v)
         {
             Core.Log("OnVesselDestroy('" + v.vesselName + "')");
-            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.Flag) || (v.vesselType == VesselType.EVA))
+            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.Flag) || (v.vesselType == VesselType.EVA) || (v.vesselType == VesselType.SpaceObject))
             {
                 Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.");
                 return;
             }
             Core.ShowNotification("Vessel destruction detected!");
-            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.Destroy, "vessel", v.vesselName));
+            chronicle.Add(new ChronicleEvent("Destroy", "vessel", v.vesselName));
         }
-
-        //public void OnVesselCrash(EventReport report)
-        //{
-        //    Vessel v = report.origin.vessel;
-        //    Core.Log("OnVesselCrash('" + v.vesselName + "')");
-        //    Core.Log("EventReport: " + report.eventType + "; " + report.msg + "; " + report.origin + "; " + report.other + "; " + report.param + "; " + report.sender + "; " + report.stage);
-
-        //    if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.Flag) || (v.vesselType == VesselType.EVA))
-        //    {
-        //        Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.");
-        //        return;
-        //    }
-        //    Core.ShowNotification("Vessel crash detected!");
-        //    chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.Destroy, "vessel", v.vesselName));
-        //}
 
         public void OnCrewKilled(EventReport report)
         {
             Core.Log("OnCrewKilled");
             Core.ShowNotification("Crew death detected!");
-            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.Death, "kerbal", report.sender));
+            chronicle.Add(new ChronicleEvent("Death", "kerbal", report.sender));
         }
 
         public void OnFlagPlanted(Vessel v)
         {
             Core.Log("OnFlagPlanted('" + v.vesselName + "')");
             Core.ShowNotification("Flag planting detected!");
-            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.FlagPlant, "body", v.mainBody.name));
+            chronicle.Add(new ChronicleEvent("FlagPlant", "body", v.mainBody.name));
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
         {
             Core.Log("OnFacilityUpgraded('" + facility.name + "', " + level + ")");
             Core.ShowNotification("Facility upgrade detected!");
-            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.FacilityUpgraded, "facility", facility.name, "level", (level + 1).ToString()));
+            chronicle.Add(new ChronicleEvent("FacilityUpgraded", "facility", facility.name, "level", (level + 1).ToString()));
         }
 
         public void OnStructureCollapsed(DestructibleBuilding structure)
         {
             Core.Log("OnStructureCollapsed('" + structure.name + "')");
             Core.ShowNotification("Structure collapse detected!");
-            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.StructureCollapsed, "facility", structure.name));
+            chronicle.Add(new ChronicleEvent("StructureCollapsed", "facility", structure.name));
         }
 
         public void OnTechnologyResearched(GameEvents.HostTargetAction<RDTech, RDTech.OperationResult> a)
         {
             Core.Log("OnTechnologyResearched(<'" + a.host.name + "', '" + a.target.ToString() + "'>)");
             Core.ShowNotification("Technology discovery detected!");
-            chronicle.Add(new ChronicleEvent(ChronicleEvent.EventType.TechnologyResearched, "tech", a.host.title));
+            chronicle.Add(new ChronicleEvent("TechnologyResearched", "tech", a.host.title));
         }
 
         public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> a)
         {
             Core.Log("OnSOIChanged(<'" + a.from.name + "', '" + a.to.name + "', '" + a.host.vesselName + "'>)");
             Core.ShowNotification("SOI change detected!");
-            chronicle.Add(new SpaceAge.ChronicleEvent(ChronicleEvent.EventType.SOIChange, "vessel", a.host.vesselName, "body", a.to.name));
+            chronicle.Add(new SpaceAge.ChronicleEvent("SOIChange", "vessel", a.host.vesselName, "body", a.to.name));
         }
     }
 }

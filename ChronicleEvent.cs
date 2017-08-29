@@ -7,7 +7,7 @@ namespace SpaceAge
 {
     class ChronicleEvent
     {
-        public enum EventType { Launch, Recovery, Destroy, Death, FlagPlant, FacilityUpgraded, StructureCollapsed, TechnologyResearched, SOIChange };
+        //public enum EventType { Launch, Recovery, Destroy, Death, FlagPlant, FacilityUpgraded, StructureCollapsed, TechnologyResearched, SOIChange };
 
         public double Time
         {
@@ -16,7 +16,7 @@ namespace SpaceAge
         }
 
 
-        public EventType Type
+        public string Type
         {
             get { return type; }
             set { type = value; }
@@ -37,14 +37,15 @@ namespace SpaceAge
         {
             string r;
             Data.TryGetValue(key, out r);
-            return r as string;
+            return r;
         }
 
         public int GetInt(string key)
         {
             string r;
             Data.TryGetValue(key, out r);
-            return int.Parse(r);
+            try { return int.Parse(r); }
+            catch (FormatException e) { return 0; }
         }
 
         public string Name
@@ -56,15 +57,15 @@ namespace SpaceAge
             {
                 switch (Type)
                 {
-                    case EventType.Launch: return GetString("vessel") + " launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
-                    case EventType.Recovery: return GetString("vessel") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
-                    case EventType.Destroy: return GetString("vessel") + " was destroyed.";
-                    case EventType.Death: return GetString("kerbal") + " died.";
-                    case EventType.FlagPlant: return "A flag was planted on " + GetString("body") + ".";
-                    case EventType.FacilityUpgraded: return GetString("facility") + " was upgraded to level " + GetString("level") + ".";
-                    case EventType.StructureCollapsed: return GetString("facility") + " collapsed.";
-                    case EventType.TechnologyResearched: return GetString("tech") + " was researched.";
-                    case EventType.SOIChange: return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influencce.";
+                    case "Launch": return GetString("vessel") + " launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "Recovery": return GetString("vessel") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "Destroy": return GetString("vessel") + " was destroyed.";
+                    case "Death": return GetString("kerbal") + " died.";
+                    case "FlagPlant": return "A flag was planted on " + GetString("body") + ".";
+                    case "FacilityUpgraded": return GetString("facility") + " was upgraded to level " + GetString("level") + ".";
+                    case "StructureCollapsed": return GetString("facility") + " collapsed.";
+                    case "TechnologyResearched": return GetString("tech") + " was researched.";
+                    case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influencce.";
                 }
                 return "Something happened.";
             }
@@ -76,7 +77,7 @@ namespace SpaceAge
             {
                 ConfigNode node = new ConfigNode("EVENT");
                 node.AddValue("time", Time);
-                node.AddValue("type", Type.ToString());
+                node.AddValue("type", Type);
                 foreach (KeyValuePair<string, string> kvp in Data)
                 {
                     ConfigNode subnode = new ConfigNode("DATA");
@@ -89,7 +90,8 @@ namespace SpaceAge
             set
             {
                 Time = Double.Parse(value.GetValue("time"));
-                Type = (EventType)Enum.Parse(typeof(EventType), value.GetValue("type"));
+                //Type = (EventType)Enum.Parse(typeof(EventType), value.GetValue("type"));
+                Type = value.GetValue("type");
                 Core.Log("Loading data for ConfigNode (" + value.CountNodes + " subnodes)...");
                 foreach (ConfigNode node in value.GetNodes("DATA"))
                 {
@@ -102,11 +104,11 @@ namespace SpaceAge
         public ChronicleEvent()
         { Time = Planetarium.GetUniversalTime(); }
 
-        public ChronicleEvent(EventType type)
+        public ChronicleEvent(string type)
             : this()
         { Type = type; }
 
-        public ChronicleEvent(EventType type, params string[] data)
+        public ChronicleEvent(string type, params string[] data)
             : this(type)
         {
             Core.Log("Constructing " + type + " event with " + data.Length + " params.");
@@ -117,11 +119,8 @@ namespace SpaceAge
         public ChronicleEvent(ConfigNode node)
         { ConfigNode = node; }
 
-        //public ChronicleEvent(double time)
-        //{ Time = time; }
-
         double time;
-        EventType type;
+        string type;
         Dictionary<string, string> data = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
     }
 }
