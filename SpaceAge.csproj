@@ -66,6 +66,9 @@
     <Compile Include="SpaceAgeScenario.cs" />
     <Compile Include="ToolbarWrapper.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SpaceAge.version" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
     <VisualStudio AllowExistingFolder="true" />
