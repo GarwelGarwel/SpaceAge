@@ -34,7 +34,10 @@ namespace SpaceAge
         [GameParameters.CustomIntParameterUI("Items per Page", toolTip = "How many Chronicle entries to show in one page", minValue = 5, maxValue = 25, stepSize = 5)]
         public int linesPerPage = 10;
 
-        [GameParameters.CustomParameterUI("Newest First", toolTip = "Show most recent events first in the Chronicle (NOT IMPLEMENTED)")]
+        [GameParameters.CustomParameterUI("Newest First", toolTip = "Show most recent events first in the Chronicle")]
         public bool newestFirst = true;
+
+        [GameParameters.CustomParameterUI("Debug Mode", toolTip = "Verbose logging, obligatory for bug submissions")]
+        public bool debugMode = true;
     }
 }
