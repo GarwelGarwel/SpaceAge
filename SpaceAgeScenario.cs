@@ -127,8 +127,6 @@ namespace SpaceAge
                 gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, windowWidth - 10));
             }
             Core.Log("Now displaying the window...");
-            //UIStyle style = HighLogic.UISkin.label;
-            //style.alignment = TextAnchor.MiddleCenter;
 
             window = PopupDialog.SpawnPopupDialog(
                 new Vector2(1, 1),

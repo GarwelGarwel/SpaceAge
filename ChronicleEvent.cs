@@ -7,8 +7,6 @@ namespace SpaceAge
 {
     class ChronicleEvent
     {
-        //public enum EventType { Launch, Recovery, Destroy, Death, FlagPlant, FacilityUpgraded, StructureCollapsed, TechnologyResearched, SOIChange };
-
         public double Time
         {
             get { return time; }
@@ -90,7 +88,6 @@ namespace SpaceAge
             set
             {
                 Time = Double.Parse(value.GetValue("time"));
-                //Type = (EventType)Enum.Parse(typeof(EventType), value.GetValue("type"));
                 Type = value.GetValue("type");
                 Core.Log("Loading data for ConfigNode (" + value.CountNodes + " subnodes)...");
                 foreach (ConfigNode node in value.GetNodes("DATA"))
