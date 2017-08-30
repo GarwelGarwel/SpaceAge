@@ -127,6 +127,8 @@ namespace SpaceAge
                 gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, windowWidth - 10));
             }
             Core.Log("Now displaying the window...");
+            //UIStyle style = HighLogic.UISkin.label;
+            //style.alignment = TextAnchor.MiddleCenter;
 
             window = PopupDialog.SpawnPopupDialog(
                 new Vector2(1, 1),
@@ -137,7 +139,14 @@ namespace SpaceAge
                     "Space Age Chronicle", 
                     HighLogic.UISkin,
                     windowPosition,
-                    new DialogGUIHorizontalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 5, 5), TextAnchor.MiddleCenter, new DialogGUIButton("<<", FirstPage, PageUpEnabled, false), new DialogGUIButton("<", PageUp, PageUpEnabled, false), new DialogGUILabel(page + "/" + PageCount), new DialogGUIButton(">", PageDown, PageDownEnabled, false), new DialogGUIButton(">>", LastPage, PageDownEnabled, false)),
+                    new DialogGUIHorizontalLayout(
+                        true, 
+                        false,
+                        new DialogGUIButton("<<", FirstPage, PageUpEnabled, false), 
+                        new DialogGUIButton("<", PageUp, PageUpEnabled, false), 
+                        new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel(page + "/" + PageCount)), 
+                        new DialogGUIButton(">", PageDown, PageDownEnabled, false), 
+                        new DialogGUIButton(">>", LastPage, PageDownEnabled, false)),
                     new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 5, 5), TextAnchor.UpperLeft, gridContents.ToArray())),
                 false,
                 HighLogic.UISkin, 
