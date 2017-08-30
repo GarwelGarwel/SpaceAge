@@ -114,7 +114,7 @@ namespace SpaceAge
             Core.Log("DisplayData", Core.LogLevel.Important);
             if (chronicle.Count == 0)
             {
-                Core.Log("Chronicle is empty. Aborting.");
+                Core.Log("Chronicle is empty. Aborting.", Core.LogLevel.Important);
                 ScreenMessages.PostScreenMessage("You don't have any entries in the Chronicle yet. Do something first!");
                 return;
             }
@@ -124,7 +124,10 @@ namespace SpaceAge
             for (int i = (page - 1) * LinesPerPage; i < Math.Min(page * LinesPerPage, chronicle.Count); i++)
             {
                 Core.Log("chronicle[" + (Core.NewestFirst ? (chronicle.Count - i - 1) : i) + "]: " + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
-                gridContents.Add(new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, windowWidth - 10));
+                gridContents.Add(
+                    new DialogGUIHorizontalLayout(
+                        new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, true),
+                        new DialogGUIButton<int>("X", DeleteItem, Core.NewestFirst ? (chronicle.Count - i - 1) : i)));
             }
             Core.Log("Now displaying the window...");
 
@@ -202,6 +205,12 @@ namespace SpaceAge
         public void LastPage()
         {
             page = PageCount;
+            Invalidate();
+        }
+
+        public void DeleteItem(int i)
+        {
+            chronicle.RemoveAt(i);
             Invalidate();
         }
 
