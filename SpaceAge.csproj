@@ -55,9 +55,7 @@
   <ItemGroup>
     <None Include="README.md" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include=".git\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Compile Include="ChronicleEvent.cs" />
     <Compile Include="Core.cs" />
