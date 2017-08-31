@@ -47,7 +47,7 @@ namespace SpaceAge
             {
                 Core.Log("Registering AppLauncher button...", Core.LogLevel.Important);
                 Texture2D icon = new Texture2D(38, 38);
-                icon.LoadImage(System.IO.File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon38.png")));
+                icon.LoadImage(File.ReadAllBytes(System.IO.Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon38.png")));
                 appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
             }
         }
@@ -152,10 +152,11 @@ namespace SpaceAge
                         new DialogGUIButton(">>", LastPage, PageDownEnabled, false)),
                     new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 5, 5), TextAnchor.UpperLeft, gridContents.ToArray()),
                     new DialogGUIHorizontalLayout(
-                        windowWidth - 10,
+                        windowWidth - 20,
                         10,
-                        new DialogGUITextInput("", false, 100, TextInputChanged, windowWidth - 35, -1),
-                        new DialogGUIButton("+", AddItem, false))),
+                        new DialogGUITextInput("", false, 100, TextInputChanged),
+                        new DialogGUIButton("+", AddItem, false),
+                        new DialogGUIButton("Export", ExportChronicle))),
                 false,
                 HighLogic.UISkin, 
                 false);
@@ -227,6 +228,19 @@ namespace SpaceAge
             Core.Log("TextInputChanged('" + s + "')");
             textInput = s;
             return s;
+        }
+
+        void ExportChronicle()
+        {
+            string filename = ((textInput.Trim(' ') == "") ? "SpaceAge" : KSPUtil.SanitizeFilename(textInput)) + ".txt";
+            Core.Log("ExportChronicle to '" + filename + "'...", Core.LogLevel.Important);
+            TextWriter writer = File.CreateText(filename);
+            for (int i = 0; i < chronicle.Count; i++)
+                writer.WriteLine(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
+            writer.Close();
+            Core.Log("Done.");
+            ScreenMessages.PostScreenMessage("The Chronicle has been exported to GameData\\SpaceAge\\PluginData\\SpaceAge\\" + filename + ".");
+            Invalidate();
         }
 
         void AddItem()
