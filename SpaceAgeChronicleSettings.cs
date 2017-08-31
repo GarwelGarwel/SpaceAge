@@ -28,8 +28,11 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Use Blizzy's Toolbar", toolTip = "Show icon in Blizzy's Toolbar, if available, instead of stock AppLauncher")]
         public bool UseBlizzysToolbar = true;
 
+        [GameParameters.CustomParameterUI("Debug Mode", toolTip = "Verbose logging, obligatory for bug submissions")]
+        public bool debugMode = true;
+
         [GameParameters.CustomParameterUI("Show Notifications", toolTip = "Show on-screen notifications when new items added to the Chronicle")]
-        public bool showNotifications = true;
+        public bool showNotifications = false;
 
         [GameParameters.CustomIntParameterUI("Items per Page", toolTip = "How many Chronicle entries to show in one page", minValue = 5, maxValue = 25, stepSize = 5)]
         public int linesPerPage = 10;
@@ -37,7 +40,31 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Newest First", toolTip = "Show most recent events first in the Chronicle")]
         public bool newestFirst = true;
 
-        [GameParameters.CustomParameterUI("Debug Mode", toolTip = "Verbose logging, obligatory for bug submissions")]
-        public bool debugMode = true;
+        [GameParameters.CustomParameterUI("Track Launch Events", toolTip = "Track and save Launch events in the Chronicle")]
+        public bool trackLaunch = true;
+
+        [GameParameters.CustomParameterUI("Track Recovery Events", toolTip = "Track and save Recovery events in the Chronicle")]
+        public bool trackRecovery = true;
+
+        [GameParameters.CustomParameterUI("Track Destroy Events", toolTip = "Track and save Destroy events in the Chronicle")]
+        public bool trackDestroy = true;
+
+        [GameParameters.CustomParameterUI("Track Death Events", toolTip = "Track and save Death events in the Chronicle")]
+        public bool trackDeath = true;
+
+        [GameParameters.CustomParameterUI("Track Flag Plant Events", toolTip = "Track and save Flag Plant events in the Chronicle")]
+        public bool trackFlagPlant = true;
+
+        [GameParameters.CustomParameterUI("Track Facility Upgraded Events", toolTip = "Track and save Facility Upgraded events in the Chronicle")]
+        public bool trackFacilityUpgraded = true;
+
+        [GameParameters.CustomParameterUI("Track Structure Collapsed Events", toolTip = "Track and save Structure Collapsed events in the Chronicle")]
+        public bool trackStructureCollapsed = true;
+
+        [GameParameters.CustomParameterUI("Track Tech Researched Events", toolTip = "Track and save Technology Researched events in the Chronicle")]
+        public bool trackTechnologyResearched = true;
+
+        [GameParameters.CustomParameterUI("Track SOI Change Events", toolTip = "Track and save SOI Change events in the Chronicle")]
+        public bool trackSOIChange = true;
     }
 }
