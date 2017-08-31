@@ -78,24 +78,17 @@ namespace SpaceAge
                 node.AddValue("time", Time);
                 node.AddValue("type", Type);
                 foreach (KeyValuePair<string, string> kvp in Data)
-                {
-                    ConfigNode subnode = new ConfigNode("DATA");
-                    subnode.AddValue("key", kvp.Key);
-                    subnode.AddValue("value", kvp.Value);
-                    node.AddNode(subnode);
-                }
+                    node.AddValue(kvp.Key, kvp.Value);
                 return node;
             }
             set
             {
                 Time = Double.Parse(value.GetValue("time"));
                 Type = value.GetValue("type");
-                Core.Log("Loading data for ConfigNode (" + value.CountNodes + " subnodes)...");
-                foreach (ConfigNode node in value.GetNodes("DATA"))
-                {
-                    Core.Log("Loading node with key '" + node.GetValue("key") + "', value " + node.GetValue("value") + "'...");
-                    Data.Add(node.GetValue("key"), node.GetValue("value"));
-                }
+                Core.Log("Loading data for ConfigNode (" + value.CountValues + " values)...");
+                foreach (ConfigNode.Value v in value.values)
+                    if ((v.name != "time") && (v.name != "type"))
+                        Data.Add(v.name, v.value);
             }
         }
 
