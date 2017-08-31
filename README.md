@@ -1,10 +1,10 @@
 # SpaceAge
 
-Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v. 0.1.0, it has its first module, the Chronicle, implemented (see below). The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an occasional NRE or freezeup are possible. Please report errors in the Issues tab or in the forum post.
+Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v. 0.1, it has its first module, the Chronicle, implemented (see below). The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an occasional NRE or freezeup are possible. Please report errors in the Issues tab or in the forum post.
 
 **Chronicle**
 
-The Chronicle is the first module in the mod. It shows a history of notable events in the playthrough:
+The Chronicle is the first module in the mod. It shows a history of notable events in the playthrough (adjustable in Difficulty Settings):
 - launches
 - vessel recoveries
 - vessel destruction
@@ -14,6 +14,8 @@ The Chronicle is the first module in the mod. It shows a history of notable even
 - KSC structures damaged
 - tech nodes discoveries
 - changes of SOI
+
+You can also add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
 
 **Future Plans**
 
