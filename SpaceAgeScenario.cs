@@ -232,7 +232,7 @@ namespace SpaceAge
 
         void ExportChronicle()
         {
-            string filename = ((textInput.Trim(' ') == "") ? "SpaceAge" : KSPUtil.SanitizeFilename(textInput)) + ".txt";
+            string filename = ((textInput.Trim(' ') == "") ? HighLogic.SaveFolder : KSPUtil.SanitizeFilename(textInput)) + ".txt";
             Core.Log("ExportChronicle to '" + filename + "'...", Core.LogLevel.Important);
             TextWriter writer = File.CreateText(filename);
             for (int i = 0; i < chronicle.Count; i++)
