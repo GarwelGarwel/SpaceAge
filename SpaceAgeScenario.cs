@@ -150,7 +150,12 @@ namespace SpaceAge
                         new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel(page + "/" + PageCount)), 
                         new DialogGUIButton(">", PageDown, PageDownEnabled, false), 
                         new DialogGUIButton(">>", LastPage, PageDownEnabled, false)),
-                    new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 5, 5), TextAnchor.UpperLeft, gridContents.ToArray())),
+                    new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 5, 5), TextAnchor.UpperLeft, gridContents.ToArray()),
+                    new DialogGUIHorizontalLayout(
+                        windowWidth - 10,
+                        10,
+                        new DialogGUITextInput("", false, 100, TextInputChanged, windowWidth - 35, -1),
+                        new DialogGUIButton("+", AddItem, false))),
                 false,
                 HighLogic.UISkin, 
                 false);
@@ -214,6 +219,21 @@ namespace SpaceAge
         {
             chronicle.RemoveAt(i);
             Invalidate();
+        }
+
+        string textInput = "";
+        public string TextInputChanged(string s)
+        {
+            Core.Log("TextInputChanged('" + s + "')");
+            textInput = s;
+            return s;
+        }
+
+        void AddItem()
+        {
+            Core.Log("AddItem (textInput = '" + textInput + "')", Core.LogLevel.Important);
+            if (textInput.Trim(' ') == "") return;
+            AddChronicleEvent(new SpaceAge.ChronicleEvent("Custom", "description", textInput));
         }
 
         // EVENT HANDLERS BELOW--USED TO TRACK AND RECORD EVENTS

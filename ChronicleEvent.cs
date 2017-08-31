@@ -64,6 +64,7 @@ namespace SpaceAge
                     case "StructureCollapsed": return GetString("facility") + " collapsed.";
                     case "TechnologyResearched": return GetString("tech") + " was researched.";
                     case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influencce.";
+                    case "Custom": return GetString("description");
                 }
                 return "Something happened.";
             }
