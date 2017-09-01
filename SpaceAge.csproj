@@ -55,7 +55,9 @@
   <ItemGroup>
     <None Include="README.md" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="SpaceAge.netkan" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="ChronicleEvent.cs" />
     <Compile Include="Core.cs" />
