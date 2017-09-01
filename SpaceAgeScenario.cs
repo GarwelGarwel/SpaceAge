@@ -151,12 +151,13 @@ namespace SpaceAge
                         new DialogGUIButton(">", PageDown, PageDownEnabled, false), 
                         new DialogGUIButton(">>", LastPage, PageDownEnabled, false)),
                     new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 5, 5), TextAnchor.UpperLeft, gridContents.ToArray()),
+                    (HighLogic.LoadedSceneIsFlight ? null :
                     new DialogGUIHorizontalLayout(
                         windowWidth - 20,
                         10,
                         new DialogGUITextInput("", false, 100, TextInputChanged),
-                        new DialogGUIButton("+", AddItem, false),
-                        new DialogGUIButton("Export", ExportChronicle))),
+                        new DialogGUIButton("Add", AddItem, false),
+                        new DialogGUIButton("Export", ExportChronicle)))),
                 false,
                 HighLogic.UISkin, 
                 false);
