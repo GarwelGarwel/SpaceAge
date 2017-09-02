@@ -10,6 +10,7 @@ namespace SpaceAge
     class SpaceAgeScenario : ScenarioModule
     {
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>();
+        List<Achievement> achievements = new List<Achievement>();
 
         IButton toolbarButton;
         ApplicationLauncherButton appLauncherButton;
@@ -17,6 +18,8 @@ namespace SpaceAge
         int page = 1;
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
+
+        double funds;
 
         public void Start()
         {
@@ -32,6 +35,7 @@ namespace SpaceAge
             GameEvents.OnKSCStructureCollapsed.Add(OnStructureCollapsed);
             GameEvents.OnTechnologyResearched.Add(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Add(OnSOIChanged);
+            GameEvents.OnFundsChanged.Add(OnFundsChanged);
 
             // Adding buttons to Toolbar or AppLauncher
             if (ToolbarManager.ToolbarAvailable && Core.UseBlizzysToolbar)
@@ -50,6 +54,8 @@ namespace SpaceAge
                 icon.LoadImage(File.ReadAllBytes(System.IO.Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon38.png")));
                 appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
             }
+
+            funds = Funding.Instance.Funds;
         }
 
         public void OnDisable()
@@ -80,25 +86,38 @@ namespace SpaceAge
             ConfigNode chronicleNode = new ConfigNode("CHRONICLE");
             foreach (ChronicleEvent e in chronicle)
                 chronicleNode.AddNode(e.ConfigNode);
-            Core.Log(chronicleNode.CountNodes + " nodes saved in the chronicle.");
+            Core.Log(chronicleNode.CountNodes + " nodes saved.");
             node.AddNode(chronicleNode);
+            ConfigNode achievementsNode = new ConfigNode("ACHIEVEMENTS");
+            foreach (Achievement a in achievements)
+                achievementsNode.AddNode(a.ConfigNode);
+            Core.Log(achievementsNode.CountNodes + " achievements saved.");
+            node.AddNode(achievementsNode);
         }
 
         public override void OnLoad(ConfigNode node)
         {
             Core.Log("SpaceAgeScenario.OnLoad");
             chronicle.Clear();
-            if (!node.HasNode("CHRONICLE"))
+            if (node.HasNode("CHRONICLE"))
             {
-                Core.Log("'CHRONICLE' node not found. Aborting OnLoad.", Core.LogLevel.Error);
-                return;
+                Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Chronicle.");
+                int i = 0;
+                foreach (ConfigNode n in node.GetNode("CHRONICLE").GetNodes())
+                {
+                    Core.Log("Processing chronicle node #" + ++i + "...");
+                    if (n.name == "EVENT") chronicle.Add(new ChronicleEvent(n));
+                }
             }
-            Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Chronicle.");
-            int i = 0;
-            foreach (ConfigNode n in node.GetNode("CHRONICLE").GetNodes())
+            if (node.HasNode("ACHIEVEMENTS"))
             {
-                Core.Log("Processing chronicle node #" + ++i + "...");
-                if (n.name == "EVENT") chronicle.Add(new ChronicleEvent(n));
+                Core.Log(node.GetNode("ACHIEVEMENTS").CountNodes + " nodes found in ACHIEVEMENTS.");
+                int i = 0;
+                foreach (ConfigNode n in node.GetNode("ACHIEVEMENTS").GetNodes())
+                {
+                    Core.Log("Processing Achievement node #" + ++i + "...");
+                    if (n.name == "ACHIEVEMENT") achievements.Add(new Achievement(n));
+                }
             }
         }
 
@@ -107,6 +126,26 @@ namespace SpaceAge
             Core.ShowNotification(e.Type + " event detected.");
             chronicle.Add(e);
             if (window != null) Invalidate();
+        }
+
+        public Achievement FindAchievement(string name)
+        {
+            foreach (Achievement a in achievements)
+                if (a.Name == name) return a;
+            return null;
+        }
+
+        public Achievement FindOrCreateAchievement(string name)
+        { return FindAchievement(name) ?? new SpaceAge.Achievement(name); }
+
+        public void AddAchievement(Achievement a)
+        {
+            Core.Log("Adding/modifying " + a.Name + " achievement.");
+            Achievement old = FindAchievement(a.Name);
+            if (old != null) achievements.Remove(old);
+            achievements.Add(a);
+            if (a.Type != Achievement.Types.Total)
+                MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", a.Name + " achievement unlocked!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
         }
 
         // UI METHODS BELOW
@@ -260,6 +299,12 @@ namespace SpaceAge
             ChronicleEvent e = new ChronicleEvent("Launch", "vessel", FlightGlobals.ActiveVessel.vesselName);
             if (FlightGlobals.ActiveVessel.GetCrewCount() > 0) e.Data.Add("crew", FlightGlobals.ActiveVessel.GetCrewCount().ToString());
             AddChronicleEvent(e);
+            foreach (string n in Achievement.RelevantAchievements("Launch"))
+            {
+                Core.Log("Checking " + n + " achievement...");
+                Achievement a = FindOrCreateAchievement(n);
+                if (a.Register(FlightGlobals.ActiveVessel)) AddAchievement(a);
+            }
         }
 
         public void OnVesselRecovery(ProtoVessel v, bool b)
@@ -280,6 +325,12 @@ namespace SpaceAge
             ChronicleEvent e = new ChronicleEvent("Recovery", "vessel", v.vesselName);
             if (v.GetVesselCrew().Count > 0) e.Data.Add("crew", v.GetVesselCrew().Count.ToString());
             AddChronicleEvent(e);
+            foreach (string n in Achievement.RelevantAchievements("Recovery"))
+            {
+                Core.Log("Checking " + n + " achievement...");
+                Achievement a = FindOrCreateAchievement(n);
+                if (a.Register(v.vesselRef)) AddAchievement(a);
+            }
         }
 
         public void OnVesselDestroy(Vessel v)
@@ -292,6 +343,12 @@ namespace SpaceAge
                 return;
             }
             AddChronicleEvent(new ChronicleEvent("Destroy", "vessel", v.vesselName));
+            foreach (string n in Achievement.RelevantAchievements("Destroy"))
+            {
+                Core.Log("Checking " + n + " achievement...");
+                Achievement a = FindOrCreateAchievement(n);
+                if (a.Register(v)) AddAchievement(a);
+            }
         }
 
         public void OnCrewKilled(EventReport report)
@@ -299,6 +356,12 @@ namespace SpaceAge
             Core.Log("OnCrewKilled", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDeath) return;
             AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report.sender));
+            foreach (string n in Achievement.RelevantAchievements("Death"))
+            {
+                Core.Log("Checking " + n + " achievement...");
+                Achievement a = FindOrCreateAchievement(n);
+                if (a.Register()) AddAchievement(a);
+            }
         }
 
         public void OnFlagPlanted(Vessel v)
@@ -334,6 +397,18 @@ namespace SpaceAge
             Core.Log("OnSOIChanged(<'" + a.from.name + "', '" + a.to.name + "', '" + a.host.vesselName + "'>)", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange) return;
             AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", a.host.vesselName, "body", a.to.name));
+        }
+
+        public void OnFundsChanged(double v, TransactionReasons tr)
+        {
+            Core.Log("OnFundsChanged(" + v + ", " + tr + ")");
+            foreach (string n in Achievement.RelevantAchievements("FundsChanged"))
+            {
+                Core.Log("Checking " + n + " achievement...");
+                Achievement a = FindOrCreateAchievement(n);
+                if (a.Register(v - funds)) AddAchievement(a);
+            }
+            funds = v;
         }
     }
 }
