@@ -10,10 +10,13 @@ namespace SpaceAge
     class SpaceAgeScenario : ScenarioModule
     {
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>();
+        static List<ProtoAchievement> protoAchievements;
         List<Achievement> achievements = new List<Achievement>();
 
         IButton toolbarButton;
         ApplicationLauncherButton appLauncherButton;
+        enum Tabs { Chronicle, Achievements };
+        Tabs currentTab = Tabs.Chronicle;
         const float windowWidth = 500;
         int page = 1;
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
@@ -35,6 +38,8 @@ namespace SpaceAge
             GameEvents.OnKSCStructureCollapsed.Add(OnStructureCollapsed);
             GameEvents.OnTechnologyResearched.Add(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Add(OnSOIChanged);
+            GameEvents.onVesselOrbitClosed.Add(OnOrbitClosed);
+            GameEvents.onVesselSituationChange.Add(OnSituationChanged);
             GameEvents.OnFundsChanged.Add(OnFundsChanged);
 
             // Adding buttons to Toolbar or AppLauncher
@@ -55,7 +60,18 @@ namespace SpaceAge
                 appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
             }
 
-            funds = Funding.Instance.Funds;
+            //funds = Funding.Instance.Funds;
+            InitializeProtoAchievements();
+        }
+
+        void InitializeProtoAchievements()
+        {
+            Core.Log("Initializing ProtoAchievements...");
+            ConfigNode config = ConfigNode.Load(KSPUtil.ApplicationRootPath + "/GameData/SpaceAge/achievements.cfg");
+            protoAchievements = new List<ProtoAchievement>();
+            foreach (ConfigNode n in config.GetNodes())
+                protoAchievements.Add(new ProtoAchievement(n));
+            Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
         }
 
         public void OnDisable()
@@ -73,6 +89,9 @@ namespace SpaceAge
             GameEvents.OnKSCStructureCollapsed.Remove(OnStructureCollapsed);
             GameEvents.OnTechnologyResearched.Remove(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Remove(OnSOIChanged);
+            GameEvents.onVesselOrbitClosed.Remove(OnOrbitClosed);
+            GameEvents.onVesselSituationChange.Remove(OnSituationChanged);
+            GameEvents.OnFundsChanged.Remove(OnFundsChanged);
 
             // Removing Toolbar & AppLauncher buttons
             if (toolbarButton != null) toolbarButton.Destroy();
@@ -99,6 +118,7 @@ namespace SpaceAge
         {
             Core.Log("SpaceAgeScenario.OnLoad");
             chronicle.Clear();
+            InitializeProtoAchievements();
             if (node.HasNode("CHRONICLE"))
             {
                 Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Chronicle.");
@@ -128,49 +148,139 @@ namespace SpaceAge
             if (window != null) Invalidate();
         }
 
-        public Achievement FindAchievement(string name)
+        public static ProtoAchievement FindProtoAchievement(string name)
         {
-            foreach (Achievement a in achievements)
-                if (a.Name == name) return a;
+            Core.Log("Searching among " + protoAchievements.Count + " ProtoAchievements.");
+            foreach (ProtoAchievement pa in protoAchievements)
+                if (pa.Name == name) return pa;
+            Core.Log("ProtoAchievement '" + name + "' not found!", Core.LogLevel.Error);
             return null;
         }
 
-        public Achievement FindOrCreateAchievement(string name)
-        { return FindAchievement(name) ?? new SpaceAge.Achievement(name); }
-
-        public void AddAchievement(Achievement a)
+        public Achievement FindAchievement(string name, CelestialBody body = null)
         {
-            Core.Log("Adding/modifying " + a.Name + " achievement.");
-            Achievement old = FindAchievement(a.Name);
-            if (old != null) achievements.Remove(old);
-            achievements.Add(a);
-            if (a.Type != Achievement.Types.Total)
-                MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", a.Name + " achievement unlocked!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
+            foreach (Achievement a in achievements)
+                if ((a.Proto.Name == name) && (!a.Proto.IsBodySpecific || (a.Body == body?.name))) return a;
+            return null;
         }
 
+        //public ProtoAchievement FindOrCreateAchievement(string name, string body = null)
+        //{
+        //    string id = name;
+        //    if (body != null) id += "@" + body;
+        //    return FindAchievement(id) ?? new SpaceAge.ProtoAchievement(id);
+        //}
+
+        //public void AddAchievement(ProtoAchievement a)
+        //{
+        //    Core.Log("Adding/modifying " + a.Id + " achievement.");
+        //    ProtoAchievement old = FindAchievement(a.Id);
+        //    if (old != null) achievements.Remove(old);
+        //    achievements.Add(a);
+        //    if (a.Type != ProtoAchievement.Types.Total)
+        //        MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", a.Title + " achievement unlocked!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
+        //}
+
+        void CheckAchievements(string ev, CelestialBody body = null, Vessel vessel = null, double value = 0)
+        {
+            Core.Log("CheckAchievements('" + ev + "', '" + body?.name + "', vessel = '" + vessel?.vesselName + "', " + value + ")");
+            foreach (ProtoAchievement pa in protoAchievements)
+                if (pa.OnEvent == ev)
+                {
+                    Core.Log("Checking ProtoAchievement '" + pa.Name + "'...");
+                    Achievement ach = new Achievement(pa), old = null;
+                    ach.Body = body?.name;
+                    foreach (Achievement a in achievements)
+                        if ((a.Proto.Name == pa.Name) && (!pa.IsBodySpecific || (a.Body == body?.name)))
+                        {
+                            Core.Log("Achievement " + a.Title + " already exists.");
+                            ach = a;
+                            old = a;
+                            break;
+                        }
+                    if (ach.Register(vessel, value))
+                    {
+                        Core.Log("Achievement registered.");
+                        if (old != null) achievements.Remove(old);
+                        achievements.Add(ach);
+                        if (ach.Proto.Type != ProtoAchievement.Types.Total)
+                            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement unlocked!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
+                    }
+                }
+        }
+
+        void CheckAchievements(string ev, Vessel v)
+        { CheckAchievements(ev, v.mainBody, v); }
+
+        void CheckAchievements(string ev, double v)
+        { CheckAchievements(ev, null, null, v); }
+
         // UI METHODS BELOW
+
+
+        void DisplayAchievement(Achievement a, List<DialogGUIBase> grid)
+        {
+            if (a == null) return;
+            grid.Add(new DialogGUILabel(a.Title, true));
+            grid.Add(new DialogGUILabel(a.DisplayValue, true));
+            grid.Add(new DialogGUILabel(a.Proto.HasTime ? KSPUtil.PrintDate(a.Time, true) : "", true));
+        }
+
+        public DialogGUIBase windowContents
+        {
+            get
+            {
+                List<DialogGUIBase> gridContents;
+                switch (currentTab)
+                {
+                    case Tabs.Chronicle:
+                        if (page > PageCount) page = PageCount;
+                        gridContents = new List<DialogGUIBase>(LinesPerPage);
+                        Core.Log("Displaying events " + ((page - 1) * LinesPerPage + 1) + "-" + Math.Min(page * LinesPerPage, chronicle.Count) + "...");
+                        for (int i = (page - 1) * LinesPerPage; i < Math.Min(page * LinesPerPage, chronicle.Count); i++)
+                        {
+                            Core.Log("chronicle[" + (Core.NewestFirst ? (chronicle.Count - i - 1) : i) + "]: " + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
+                            gridContents.Add(
+                                new DialogGUIHorizontalLayout(
+                                    new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, true),
+                                    new DialogGUIButton<int>("X", DeleteItem, Core.NewestFirst ? (chronicle.Count - i - 1) : i)));
+                        }
+                        return new DialogGUIVerticalLayout(
+                            new DialogGUIHorizontalLayout(
+                                true,
+                                false,
+                                new DialogGUIButton("<<", FirstPage, () => (page > 1), false),
+                                new DialogGUIButton("<", PageUp, () => (page > 1), false),
+                                new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel(page + "/" + PageCount)),
+                                new DialogGUIButton(">", PageDown, () => (page < PageCount), false),
+                                new DialogGUIButton(">>", LastPage, () => (page < PageCount), false)),
+                            new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 5, 5), TextAnchor.UpperLeft, gridContents.ToArray()),
+                            (HighLogic.LoadedSceneIsFlight ? new DialogGUIHorizontalLayout() :
+                            new DialogGUIHorizontalLayout(
+                                windowWidth - 20,
+                                10,
+                                new DialogGUITextInput("", false, 100, TextInputChanged),
+                                new DialogGUIButton("Add", AddItem, false),
+                                new DialogGUIButton("Export", ExportChronicle))));
+
+                    case Tabs.Achievements:
+                        gridContents = new List<DialogGUIBase>(achievements.Count * 3);
+                        Core.Log("Displaying " + achievements.Count + " achievements...");
+                        foreach (ProtoAchievement pa in protoAchievements)
+                            if (!pa.IsBodySpecific) DisplayAchievement(FindAchievement(pa.Name), gridContents);
+                        Core.Log("Displaying body achievements...");
+                        foreach (CelestialBody b in FlightGlobals.Bodies)
+                            foreach (ProtoAchievement pa in protoAchievements)
+                                if (pa.IsBodySpecific) DisplayAchievement(FindAchievement(pa.Name, b), gridContents);
+                        return new DialogGUIGridLayout(new RectOffset(0, 0, 0, 0), new Vector2(windowWidth / 3 - 5, 20), new Vector2(5, 5), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleLeft, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 3, gridContents.ToArray());
+                }
+                return null;
+            }
+        }
 
         public void DisplayData()
         {
             Core.Log("DisplayData", Core.LogLevel.Important);
-            if (chronicle.Count == 0)
-            {
-                Core.Log("Chronicle is empty. Aborting.", Core.LogLevel.Important);
-                ScreenMessages.PostScreenMessage("You don't have any entries in the Chronicle yet. Do something first!");
-                return;
-            }
-            if (page > PageCount) page = PageCount;
-            List<DialogGUIBase> gridContents = new List<DialogGUIBase>(LinesPerPage);
-            Core.Log("Displaying lines " + ((page - 1) * LinesPerPage + 1) + "-" + Math.Min(page * LinesPerPage, chronicle.Count) + "...");
-            for (int i = (page - 1) * LinesPerPage; i < Math.Min(page * LinesPerPage, chronicle.Count); i++)
-            {
-                Core.Log("chronicle[" + (Core.NewestFirst ? (chronicle.Count - i - 1) : i) + "]: " + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
-                gridContents.Add(
-                    new DialogGUIHorizontalLayout(
-                        new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, true),
-                        new DialogGUIButton<int>("X", DeleteItem, Core.NewestFirst ? (chronicle.Count - i - 1) : i)));
-            }
-            Core.Log("Now displaying the window...");
 
             window = PopupDialog.SpawnPopupDialog(
                 new Vector2(1, 1),
@@ -184,19 +294,9 @@ namespace SpaceAge
                     new DialogGUIHorizontalLayout(
                         true, 
                         false,
-                        new DialogGUIButton("<<", FirstPage, PageUpEnabled, false), 
-                        new DialogGUIButton("<", PageUp, PageUpEnabled, false), 
-                        new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel(page + "/" + PageCount)), 
-                        new DialogGUIButton(">", PageDown, PageDownEnabled, false), 
-                        new DialogGUIButton(">>", LastPage, PageDownEnabled, false)),
-                    new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 5, 5), TextAnchor.UpperLeft, gridContents.ToArray()),
-                    (HighLogic.LoadedSceneIsFlight ? null :
-                    new DialogGUIHorizontalLayout(
-                        windowWidth - 20,
-                        10,
-                        new DialogGUITextInput("", false, 100, TextInputChanged),
-                        new DialogGUIButton("Add", AddItem, false),
-                        new DialogGUIButton("Export", ExportChronicle)))),
+                        new DialogGUIButton<Tabs>("Chronicle", SelectTab, Tabs.Chronicle, () => (currentTab != Tabs.Chronicle), true),
+                        new DialogGUIButton<Tabs>("Achievements", SelectTab, Tabs.Achievements, () => (currentTab != Tabs.Achievements), true)),
+                    windowContents),
                 false,
                 HighLogic.UISkin, 
                 false);
@@ -218,16 +318,17 @@ namespace SpaceAge
             DisplayData();
         }
 
-        int LinesPerPage
+        void SelectTab(Tabs t)
         {
-            get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().linesPerPage; }
+            currentTab = t;
+            Invalidate();
         }
+
+        int LinesPerPage
+        { get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().linesPerPage; } }
 
         int PageCount
         { get { return (int)System.Math.Ceiling((double)chronicle.Count / LinesPerPage); } }
-
-        public bool PageUpEnabled()
-        { return page > 1; }
 
         public void PageUp()
         {
@@ -240,9 +341,6 @@ namespace SpaceAge
             page = 1;
             Invalidate();
         }
-
-        public bool PageDownEnabled()
-        { return page < PageCount; }
 
         public void PageDown()
         {
@@ -299,12 +397,7 @@ namespace SpaceAge
             ChronicleEvent e = new ChronicleEvent("Launch", "vessel", FlightGlobals.ActiveVessel.vesselName);
             if (FlightGlobals.ActiveVessel.GetCrewCount() > 0) e.Data.Add("crew", FlightGlobals.ActiveVessel.GetCrewCount().ToString());
             AddChronicleEvent(e);
-            foreach (string n in Achievement.RelevantAchievements("Launch"))
-            {
-                Core.Log("Checking " + n + " achievement...");
-                Achievement a = FindOrCreateAchievement(n);
-                if (a.Register(FlightGlobals.ActiveVessel)) AddAchievement(a);
-            }
+            CheckAchievements("Launch", FlightGlobals.ActiveVessel);
         }
 
         public void OnVesselRecovery(ProtoVessel v, bool b)
@@ -325,12 +418,7 @@ namespace SpaceAge
             ChronicleEvent e = new ChronicleEvent("Recovery", "vessel", v.vesselName);
             if (v.GetVesselCrew().Count > 0) e.Data.Add("crew", v.GetVesselCrew().Count.ToString());
             AddChronicleEvent(e);
-            foreach (string n in Achievement.RelevantAchievements("Recovery"))
-            {
-                Core.Log("Checking " + n + " achievement...");
-                Achievement a = FindOrCreateAchievement(n);
-                if (a.Register(v.vesselRef)) AddAchievement(a);
-            }
+            CheckAchievements("Recovery", v.vesselRef);
         }
 
         public void OnVesselDestroy(Vessel v)
@@ -343,12 +431,7 @@ namespace SpaceAge
                 return;
             }
             AddChronicleEvent(new ChronicleEvent("Destroy", "vessel", v.vesselName));
-            foreach (string n in Achievement.RelevantAchievements("Destroy"))
-            {
-                Core.Log("Checking " + n + " achievement...");
-                Achievement a = FindOrCreateAchievement(n);
-                if (a.Register(v)) AddAchievement(a);
-            }
+            CheckAchievements("Destroy", v);
         }
 
         public void OnCrewKilled(EventReport report)
@@ -356,12 +439,7 @@ namespace SpaceAge
             Core.Log("OnCrewKilled", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDeath) return;
             AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report.sender));
-            foreach (string n in Achievement.RelevantAchievements("Death"))
-            {
-                Core.Log("Checking " + n + " achievement...");
-                Achievement a = FindOrCreateAchievement(n);
-                if (a.Register()) AddAchievement(a);
-            }
+            CheckAchievements("Death", report.origin.vessel.mainBody);
         }
 
         public void OnFlagPlanted(Vessel v)
@@ -369,6 +447,7 @@ namespace SpaceAge
             Core.Log("OnFlagPlanted('" + v.vesselName + "')", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackFlagPlant) return;
             AddChronicleEvent(new ChronicleEvent("FlagPlant", "body", v.mainBody.name));
+            CheckAchievements("FlagPlant", v);
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
@@ -376,6 +455,7 @@ namespace SpaceAge
             Core.Log("OnFacilityUpgraded('" + facility.name + "', " + level + ")", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackFacilityUpgraded) return;
             AddChronicleEvent(new ChronicleEvent("FacilityUpgraded", "facility", facility.name, "level", (level + 1).ToString()));
+            CheckAchievements("FacilityUpgraded");
         }
 
         public void OnStructureCollapsed(DestructibleBuilding structure)
@@ -383,6 +463,7 @@ namespace SpaceAge
             Core.Log("OnStructureCollapsed('" + structure.name + "')", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackStructureCollapsed) return;
             AddChronicleEvent(new ChronicleEvent("StructureCollapsed", "facility", structure.name));
+            CheckAchievements("StructureCollapsed");
         }
 
         public void OnTechnologyResearched(GameEvents.HostTargetAction<RDTech, RDTech.OperationResult> a)
@@ -390,24 +471,43 @@ namespace SpaceAge
             Core.Log("OnTechnologyResearched(<'" + a.host.name + "', '" + a.target.ToString() + "'>)", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackTechnologyResearched) return;
             AddChronicleEvent(new ChronicleEvent("TechnologyResearched", "tech", a.host.title));
+            CheckAchievements("TechnologyResearched");
         }
 
-        public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> a)
+        public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> e)
         {
-            Core.Log("OnSOIChanged(<'" + a.from.name + "', '" + a.to.name + "', '" + a.host.vesselName + "'>)", Core.LogLevel.Important);
+            Core.Log("OnSOIChanged(<'" + e.from.name + "', '" + e.to.name + "', '" + e.host.vesselName + "'>)", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange) return;
-            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", a.host.vesselName, "body", a.to.name));
+            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.name));
+            CheckAchievements("SOIChange", e.to, e.host);
+        }
+
+        public void OnOrbitClosed(Vessel v)
+        {
+            Core.Log("OnOrbitClosed", Core.LogLevel.Important);
+            CheckAchievements("Orbit", v);
+        }
+
+        public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
+        {
+            Core.Log("OnSituationChanged(<'" + a.host.vesselName + "', '" + a.to + "'>)");
+            switch (a.to)
+            {
+                case Vessel.Situations.LANDED:
+                case Vessel.Situations.SPLASHED:
+                    CheckAchievements("Landed", a.host);
+                    break;
+                case Vessel.Situations.ESCAPING:
+                case Vessel.Situations.SUB_ORBITAL:
+                    CheckAchievements("Flyby", a.host);
+                    break;
+            }
         }
 
         public void OnFundsChanged(double v, TransactionReasons tr)
         {
             Core.Log("OnFundsChanged(" + v + ", " + tr + ")");
-            foreach (string n in Achievement.RelevantAchievements("FundsChanged"))
-            {
-                Core.Log("Checking " + n + " achievement...");
-                Achievement a = FindOrCreateAchievement(n);
-                if (a.Register(v - funds)) AddAchievement(a);
-            }
+            CheckAchievements("Income", v - funds);
             funds = v;
         }
     }

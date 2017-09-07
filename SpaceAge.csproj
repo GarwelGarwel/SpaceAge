@@ -53,6 +53,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="achievements.cfg" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
@@ -60,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Achievement.cs" />
+    <Compile Include="ProtoAchievement.cs" />
     <Compile Include="ChronicleEvent.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

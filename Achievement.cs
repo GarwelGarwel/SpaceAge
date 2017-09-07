@@ -1,205 +1,102 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace SpaceAge
 {
     public class Achievement
     {
-        public static string[] generalAchievements = {
-            "MostExpensiveVessel",
-            "HeaviestVessel",
-            "MostComplexVessel",
-            "MaxCrewInVessel",
-            "TotalFunds",
-            "TotalLaunches",
-            "TotalCrewedLaunches",
-            "TotalMassLaunched",
-            "TotalCrewLaunched",
-            "FirstLaunch",
-            "FirstSpace",
-            "FirstOrbit",
-            "FirstRecovery",
-            "FirstDestroy",
-            "FirstDeath"
-        };
-
-        string name;
-        public string Name
+        ProtoAchievement protoAchievement;
+        public ProtoAchievement Proto
         {
-            get { return name; }
-            set { name = value; }
+            get { return protoAchievement; }
+            set { protoAchievement = value; }
         }
 
-        public enum Types { Maximum, Total, First };
-        public Types Type
+        string body = null;
+        public string Body
         {
-            get
-            {
-                switch (Name)
-                {
-                    case "MostExpensiveVessel":
-                    case "HeaviestVessel":
-                    case "MostComplexVessel":
-                    case "MaxCrewInVessel":
-                        return Achievement.Types.Maximum;
-                    case "TotalFunds":
-                    case "TotalLaunches":
-                    case "TotalCrewedLaunches":
-                    case "TotalMassLaunched":
-                    case "TotalCrewLaunched":
-                        return Achievement.Types.Total;
-                    case "FirstLaunch":
-                    case "FirstSpace":
-                    case "FirstOrbit":
-                    case "FirstRecovery":
-                    case "FirstDestroy":
-                    case "FirstDeath":
-                        return Achievement.Types.First;
-                }
-                return Achievement.Types.Total;
-            }
+            get { return Proto.IsBodySpecific ? body : null; }
+            set { body = value; }
         }
 
-        public string Description
+        double time = Double.NaN;
+        public double Time
         {
-            get
-            {
-                switch (Name)
-                {
-                    case "MostExpensiveVessel": return "Most Expensive Vessel";
-                    case "HeaviestVessel": return "Heaviest Vessel";
-                    case "MostComplexVessel": return "Most Complex Vessel";
-                    case "MaxCrewInVessel": return "Max Crew In a Vessel On Launch";
-                    case "TotalFunds": return "Total Funds Earned";
-                    case "TotalLaunches": return "Total Launches";
-                    case "TotalCrewedLaunches": return "Total Crewed Launches";
-                    case "TotalMassLaunched": return "Total Mass of Launched Vessels";
-                    case "TotalCrewLaunched": return "Total Crew of Launched Vessels";
-                    case "FirstLaunch": return "First Launch";
-                    case "FirstSpace": return "First Reaching the Space";
-                    case "FirstOrbit": return "First Orbit";
-                    case "FirstRecovery": return "First Recovery";
-                    case "FirstDestroy": return "First Destroyed Ship";
-                    case "FirstDeath": return "First Death of a Kerbal";
-                }
-                return "Unknown achievement";
-            }
+            get { return Proto.HasTime ? time : Double.NaN; }
+            set { time = value; }
         }
-
-        public bool HasValue
-        { get { return (Type == Types.Maximum) || (Type == Types.Total); } }
 
         double value = 0;
         public double Value
         {
-            get { return value; }
+            get { return Proto.HasValue ? value : 0; }
             set { this.value = value; }
         }
 
-        public string Unit
+        public string DisplayValue
         {
             get
             {
-                switch (Name)
-                {
-                    default: return "";
-                }
+                if (!Proto.HasValue) return "";
+                return ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("F2") : Value.ToString("F0")) + " " + Proto.Unit;
             }
         }
 
-        public bool HasTime
-        { get { return (Type == Types.First) || (Type == Types.Maximum); } }
-
-        public double time = Double.NaN;
-        public double Time
+        public string Title
         {
-            get { return time; }
-            set { time = value; }
-        }
-
-        public static string RelevantEvent(string name)
-        {
-            switch (name)
-            {
-                case "MostExpensiveVessel":
-                case "HeaviestVessel":
-                case "MostComplexVessel":
-                case "MaxCrewInVessel":
-                case "TotalLaunches":
-                case "TotalCrewedLaunches":
-                case "TotalMassLaunched":
-                case "TotalCrewLaunched":
-                case "FirstLaunch":
-                    return "Launch";
-                case "TotalFunds": return "FundsChanged";
-                case "FirstSpace": return "First Reaching the Space";
-                case "FirstOrbit": return "First Orbit";
-                case "FirstRecovery": return "Recovery";
-                case "FirstDestroy": return "Destroy";
-                case "FirstDeath": return "Death";
-            }
-            return "";
-        }
-
-        public static List<string> RelevantAchievements(string eventName)
-        {
-            List<string> res = new List<string>();
-            foreach (string achievementName in generalAchievements)
-                if (RelevantEvent(achievementName) == eventName)
-                    res.Add(achievementName);
-            return res;
+            get { return Proto.Title + (Proto.IsBodySpecific ? " " + Body : ""); }
         }
 
         public bool Register()
         {
-            if (Type == Types.First && Double.IsNaN(Time))
+            if (Proto.ExcludeHome && (Body == FlightGlobals.GetHomeBodyName())) return false;
+            switch (Proto.Type)
             {
-                Time = Planetarium.GetUniversalTime();
-                return true;
+                case ProtoAchievement.Types.Total:
+                    Value++;
+                    return true;
+                case ProtoAchievement.Types.Max:
+                    return false;
+                case ProtoAchievement.Types.First:
+                    if (!Double.IsNaN(Time)) return false;
+                    Time = Planetarium.GetUniversalTime();
+                    return true;
             }
             return false;
         }
 
-        public bool Register(double value)
+        public bool Register(double v)
         {
-            if ((Type == Types.Maximum) && (value > Value))
+            switch (Proto.Type)
             {
-                Value = value;
-                Time = Planetarium.GetUniversalTime();
-                return true;
-            }
-            if ((Type == Types.Total) && (value > 0))
-            {
-                Value += value;
-                return true;
-            }
-            return false;
-        }
-
-        public bool Register(Vessel v)
-        {
-            switch (Name)
-            {
-                case "MostExpensiveVessel":
-                    return false;  // Not implemented
-                case "HeaviestVessel":
-                case "TotalMassLaunched":
-                    return Register(v.totalMass);
-                case "MostComplexVessel":
-                    return Register(v.Parts.Count);
-                case "MaxCrewInVessel":
-                case "TotalCrewLaunched":
-                    return Register(v.GetCrewCount());
-                case "TotalLaunches":
-                    return Register(1);
-                case "TotalCrewedLaunches":
-                    return (v.GetCrewCount() > 0) && Register(1);
-                case "FirstLaunch":
+                case ProtoAchievement.Types.Total:
+                    Value += v;
+                    return true;
+                case ProtoAchievement.Types.Max:
+                    if (v <= Value) return false;
+                    Value = v;
+                    Time = Planetarium.GetUniversalTime();
+                    return true;
+                case ProtoAchievement.Types.First:
                     return Register();
-                case "FirstRecovery": return Register();
-                case "FirstDestroy": return Register();
             }
             return false;
+        }
+
+        public bool Register(Vessel vessel = null, double value = 0)
+        {
+            if (Proto.CrewedOnly && (vessel.GetCrewCount() == 0)) return false;
+            switch (Proto.ValueType)
+            {
+                case ProtoAchievement.ValueTypes.Cost: return Register(0); // NOT IMPLEMENTED
+                case ProtoAchievement.ValueTypes.Mass: return Register(vessel.totalMass);
+                case ProtoAchievement.ValueTypes.PartsNum: return Register(vessel.parts.Count);
+                case ProtoAchievement.ValueTypes.CrewNum: return Register(vessel.GetCrewCount());
+                case ProtoAchievement.ValueTypes.Scalar: return Register(value);
+            }
+            return Register(1);
         }
 
         public ConfigNode ConfigNode
@@ -207,21 +104,27 @@ namespace SpaceAge
             get
             {
                 ConfigNode node = new ConfigNode("ACHIEVEMENT");
-                node.AddValue("name", Name);
-                if (HasValue) node.AddValue("value", Value);
-                if (HasTime) node.AddValue("time", Time);
+                node.AddValue("name", Proto.Name);
+                if (Proto.IsBodySpecific) node.AddValue("body", Body);
+                if (Proto.HasTime) node.AddValue("time", Time);
+                if (Proto.HasValue) node.AddValue("value", Value);
                 return node;
             }
             set
             {
-                Name = value.GetValue("name");
-                if (value.HasValue("value")) Value = Double.Parse(value.GetValue("value"));
-                if (value.HasValue("time")) Time = Double.Parse(value.GetValue("time"));
+                if (value.name != "ACHIEVEMENT") return;
+                Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
+                Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
+                if (Proto.IsBodySpecific && value.HasValue("body")) Body = value.GetValue("body");
+                if (Proto.HasTime && value.HasValue("time")) Time = Double.Parse(value.GetValue("time"));
+                if (Proto.HasValue && value.HasValue("value")) Value = Double.Parse(value.GetValue("value"));
             }
         }
 
-        public Achievement() { }
-        public Achievement(string name) { Name = name; }
-        public Achievement(ConfigNode node) { ConfigNode = node; }
+        public Achievement(ProtoAchievement proto)
+        { Proto = proto; }
+
+        public Achievement(ConfigNode node)
+        { ConfigNode = node; }
     }
 }
