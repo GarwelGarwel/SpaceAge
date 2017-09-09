@@ -5,39 +5,6 @@ namespace SpaceAge
 {
     public class ProtoAchievement
     {
-        //public static string[] generalAchievements = {
-        //    "TotalFunds",  // bugged
-        //    "TotalLaunches",
-        //    "TotalCrewedLaunches",
-        //    "TotalMassLaunched",
-        //    "TotalCrewLaunched",
-        //    "MostExpensiveVessel",  // not implemented
-        //    "HeaviestVessel",
-        //    "MostComplexVessel",
-        //    "MaxCrewInVessel",
-        //    "FirstLaunch",
-        //    "FirstSpace",  // not implemented
-        //    "FirstRecovery",
-        //    "FirstDestroy",
-        //    "FirstDeath"
-        //};
-
-        //public static string[] bodyAchievements =
-        //{
-        //    "TotalLandings",
-        //    "TotalCrewedLandings",
-        //    "HeaviestVesselInOrbit",
-        //    "HeaviestVesselLanded",
-        //    "FirstFlyby",
-        //    "FirstOrbit",
-        //    "FirstLanding",
-        //    "FirstReturn",
-        //    "FirstCrewedFlyby",
-        //    "FirstCrewedOrbit",
-        //    "FirstCrewedLanding",
-        //    "FirstCrewedReturn"
-        //};
-
         string name;
         public string Name
         {
@@ -91,7 +58,7 @@ namespace SpaceAge
             {
                 switch (ValueType)
                 {
-                    case ValueTypes.Cost: return "$";
+                    case ValueTypes.Cost: return "funds";
                     case ValueTypes.Mass: return "t";
                     case ValueTypes.PartsNum: return "parts";
                 }
