@@ -5,9 +5,6 @@ namespace SpaceAge
 {
     class Core
     {
-        public static void ShowNotification(string msg)
-        { if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications) ScreenMessages.PostScreenMessage(msg); }
-
         public static double VesselCost(Vessel v)
         {
             double c = 0;
@@ -15,6 +12,9 @@ namespace SpaceAge
                 c += p.protoPartSnapshot.moduleCosts;
             return c;
         }
+
+        public static void ShowNotification(string msg)
+        { if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications) ScreenMessages.PostScreenMessage(msg); }
 
         /// <summary>
         /// Log levels:

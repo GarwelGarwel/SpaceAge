@@ -38,7 +38,7 @@ namespace SpaceAge
             GameEvents.OnKSCStructureCollapsed.Add(OnStructureCollapsed);
             GameEvents.OnTechnologyResearched.Add(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Add(OnSOIChanged);
-            GameEvents.onVesselOrbitClosed.Add(OnOrbitClosed);
+            //GameEvents.onVesselOrbitClosed.Add(OnOrbitClosed);
             GameEvents.onVesselSituationChange.Add(OnSituationChanged);
             GameEvents.OnFundsChanged.Add(OnFundsChanged);
 
@@ -60,12 +60,13 @@ namespace SpaceAge
                 appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
             }
 
-            //funds = Funding.Instance.Funds;
+            funds = Funding.Instance.Funds;
             InitializeProtoAchievements();
         }
 
         void InitializeProtoAchievements()
         {
+            if (protoAchievements != null) return;
             Core.Log("Initializing ProtoAchievements...");
             ConfigNode config = ConfigNode.Load(KSPUtil.ApplicationRootPath + "/GameData/SpaceAge/achievements.cfg");
             protoAchievements = new List<ProtoAchievement>();
@@ -89,7 +90,7 @@ namespace SpaceAge
             GameEvents.OnKSCStructureCollapsed.Remove(OnStructureCollapsed);
             GameEvents.OnTechnologyResearched.Remove(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Remove(OnSOIChanged);
-            GameEvents.onVesselOrbitClosed.Remove(OnOrbitClosed);
+            //GameEvents.onVesselOrbitClosed.Remove(OnOrbitClosed);
             GameEvents.onVesselSituationChange.Remove(OnSituationChanged);
             GameEvents.OnFundsChanged.Remove(OnFundsChanged);
 
@@ -164,26 +165,9 @@ namespace SpaceAge
             return null;
         }
 
-        //public ProtoAchievement FindOrCreateAchievement(string name, string body = null)
-        //{
-        //    string id = name;
-        //    if (body != null) id += "@" + body;
-        //    return FindAchievement(id) ?? new SpaceAge.ProtoAchievement(id);
-        //}
-
-        //public void AddAchievement(ProtoAchievement a)
-        //{
-        //    Core.Log("Adding/modifying " + a.Id + " achievement.");
-        //    ProtoAchievement old = FindAchievement(a.Id);
-        //    if (old != null) achievements.Remove(old);
-        //    achievements.Add(a);
-        //    if (a.Type != ProtoAchievement.Types.Total)
-        //        MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", a.Title + " achievement unlocked!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
-        //}
-
         void CheckAchievements(string ev, CelestialBody body = null, Vessel vessel = null, double value = 0)
         {
-            Core.Log("CheckAchievements('" + ev + "', '" + body?.name + "', vessel = '" + vessel?.vesselName + "', " + value + ")");
+            Core.Log("CheckAchievements('" + ev + "', body = '" + body?.name + "', vessel = '" + vessel?.vesselName + "', " + value + ")");
             foreach (ProtoAchievement pa in protoAchievements)
                 if (pa.OnEvent == ev)
                 {
@@ -204,7 +188,7 @@ namespace SpaceAge
                         if (old != null) achievements.Remove(old);
                         achievements.Add(ach);
                         if (ach.Proto.Type != ProtoAchievement.Types.Total)
-                            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement unlocked!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
+                            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
                     }
                 }
         }
@@ -370,7 +354,7 @@ namespace SpaceAge
 
         void ExportChronicle()
         {
-            string filename = ((textInput.Trim(' ') == "") ? HighLogic.SaveFolder : KSPUtil.SanitizeFilename(textInput)) + ".txt";
+            string filename = KSPUtil.ApplicationRootPath + "/saves/" + HighLogic.SaveFolder + "/" + ((textInput.Trim(' ') == "") ? "chronicle" : KSPUtil.SanitizeFilename(textInput)) + ".txt";
             Core.Log("ExportChronicle to '" + filename + "'...", Core.LogLevel.Important);
             TextWriter writer = File.CreateText(filename);
             for (int i = 0; i < chronicle.Count; i++)
@@ -392,8 +376,13 @@ namespace SpaceAge
 
         public void OnLaunch(EventReport report)
         {
-            Core.Log("OnLaunch", Core.LogLevel.Important);
+            Core.Log("OnLaunch(<" + report.eventType + ", " + report.origin + ", " + report.sender + ">)", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLaunch) return;
+            if (report.eventType != FlightEvents.LAUNCH)
+            {
+                Core.Log("Not an actual launch. NO processing.");
+                return;
+            }
             ChronicleEvent e = new ChronicleEvent("Launch", "vessel", FlightGlobals.ActiveVessel.vesselName);
             if (FlightGlobals.ActiveVessel.GetCrewCount() > 0) e.Data.Add("crew", FlightGlobals.ActiveVessel.GetCrewCount().ToString());
             AddChronicleEvent(e);
@@ -438,8 +427,8 @@ namespace SpaceAge
         {
             Core.Log("OnCrewKilled", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDeath) return;
-            AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report.sender));
-            CheckAchievements("Death", report.origin.vessel.mainBody);
+            AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report?.sender));
+            CheckAchievements("Death", report?.origin?.vessel?.mainBody);
         }
 
         public void OnFlagPlanted(Vessel v)
@@ -482,11 +471,11 @@ namespace SpaceAge
             CheckAchievements("SOIChange", e.to, e.host);
         }
 
-        public void OnOrbitClosed(Vessel v)
-        {
-            Core.Log("OnOrbitClosed", Core.LogLevel.Important);
-            CheckAchievements("Orbit", v);
-        }
+        //public void OnOrbitClosed(Vessel v)
+        //{
+        //    Core.Log("OnOrbitClosed", Core.LogLevel.Important);
+        //    CheckAchievements("Orbit", v);
+        //}
 
         public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
         {
@@ -501,13 +490,18 @@ namespace SpaceAge
                 case Vessel.Situations.SUB_ORBITAL:
                     CheckAchievements("Flyby", a.host);
                     break;
+                case Vessel.Situations.ORBITING:
+                    CheckAchievements("Orbit", a.host);
+                    break;
             }
         }
 
         public void OnFundsChanged(double v, TransactionReasons tr)
         {
             Core.Log("OnFundsChanged(" + v + ", " + tr + ")");
-            CheckAchievements("Income", v - funds);
+            Core.Log("Current funds: " + Funding.Instance.Funds + "; SpaceAgeScenario.funds = " + funds);
+            if (v > funds) CheckAchievements("Income", v - funds);
+            else CheckAchievements("Expense", funds - v);
             funds = v;
         }
     }
