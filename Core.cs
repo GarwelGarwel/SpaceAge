@@ -8,6 +8,14 @@ namespace SpaceAge
         public static void ShowNotification(string msg)
         { if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications) ScreenMessages.PostScreenMessage(msg); }
 
+        public static double VesselCost(Vessel v)
+        {
+            double c = 0;
+            foreach (Part p in v.Parts)
+                c += p.protoPartSnapshot.moduleCosts;
+            return c;
+        }
+
         /// <summary>
         /// Log levels:
         /// <list type="bullet">

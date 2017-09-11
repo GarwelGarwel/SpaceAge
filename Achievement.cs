@@ -90,7 +90,7 @@ namespace SpaceAge
             if (Proto.CrewedOnly && (vessel.GetCrewCount() == 0)) return false;
             switch (Proto.ValueType)
             {
-                case ProtoAchievement.ValueTypes.Cost: return Register(0); // NOT IMPLEMENTED
+                case ProtoAchievement.ValueTypes.Cost: return Register(Core.VesselCost(vessel));
                 case ProtoAchievement.ValueTypes.Mass: return Register(vessel.totalMass);
                 case ProtoAchievement.ValueTypes.PartsNum: return Register(vessel.parts.Count);
                 case ProtoAchievement.ValueTypes.CrewNum: return Register(vessel.GetCrewCount());
