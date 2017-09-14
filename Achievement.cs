@@ -96,8 +96,8 @@ namespace SpaceAge
             {
                 case ProtoAchievement.ValueTypes.Cost: return Register(Core.VesselCost(vessel), useCurrentTime);
                 case ProtoAchievement.ValueTypes.Mass: return Register(vessel.totalMass, useCurrentTime);
-                case ProtoAchievement.ValueTypes.PartsNum: return Register(vessel.parts.Count, useCurrentTime);
-                case ProtoAchievement.ValueTypes.CrewNum: return Register(vessel.GetCrewCount(), useCurrentTime);
+                case ProtoAchievement.ValueTypes.PartsCount: return Register(vessel.parts.Count, useCurrentTime);
+                case ProtoAchievement.ValueTypes.CrewCount: return Register(vessel.GetCrewCount(), useCurrentTime);
                 case ProtoAchievement.ValueTypes.Scalar: return Register(value, useCurrentTime);
             }
             return Register(1, useCurrentTime);

@@ -44,7 +44,7 @@ namespace SpaceAge
         public bool HasValue
         { get { return (Type == Types.Max) || (Type == Types.Total); } }
 
-        public enum ValueTypes { None, Cost, Mass, PartsNum, CrewNum, Scalar };
+        public enum ValueTypes { None, Cost, Mass, PartsCount, CrewCount, Scalar };
         ValueTypes valueType = ValueTypes.None;
         public ValueTypes ValueType
         {
@@ -60,7 +60,7 @@ namespace SpaceAge
                 {
                     case ValueTypes.Cost: return "funds";
                     case ValueTypes.Mass: return "t";
-                    case ValueTypes.PartsNum: return "parts";
+                    case ValueTypes.PartsCount: return "parts";
                 }
                 return "";
             }
