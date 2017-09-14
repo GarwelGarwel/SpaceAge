@@ -40,7 +40,7 @@ namespace SpaceAge
             get
             {
                 if (!Proto.HasValue) return "";
-                return ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("F2") : Value.ToString("F0")) + " " + Proto.Unit;
+                return ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("F2") : Value.ToString("N0")) + " " + Proto.Unit;
             }
         }
 
@@ -98,7 +98,7 @@ namespace SpaceAge
                 case ProtoAchievement.ValueTypes.Mass: return Register(vessel.totalMass, useCurrentTime);
                 case ProtoAchievement.ValueTypes.PartsCount: return Register(vessel.parts.Count, useCurrentTime);
                 case ProtoAchievement.ValueTypes.CrewCount: return Register(vessel.GetCrewCount(), useCurrentTime);
-                case ProtoAchievement.ValueTypes.Scalar: return Register(value, useCurrentTime);
+                case ProtoAchievement.ValueTypes.Funds: return Register(value, useCurrentTime);
             }
             return Register(1, useCurrentTime);
         }
