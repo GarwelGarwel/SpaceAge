@@ -191,14 +191,11 @@ namespace SpaceAge
         {
             try { return achievements[Achievement.GetFullName(name, body?.name)]; }
             catch (KeyNotFoundException) { return null; }
-            //foreach (Achievement a in achievements)
-            //    if ((a.Proto.Name == name) && (!a.Proto.IsBodySpecific || (a.Body == body?.name))) return a;
-            //return null;
         }
 
         public void RegisterAchievement(Achievement ach, Vessel vessel = null, double value = Double.NaN, bool useCurrentTime = true)
         {
-            Achievement a = achievements[ach.FullName] ?? ach;
+            Achievement a = achievements.ContainsKey(ach.FullName) ? achievements[ach.FullName] : ach;
             if (a.Register(vessel, value))
             {
                 Core.Log("Achievement registered.");
@@ -402,10 +399,14 @@ namespace SpaceAge
 
         // EVENT HANDLERS BELOW--USED TO TRACK AND RECORD EVENTS
 
+        bool IsVesselEligible(Vessel v)
+        { return (v.vesselType != VesselType.Debris) && (v.vesselType != VesselType.EVA) && (v.vesselType != VesselType.Flag) && (v.vesselType != VesselType.SpaceObject) && (v.vesselType != VesselType.Unknown); }
+
         public void OnLaunch(EventReport report)
         {
             Core.Log("OnLaunch(<" + report.eventType + ", " + report.origin + ", " + report.sender + ">)", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLaunch) return;
+            if (!IsVesselEligible(FlightGlobals.ActiveVessel)) return;
             if (report.eventType != FlightEvents.LAUNCH)
             {
                 Core.Log("Not an actual launch. NO processing.");
@@ -422,7 +423,7 @@ namespace SpaceAge
             Core.Log("OnVesselRecovery('" + v.vesselName + "', " + b + ")", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackRecovery) return;
             Core.Log("missionTime = " + v.missionTime + "; launchTime = " + v.launchTime + "; autoClean = " + v.autoClean);
-            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.EVA) || (v.vesselType == VesselType.Flag))
+            if (!IsVesselEligible(v.vesselRef))
             {
                 Core.Log(v.vesselName + " is " + v.vesselType + ". NO adding to Chronicle.", Core.LogLevel.Important);
                 return;
@@ -442,7 +443,7 @@ namespace SpaceAge
         {
             Core.Log("OnVesselDestroy('" + v.vesselName + "')", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDestroy) return;
-            if ((v.vesselType == VesselType.Debris) || (v.vesselType == VesselType.Flag) || (v.vesselType == VesselType.EVA) || (v.vesselType == VesselType.SpaceObject))
+            if (!IsVesselEligible(v))
             {
                 Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.", Core.LogLevel.Important);
                 return;
@@ -495,6 +496,7 @@ namespace SpaceAge
         {
             Core.Log("OnSOIChanged(<'" + e.from.name + "', '" + e.to.name + "', '" + e.host.vesselName + "'>)", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange) return;
+            if (!IsVesselEligible(e.host)) return;
             AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.name));
             CheckAchievements("SOIChange", e.to, e.host);
         }
@@ -502,7 +504,8 @@ namespace SpaceAge
         public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
         {
             Core.Log("OnSituationChanged(<'" + a.host.vesselName + "', '" + a.to + "'>)");
-            switch (a.to)
+            if (!IsVesselEligible(a.host)) return;
+                switch (a.to)
             {
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.SPLASHED:
