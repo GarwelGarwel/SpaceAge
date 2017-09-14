@@ -1,10 +1,12 @@
 # SpaceAge
 
-Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v. 0.1, it has its first module, the Chronicle, implemented (see below). The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an occasional NRE or freezeup are possible. Please report errors in the Issues tab or in the forum post.
+Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v. 0.2, it has two modules, the Chronicle and Achievements, implemented (see below).
+
+The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an occasional NRE or freezeup are possible. Backward compatibility between versions is not guaranteed. Please report errors in the Issues tab or in the forum post.
 
 **Chronicle**
 
-The Chronicle is the first module in the mod. It shows a history of notable events in the playthrough (adjustable in Difficulty Settings):
+The Chronicle module shows a history of notable events in the playthrough (adjustable in Difficulty Settings):
 - launches
 - vessel recoveries
 - vessel destruction
@@ -17,10 +19,58 @@ The Chronicle is the first module in the mod. It shows a history of notable even
 
 You can also add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
 
+**Achievements**
+
+Achievements module shows your playthrough's statistics, records, and firsts. Unlike the stock progress tracking, it allows you to see this data any time you want and you can even easily adjust it by changing or even adding new achievements.
+
+Currently, the module tracks this data:
+- total (lifetime) income
+- number of launches (crewed and total)
+- total mass of vessels launched
+- total number of kerbals launched
+- heaviest vessel launched
+- most complex (by parts count) vessel launched
+- max crew in a vessel (on launch)
+- your first launch (crewed and total)
+- the first time your vessel (or your crew) reached the space
+- the first times you recovered or lost your vessels or crew
+
+For every celestial body, it tracks:
+- total number of landings (and, separately, crewed landings)
+- the masses of the heaviest vessels that landed on or orbited the celestial body
+- the first flybys, orbits, and landings on the body (crewed and overall)
+
+**Configuring your own achievements**
+
+You can easily add, modify or remove achievements by editing achievements.cfg file in the mod's directory. Each ACHIEVEMENT record there corresponds to one type of an achievement. The following fields are used:
+- `name` (obligatory): the internal unique name of the achievement
+- `title`: how the achievement is shown in the UI; the celestial body's name is added to it for body-specific achievements
+- `bodySpecific`: set to `true` if the achievement should be tracked separately for each celestial body (default is false)
+- `type` (obligatory): set to `Total`, `Max` or `First` to define the achievement's behaviour to either add values, select the highest values or just mark the first time the achievement is completed
+- `valueType` (only for `Total` and `Max` achievements): defines, which value to use for the achievement. Can be `Mass`, `PartsNum`, `CrewNum`, or `Scalar` (currently only with `Income` or `Expense` events). Note that not every event is associated with a vessel, so sometimes you may not be able to access these values.
+- `onEvent` (obligatory): which event activates the achievemnt (see list below)
+- `crewedOnly`: set to `true` if the achievement is only activated when the vessel has crew
+
+The following events are available for `onEvent` field:
+- Launch
+- Recovery
+- Destroy
+- Death
+- FlagPlant
+- FacilityUpgraded
+- StructureCollapsed
+- TechnologyResearched
+- SOIChange
+- Landed
+- Flyby
+- Orbit
+- Income
+- Expense
+
 **Future Plans**
 
-At least two more modules will be added in the future:
-- Achievements: will track things such as the total number of your launches, time you first landed on the Mun, and your heaviest vessel ever
+- Add parsing of the stock ProgressTracking system to load old achievements when Space Age is installed mid-game
+- MOAR events, achievements and data to track
 - Trends: will draw graphs of your progress (e.g. funds earned)
 
 **Supported Mods**
