@@ -51,19 +51,19 @@ You can easily add, modify or remove achievements by editing `achievements.cfg` 
 - `onEvent` (obligatory): which event activates the achievemnt (see list below)
 - `crewedOnly`: set to `true` if the achievement is only activated when the vessel has crew
 
-The following events are available for `onEvent` field:
-- `Launch`
-- `Recovery`
-- `Destroy`
+The following events are available for `onEvent` field (for events in *italic* you can use mass, parts count, and crew count):
+- *`Launch`*
+- *`Recovery`*
+- *`Destroy`*
 - `Death`
 - `FlagPlant`
 - `FacilityUpgraded`
 - `StructureCollapsed`
 - `TechnologyResearched`
-- `SOIChange`
-- `Landed`
-- `Flyby`
-- `Orbit`
+- *`SOIChange`*
+- *`Landed`*
+- *`Flyby`*
+- *`Orbit`*
 - `Income`
 - `Expense`
 
