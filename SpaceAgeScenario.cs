@@ -406,10 +406,19 @@ namespace SpaceAge
         {
             Core.Log("OnLaunch(<" + report.eventType + ", " + report.origin + ", " + report.sender + ">)", Core.LogLevel.Important);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLaunch) return;
-            if (!IsVesselEligible(FlightGlobals.ActiveVessel)) return;
+            if (!IsVesselEligible(FlightGlobals.ActiveVessel))
+            {
+                Core.Log("Vessel is ineligible due to being " + FlightGlobals.ActiveVessel.vesselType);
+                return;
+            }
             if (report.eventType != FlightEvents.LAUNCH)
             {
                 Core.Log("Not an actual launch. NO processing.");
+                return;
+            }
+            if ((FlightGlobals.ActiveVessel.mainBody != FlightGlobals.GetHomeBody()) || (FlightGlobals.ActiveVessel.missionTime > 5))
+            {
+                Core.Log("Fake launch due to main body: " + FlightGlobals.ActiveVessel.mainBody.name + ", mission time: " + FlightGlobals.ActiveVessel.missionTime);
                 return;
             }
             ChronicleEvent e = new ChronicleEvent("Launch", "vessel", FlightGlobals.ActiveVessel.vesselName);
@@ -504,11 +513,17 @@ namespace SpaceAge
         public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
         {
             Core.Log("OnSituationChanged(<'" + a.host.vesselName + "', '" + a.to + "'>)");
+            ChronicleEvent e = null;
             if (!IsVesselEligible(a.host)) return;
                 switch (a.to)
             {
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.SPLASHED:
+                    e = new ChronicleEvent("Landing");
+                    e.Data.Add("vessel", a.host.vesselName);
+                    e.Data.Add("body", a.host.mainBody.bodyName);
+                    if (a.host.GetCrewCount() > 0) e.Data.Add("crew", a.host.GetCrewCount().ToString());
+                    AddChronicleEvent(e);
                     CheckAchievements("Landed", a.host);
                     break;
                 case Vessel.Situations.ESCAPING:
