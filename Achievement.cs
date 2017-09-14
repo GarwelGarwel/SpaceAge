@@ -45,11 +45,15 @@ namespace SpaceAge
         }
 
         public string Title
-        {
-            get { return Proto.Title + (Proto.IsBodySpecific ? " " + Body : ""); }
-        }
+        { get { return Proto.Title + (Proto.IsBodySpecific ? " " + Body : ""); } }
 
-        public bool Register()
+        public static string GetFullName(string name, string body = null)
+        { return name + (body != null ? "@" + body : ""); }
+
+        public string FullName
+        { get { return GetFullName(Proto.Name, Body); } }
+
+        public bool Register(bool useCurrentTime = true)
         {
             if (Proto.ExcludeHome && (Body == FlightGlobals.GetHomeBodyName())) return false;
             switch (Proto.Type)
@@ -67,36 +71,36 @@ namespace SpaceAge
             return false;
         }
 
-        public bool Register(double v)
+        public bool Register(double value, bool useCurrentTime = true)
         {
             switch (Proto.Type)
             {
                 case ProtoAchievement.Types.Total:
-                    Value += v;
+                    Value += value;
                     return true;
                 case ProtoAchievement.Types.Max:
-                    if (v <= Value) return false;
-                    Value = v;
-                    Time = Planetarium.GetUniversalTime();
+                    if (value <= Value) return false;
+                    Value = value;
+                    if (useCurrentTime) Time = Planetarium.GetUniversalTime();
                     return true;
                 case ProtoAchievement.Types.First:
-                    return Register();
+                    return Register(useCurrentTime);
             }
             return false;
         }
 
-        public bool Register(Vessel vessel = null, double value = 0)
+        public bool Register(Vessel vessel = null, double value = 0, bool useCurrentTime = true)
         {
             if (Proto.CrewedOnly && (vessel.GetCrewCount() == 0)) return false;
             switch (Proto.ValueType)
             {
-                case ProtoAchievement.ValueTypes.Cost: return Register(Core.VesselCost(vessel));
-                case ProtoAchievement.ValueTypes.Mass: return Register(vessel.totalMass);
-                case ProtoAchievement.ValueTypes.PartsNum: return Register(vessel.parts.Count);
-                case ProtoAchievement.ValueTypes.CrewNum: return Register(vessel.GetCrewCount());
-                case ProtoAchievement.ValueTypes.Scalar: return Register(value);
+                case ProtoAchievement.ValueTypes.Cost: return Register(Core.VesselCost(vessel), useCurrentTime);
+                case ProtoAchievement.ValueTypes.Mass: return Register(vessel.totalMass, useCurrentTime);
+                case ProtoAchievement.ValueTypes.PartsNum: return Register(vessel.parts.Count, useCurrentTime);
+                case ProtoAchievement.ValueTypes.CrewNum: return Register(vessel.GetCrewCount(), useCurrentTime);
+                case ProtoAchievement.ValueTypes.Scalar: return Register(value, useCurrentTime);
             }
-            return Register(1);
+            return Register(1, useCurrentTime);
         }
 
         public ConfigNode ConfigNode

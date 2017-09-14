@@ -8,8 +8,12 @@ namespace SpaceAge
         public static double VesselCost(Vessel v)
         {
             double c = 0;
+            Core.Log("Calculating costs of " + v.vesselName);
             foreach (Part p in v.Parts)
-                c += p.protoPartSnapshot.moduleCosts;
+            {
+                Core.Log("Part " + p.name + ": module costs = " + p.GetModuleCosts(0) + "; proto costs = " + p.protoPartSnapshot.moduleCosts);
+                c += p.GetModuleCosts(0);
+            }
             return c;
         }
 

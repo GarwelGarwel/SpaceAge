@@ -83,6 +83,20 @@ namespace SpaceAge
             set { crewedOnly = value; }
         }
 
+        string stockSynonym = null;
+        public string StockSynonym
+        {
+            get { return stockSynonym; }
+            set { stockSynonym = value; }
+        }
+
+        string stockCompletedString = null;
+        public string StockCompletedString
+        {
+            get { return stockCompletedString ?? "completed"; }
+            set { stockCompletedString = value; }
+        }
+
         public Achievement GetAchievement()
         { return new SpaceAge.Achievement(this); }
 
@@ -99,6 +113,7 @@ namespace SpaceAge
                 if (value.HasValue("valueType")) ValueType = (ValueTypes)Enum.Parse(typeof(ValueTypes), value.GetValue("valueType"), true);
                 if (value.HasValue("onEvent")) OnEvent = value.GetValue("onEvent");
                 if (value.HasValue("crewedOnly")) CrewedOnly = Boolean.Parse(value.GetValue("crewedOnly"));
+                if (value.HasValue("stockSynonym")) OnEvent = value.GetValue("stockSynonym");
             }
         }
 
