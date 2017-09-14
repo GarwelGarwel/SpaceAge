@@ -42,7 +42,7 @@ For every celestial body, it tracks:
 
 **Configuring your own achievements**
 
-You can easily add, modify or remove achievements by editing achievements.cfg file in the mod's directory. Each ACHIEVEMENT record there corresponds to one type of an achievement. The following fields are used:
+You can easily add, modify or remove achievements by editing `achievements.cfg` file in the mod's directory. Each `ACHIEVEMENT` record there corresponds to one type of an achievement. The following fields are used:
 - `name` (obligatory): the internal unique name of the achievement
 - `title`: how the achievement is shown in the UI; the celestial body's name is added to it for body-specific achievements
 - `bodySpecific`: set to `true` if the achievement should be tracked separately for each celestial body (default is false)
@@ -52,20 +52,20 @@ You can easily add, modify or remove achievements by editing achievements.cfg fi
 - `crewedOnly`: set to `true` if the achievement is only activated when the vessel has crew
 
 The following events are available for `onEvent` field:
-- Launch
-- Recovery
-- Destroy
-- Death
-- FlagPlant
-- FacilityUpgraded
-- StructureCollapsed
-- TechnologyResearched
-- SOIChange
-- Landed
-- Flyby
-- Orbit
-- Income
-- Expense
+- `Launch`
+- `Recovery`
+- `Destroy`
+- `Death`
+- `FlagPlant`
+- `FacilityUpgraded`
+- `StructureCollapsed`
+- `TechnologyResearched`
+- `SOIChange`
+- `Landed`
+- `Flyby`
+- `Orbit`
+- `Income`
+- `Expense`
 
 **Future Plans**
 
