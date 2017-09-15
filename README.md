@@ -36,6 +36,7 @@ Currently, the module tracks this data:
 - your first launch (crewed and total)
 - the first time your vessel (or your crew) reached the space
 - the first times you recovered or lost your vessels or crew
+- number of destroyed KSC buildings
 
 For every celestial body, it tracks:
 - total number of landings (and, separately, crewed landings)
