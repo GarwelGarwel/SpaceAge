@@ -399,13 +399,13 @@ namespace SpaceAge
 
         // EVENT HANDLERS BELOW--USED TO TRACK AND RECORD EVENTS
 
-        bool IsVesselEligible(Vessel v)
-        { return (v.vesselType != VesselType.Debris) && (v.vesselType != VesselType.EVA) && (v.vesselType != VesselType.Flag) && (v.vesselType != VesselType.SpaceObject) && (v.vesselType != VesselType.Unknown); }
+        bool IsVesselEligible(Vessel v, bool mustBeActive)
+        { return (v.vesselType != VesselType.Debris) && (v.vesselType != VesselType.EVA) && (v.vesselType != VesselType.Flag) && (v.vesselType != VesselType.SpaceObject) && (v.vesselType != VesselType.Unknown) && (!mustBeActive || (v == FlightGlobals.ActiveVessel)); }
 
         public void OnLaunch(EventReport report)
         {
             Core.Log("OnLaunch(<" + report.eventType + ", " + report.origin + ", " + report.sender + ">)", Core.LogLevel.Important);
-            if (!IsVesselEligible(FlightGlobals.ActiveVessel))
+            if (!IsVesselEligible(FlightGlobals.ActiveVessel, false))
             {
                 Core.Log("Vessel is ineligible due to being " + FlightGlobals.ActiveVessel.vesselType);
                 return;
@@ -431,7 +431,7 @@ namespace SpaceAge
         {
             Core.Log("OnVesselRecovery('" + v.vesselName + "', " + b + ")", Core.LogLevel.Important);
             Core.Log("missionTime = " + v.missionTime + "; launchTime = " + v.launchTime + "; autoClean = " + v.autoClean);
-            if (!IsVesselEligible(v.vesselRef))
+            if (!IsVesselEligible(v.vesselRef, false))
             {
                 Core.Log(v.vesselName + " is " + v.vesselType + ". NO adding to Chronicle.", Core.LogLevel.Important);
                 return;
@@ -451,7 +451,7 @@ namespace SpaceAge
         public void OnVesselDestroy(Vessel v)
         {
             Core.Log("OnVesselDestroy('" + v.vesselName + "')", Core.LogLevel.Important);
-            if (!IsVesselEligible(v))
+            if (!IsVesselEligible(v, true))
             {
                 Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.", Core.LogLevel.Important);
                 return;
@@ -474,7 +474,7 @@ namespace SpaceAge
             Core.Log("OnFlagPlanted('" + v.vesselName + "')", Core.LogLevel.Important);
             CheckAchievements("FlagPlant", v);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackFlagPlant) return;
-            AddChronicleEvent(new ChronicleEvent("FlagPlant", "body", v.mainBody.name));
+            AddChronicleEvent(new ChronicleEvent("FlagPlant", "body", v.mainBody.bodyDisplayName));
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
@@ -504,20 +504,20 @@ namespace SpaceAge
         public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> e)
         {
             Core.Log("OnSOIChanged(<'" + e.from.name + "', '" + e.to.name + "', '" + e.host.vesselName + "'>)", Core.LogLevel.Important);
-            if (!IsVesselEligible(e.host)) return;
+            if (!IsVesselEligible(e.host, false)) return;
             CheckAchievements("SOIChange", e.to, e.host);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange) return;
-            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.name));
+            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.bodyDisplayName));
         }
 
         double lastLanding = 0;
         public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
         {
             Core.Log("OnSituationChanged(<'" + a.host.vesselName + "', '" + a.to + "'>)");
-            if (!IsVesselEligible(a.host)) return;
+            if (!IsVesselEligible(a.host, true)) return;
             ChronicleEvent e = new ChronicleEvent();
             e.Data.Add("vessel", a.host.vesselName);
-            e.Data.Add("body", a.host.mainBody.bodyName);
+            e.Data.Add("body", a.host.mainBody.bodyDisplayName);
             if (a.host.GetCrewCount() > 0) e.Data.Add("crew", a.host.GetCrewCount().ToString());
             switch (a.to)
             {
