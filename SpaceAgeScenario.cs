@@ -18,7 +18,7 @@ namespace SpaceAge
         enum Tabs { Chronicle, Achievements };
         Tabs currentTab = Tabs.Chronicle;
         const float windowWidth = 500;
-        int page = 1;
+        int[] page = new int[2] { 1, 1 };
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
 
@@ -226,7 +226,6 @@ namespace SpaceAge
 
         // UI METHODS BELOW
 
-
         void DisplayAchievement(Achievement a, List<DialogGUIBase> grid)
         {
             if (a == null) return;
@@ -235,18 +234,32 @@ namespace SpaceAge
             grid.Add(new DialogGUILabel(a.Proto.HasTime ? KSPUtil.PrintDate(a.Time, true) : "", true));
         }
 
+        List<Achievement> SortedAchievements
+        {
+            get
+            {
+                List<Achievement> res = new List<Achievement>();
+                foreach (ProtoAchievement pa in protoAchievements)
+                    if (!pa.IsBodySpecific && achievements.ContainsKey(pa.Name)) res.Add(FindAchievement(pa.Name));
+                foreach (CelestialBody b in FlightGlobals.Bodies)
+                    foreach (ProtoAchievement pa in protoAchievements)
+                        if (pa.IsBodySpecific && achievements.ContainsKey(Achievement.GetFullName(pa.Name, b.name))) res.Add(FindAchievement(pa.Name, b));
+                return res;
+            }
+        }
+
         public DialogGUIBase windowContents
         {
             get
             {
                 List<DialogGUIBase> gridContents;
+                if (Page > PageCount) Page = PageCount;
                 switch (currentTab)
                 {
                     case Tabs.Chronicle:
-                        if (page > PageCount) page = PageCount;
                         gridContents = new List<DialogGUIBase>(LinesPerPage);
-                        Core.Log("Displaying events " + ((page - 1) * LinesPerPage + 1) + "-" + Math.Min(page * LinesPerPage, chronicle.Count) + "...");
-                        for (int i = (page - 1) * LinesPerPage; i < Math.Min(page * LinesPerPage, chronicle.Count); i++)
+                        Core.Log("Displaying events " + ((Page - 1) * LinesPerPage + 1) + "-" + Math.Min(Page * LinesPerPage, chronicle.Count) + "...");
+                        for (int i = (Page - 1) * LinesPerPage; i < Math.Min(Page * LinesPerPage, chronicle.Count); i++)
                         {
                             Core.Log("chronicle[" + (Core.NewestFirst ? (chronicle.Count - i - 1) : i) + "]: " + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
                             gridContents.Add(
@@ -255,14 +268,6 @@ namespace SpaceAge
                                     new DialogGUIButton<int>("X", DeleteItem, Core.NewestFirst ? (chronicle.Count - i - 1) : i)));
                         }
                         return new DialogGUIVerticalLayout(
-                            new DialogGUIHorizontalLayout(
-                                true,
-                                false,
-                                new DialogGUIButton("<<", FirstPage, () => (page > 1), false),
-                                new DialogGUIButton("<", PageUp, () => (page > 1), false),
-                                new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel(page + "/" + PageCount)),
-                                new DialogGUIButton(">", PageDown, () => (page < PageCount), false),
-                                new DialogGUIButton(">>", LastPage, () => (page < PageCount), false)),
                             new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, gridContents.ToArray()),
                             (HighLogic.LoadedSceneIsFlight ? new DialogGUIHorizontalLayout() :
                             new DialogGUIHorizontalLayout(
@@ -273,14 +278,17 @@ namespace SpaceAge
                                 new DialogGUIButton("Export", ExportChronicle))));
 
                     case Tabs.Achievements:
-                        gridContents = new List<DialogGUIBase>(achievements.Count * 3);
-                        Core.Log("Displaying " + achievements.Count + " achievements...");
-                        foreach (ProtoAchievement pa in protoAchievements)
-                            if (!pa.IsBodySpecific) DisplayAchievement(FindAchievement(pa.Name), gridContents);
-                        Core.Log("Displaying body achievements...");
-                        foreach (CelestialBody b in FlightGlobals.Bodies)
-                            foreach (ProtoAchievement pa in protoAchievements)
-                                if (pa.IsBodySpecific) DisplayAchievement(FindAchievement(pa.Name, b), gridContents);
+                        gridContents = new List<DialogGUIBase>(SpaceAgeChronicleSettings.AchievementsPerPage * 3);
+                        int startingIndex = (Page - 1) * LinesPerPage;
+                        Core.Log("Displaying achievements starting from " + startingIndex + " out of " + achievements.Count + "...");
+                        foreach (Achievement a in SortedAchievements.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
+                            DisplayAchievement(a, gridContents);
+                        //foreach (ProtoAchievement pa in protoAchievements)
+                        //    if (!pa.IsBodySpecific) DisplayAchievement(FindAchievement(pa.Name), gridContents);
+                        //Core.Log("Displaying body achievements...");
+                        //foreach (CelestialBody b in FlightGlobals.Bodies)
+                        //    foreach (ProtoAchievement pa in protoAchievements)
+                        //        if (pa.IsBodySpecific) DisplayAchievement(FindAchievement(pa.Name, b), gridContents);
                         return new DialogGUIGridLayout(new RectOffset(5, 5, 0, 0), new Vector2((windowWidth - 10) / 3 - 3, 20), new Vector2(5, 5), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleLeft, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 3, gridContents.ToArray());
                 }
                 return null;
@@ -295,19 +303,27 @@ namespace SpaceAge
                 new Vector2(1, 1),
                 new Vector2(1, 1),
                 new MultiOptionDialog(
-                    "Space Age Chronicle", 
-                    "", 
-                    "Space Age Chronicle", 
+                    "Space Age Chronicle",
+                    "",
+                    "Space Age Chronicle",
                     HighLogic.UISkin,
                     windowPosition,
                     new DialogGUIHorizontalLayout(
-                        true, 
+                        true,
                         false,
                         new DialogGUIButton<Tabs>("Chronicle", SelectTab, Tabs.Chronicle, () => (currentTab != Tabs.Chronicle), true),
                         new DialogGUIButton<Tabs>("Achievements", SelectTab, Tabs.Achievements, () => (currentTab != Tabs.Achievements), true)),
+                    new DialogGUIHorizontalLayout(
+                        true,
+                        false,
+                        new DialogGUIButton("<<", FirstPage, () => (Page > 1), false),
+                        new DialogGUIButton("<", PageUp, () => (Page > 1), false),
+                        new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel(Page + "/" + PageCount)),
+                        new DialogGUIButton(">", PageDown, () => (Page < PageCount), false),
+                        new DialogGUIButton(">>", LastPage, () => (Page < PageCount), false)),
                     windowContents),
                 false,
-                HighLogic.UISkin, 
+                HighLogic.UISkin,
                 false);
         }
 
@@ -333,33 +349,46 @@ namespace SpaceAge
             Invalidate();
         }
 
+        int Page
+        {
+            get { return page[(int)currentTab]; }
+            set { page[(int)currentTab] = value; }
+        }
+
         int LinesPerPage
-        { get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().linesPerPage; } }
+        {
+            get
+            {
+                if (currentTab == Tabs.Chronicle)
+                    return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().chronicleLinesPerPage;
+                else return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage;
+            }
+        }
 
         int PageCount
-        { get { return (int)System.Math.Ceiling((double)chronicle.Count / LinesPerPage); } }
+        { get { return (int)System.Math.Ceiling((double) ((currentTab == Tabs.Chronicle) ? chronicle.Count : achievements.Count) / LinesPerPage); } }
 
         public void PageUp()
         {
-            if (page > 1) page--;
+            if (Page > 1) Page--;
             Invalidate();
         }
 
         public void FirstPage()
         {
-            page = 1;
+            Page = 1;
             Invalidate();
         }
 
         public void PageDown()
         {
-            if (page < PageCount) page++;
+            if (Page < PageCount) Page++;
             Invalidate();
         }
 
         public void LastPage()
         {
-            page = PageCount;
+            Page = PageCount;
             Invalidate();
         }
 
