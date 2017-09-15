@@ -40,31 +40,46 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Newest First", toolTip = "Show most recent events first in the Chronicle")]
         public bool newestFirst = true;
 
-        [GameParameters.CustomParameterUI("Track Launch Events", toolTip = "Track and save Launch events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track Launch Events", toolTip = "Track and save Launch events in the Chronicle and Achievements")]
         public bool trackLaunch = true;
 
-        [GameParameters.CustomParameterUI("Track Recovery Events", toolTip = "Track and save Recovery events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track Orbit Events", toolTip = "Track and save Orbit events in the Chronicle and Achievements")]
+        public bool trackOrbit = false;
+
+        [GameParameters.CustomParameterUI("Track Landing Events", toolTip = "Track and save Landing events in the Chronicle and Achievements")]
+        public bool trackLanding = true;
+
+        [GameParameters.CustomFloatParameterUI("Min Landing Interval", toolTip = "Min time between landings for them to be counted as separate, in seconds", minValue = 0, maxValue = 300, stepCount = 31)]
+        public float minLandingInterval = 60;
+
+        public static float MinLandingInterval
+        {
+            get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minLandingInterval; }
+            set { HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minLandingInterval = value; }
+        }
+
+        [GameParameters.CustomParameterUI("Track Recovery Events", toolTip = "Track and save Recovery events in the Chronicle and Achievements")]
         public bool trackRecovery = true;
 
-        [GameParameters.CustomParameterUI("Track Destroy Events", toolTip = "Track and save Destroy events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track Destroy Events", toolTip = "Track and save Destroy events in the Chronicle and Achievements")]
         public bool trackDestroy = true;
 
-        [GameParameters.CustomParameterUI("Track Death Events", toolTip = "Track and save Death events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track Death Events", toolTip = "Track and save Death events in the Chronicle and Achievements")]
         public bool trackDeath = true;
 
-        [GameParameters.CustomParameterUI("Track Flag Plant Events", toolTip = "Track and save Flag Plant events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track Flag Plant Events", toolTip = "Track and save Flag Plant events in the Chronicle and Achievements")]
         public bool trackFlagPlant = true;
 
-        [GameParameters.CustomParameterUI("Track Facility Upgraded Events", toolTip = "Track and save Facility Upgraded events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track Facility Upgraded Events", toolTip = "Track and save Facility Upgraded events in the Chronicle and Achievements")]
         public bool trackFacilityUpgraded = true;
 
-        [GameParameters.CustomParameterUI("Track Structure Collapsed Events", toolTip = "Track and save Structure Collapsed events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track Structure Collapsed Events", toolTip = "Track and save Structure Collapsed events in the Chronicle and Achievements")]
         public bool trackStructureCollapsed = true;
 
-        [GameParameters.CustomParameterUI("Track Tech Researched Events", toolTip = "Track and save Technology Researched events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track Tech Researched Events", toolTip = "Track and save Technology Researched events in the Chronicle and Achievements")]
         public bool trackTechnologyResearched = true;
 
-        [GameParameters.CustomParameterUI("Track SOI Change Events", toolTip = "Track and save SOI Change events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track SOI Change Events", toolTip = "Track and save SOI Change events in the Chronicle and Achievements")]
         public bool trackSOIChange = true;
     }
 }

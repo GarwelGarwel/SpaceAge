@@ -510,30 +510,40 @@ namespace SpaceAge
             CheckAchievements("SOIChange", e.to, e.host);
         }
 
+        double lastLanding = 0;
         public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
         {
             Core.Log("OnSituationChanged(<'" + a.host.vesselName + "', '" + a.to + "'>)");
-            ChronicleEvent e = null;
             if (!IsVesselEligible(a.host)) return;
-                switch (a.to)
+            ChronicleEvent e = new ChronicleEvent();
+            e.Data.Add("vessel", a.host.vesselName);
+            e.Data.Add("body", a.host.mainBody.bodyName);
+            if (a.host.GetCrewCount() > 0) e.Data.Add("crew", a.host.GetCrewCount().ToString());
+            switch (a.to)
             {
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.SPLASHED:
-                    e = new ChronicleEvent("Landing");
-                    e.Data.Add("vessel", a.host.vesselName);
-                    e.Data.Add("body", a.host.mainBody.bodyName);
-                    if (a.host.GetCrewCount() > 0) e.Data.Add("crew", a.host.GetCrewCount().ToString());
-                    AddChronicleEvent(e);
-                    CheckAchievements("Landed", a.host);
+                    if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLanding) return;
+                    if (Planetarium.GetUniversalTime() < lastLanding + SpaceAgeChronicleSettings.MinLandingInterval)
+                    {
+                        Core.Log("Landing is not logged (last landing: " + lastLanding + "; current UT:" + Planetarium.GetUniversalTime() + ").");
+                        return;
+                    }
+                    lastLanding = Planetarium.GetUniversalTime();
+                    e.Type = "Landing";
+                    CheckAchievements("Landing", a.host);
                     break;
-                case Vessel.Situations.ESCAPING:
                 case Vessel.Situations.SUB_ORBITAL:
+                case Vessel.Situations.ESCAPING:
                     CheckAchievements("Flyby", a.host);
                     break;
                 case Vessel.Situations.ORBITING:
+                    if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackOrbit) return;
+                    e.Type = "Orbit";
                     CheckAchievements("Orbit", a.host);
                     break;
             }
+            if ((e.Type != null) && (e.Type != "")) AddChronicleEvent(e);
         }
 
         public void OnFundsChanged(double v, TransactionReasons tr)

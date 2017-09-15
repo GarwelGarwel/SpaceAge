@@ -13,7 +13,6 @@ namespace SpaceAge
             set { time = value; }
         }
 
-
         public string Type
         {
             get { return type; }
@@ -56,6 +55,8 @@ namespace SpaceAge
                 switch (Type)
                 {
                     case "Launch": return GetString("vessel") + " launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "Landing": return GetString("vessel") + " landed on " + GetString("body") + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "");
+                    case "Orbit": return GetString("vessel") + " entered orbit around " + GetString("body") + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "");
                     case "Recovery": return GetString("vessel") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case "Destroy": return GetString("vessel") + " was destroyed.";
                     case "Death": return GetString("kerbal") + " died.";
@@ -64,7 +65,6 @@ namespace SpaceAge
                     case "StructureCollapsed": return GetString("facility") + " collapsed.";
                     case "TechnologyResearched": return GetString("tech") + " was researched.";
                     case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influencce.";
-                    case "Landing": return GetString("vessel") + " landed on " + GetString("body") + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "");
                     case "Custom": return GetString("description");
                 }
                 return "Something happened.";
