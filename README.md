@@ -1,6 +1,6 @@
 # SpaceAge
 
-Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v. 0.2, it has two modules, the Chronicle and Achievements, implemented (see below).
+Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v. 0.2.1, it has two modules, the Chronicle and Achievements, implemented (see below).
 
 The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an occasional NRE or freezeup are possible. Backward compatibility between versions is not guaranteed. Please report errors in the Issues tab or in the forum post.
 
@@ -8,6 +8,8 @@ The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an 
 
 The Chronicle module shows a history of notable events in the playthrough (adjustable in Difficulty Settings):
 - launches
+- orbiting (disabled by default)
+- landings
 - vessel recoveries
 - vessel destruction
 - deaths
@@ -17,7 +19,7 @@ The Chronicle module shows a history of notable events in the playthrough (adjus
 - tech nodes discoveries
 - changes of SOI
 
-You can also add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
+You can also manually add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
 
 **Achievements**
 
@@ -25,9 +27,9 @@ Achievements module shows your playthrough's statistics, records, and firsts. Un
 
 Currently, the module tracks this data:
 - total (lifetime) income
-- number of launches (crewed and total)
+- number of launched and lost vessels and kerbals
 - total mass of vessels launched
-- total number of kerbals launched
+- total number of planted flags
 - heaviest vessel launched
 - most complex (by parts count) vessel launched
 - max crew in a vessel (on launch)
@@ -38,7 +40,7 @@ Currently, the module tracks this data:
 For every celestial body, it tracks:
 - total number of landings (and, separately, crewed landings)
 - the masses of the heaviest vessels that landed on or orbited the celestial body
-- the first flybys, orbits, and landings on the body (crewed and overall)
+- the first flybys, orbits, landings, and flags on the body (crewed and overall)
 
 **Configuring your own achievements**
 
@@ -61,9 +63,9 @@ The following events are available for `onEvent` field (for events in *italic* y
 - `StructureCollapsed`
 - `TechnologyResearched`
 - *`SOIChange`*
-- *`Landed`*
 - *`Flyby`*
 - *`Orbit`*
+- *`Landing`*
 - `Income`
 - `Expense`
 

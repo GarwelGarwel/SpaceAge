@@ -405,7 +405,6 @@ namespace SpaceAge
         public void OnLaunch(EventReport report)
         {
             Core.Log("OnLaunch(<" + report.eventType + ", " + report.origin + ", " + report.sender + ">)", Core.LogLevel.Important);
-            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLaunch) return;
             if (!IsVesselEligible(FlightGlobals.ActiveVessel))
             {
                 Core.Log("Vessel is ineligible due to being " + FlightGlobals.ActiveVessel.vesselType);
@@ -421,16 +420,16 @@ namespace SpaceAge
                 Core.Log("Fake launch due to main body: " + FlightGlobals.ActiveVessel.mainBody.name + ", mission time: " + FlightGlobals.ActiveVessel.missionTime);
                 return;
             }
+            CheckAchievements("Launch", FlightGlobals.ActiveVessel);
+            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLaunch) return;
             ChronicleEvent e = new ChronicleEvent("Launch", "vessel", FlightGlobals.ActiveVessel.vesselName);
             if (FlightGlobals.ActiveVessel.GetCrewCount() > 0) e.Data.Add("crew", FlightGlobals.ActiveVessel.GetCrewCount().ToString());
             AddChronicleEvent(e);
-            CheckAchievements("Launch", FlightGlobals.ActiveVessel);
         }
 
         public void OnVesselRecovery(ProtoVessel v, bool b)
         {
             Core.Log("OnVesselRecovery('" + v.vesselName + "', " + b + ")", Core.LogLevel.Important);
-            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackRecovery) return;
             Core.Log("missionTime = " + v.missionTime + "; launchTime = " + v.launchTime + "; autoClean = " + v.autoClean);
             if (!IsVesselEligible(v.vesselRef))
             {
@@ -442,72 +441,73 @@ namespace SpaceAge
                 Core.Log(v.vesselName + " has not been launched. NO adding to Chronicle.", Core.LogLevel.Important);
                 return;
             }
+            CheckAchievements("Recovery", v.vesselRef);
+            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackRecovery) return;
             ChronicleEvent e = new ChronicleEvent("Recovery", "vessel", v.vesselName);
             if (v.GetVesselCrew().Count > 0) e.Data.Add("crew", v.GetVesselCrew().Count.ToString());
             AddChronicleEvent(e);
-            CheckAchievements("Recovery", v.vesselRef);
         }
 
         public void OnVesselDestroy(Vessel v)
         {
             Core.Log("OnVesselDestroy('" + v.vesselName + "')", Core.LogLevel.Important);
-            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDestroy) return;
             if (!IsVesselEligible(v))
             {
                 Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.", Core.LogLevel.Important);
                 return;
             }
-            AddChronicleEvent(new ChronicleEvent("Destroy", "vessel", v.vesselName));
             CheckAchievements("Destroy", v);
+            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDestroy) return;
+            AddChronicleEvent(new ChronicleEvent("Destroy", "vessel", v.vesselName));
         }
 
         public void OnCrewKilled(EventReport report)
         {
             Core.Log("OnCrewKilled", Core.LogLevel.Important);
+            CheckAchievements("Death", report?.origin?.vessel?.mainBody);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDeath) return;
             AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report?.sender));
-            CheckAchievements("Death", report?.origin?.vessel?.mainBody);
         }
 
         public void OnFlagPlanted(Vessel v)
         {
             Core.Log("OnFlagPlanted('" + v.vesselName + "')", Core.LogLevel.Important);
+            CheckAchievements("FlagPlant", v);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackFlagPlant) return;
             AddChronicleEvent(new ChronicleEvent("FlagPlant", "body", v.mainBody.name));
-            CheckAchievements("FlagPlant", v);
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
         {
             Core.Log("OnFacilityUpgraded('" + facility.name + "', " + level + ")", Core.LogLevel.Important);
+            CheckAchievements("FacilityUpgraded");
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackFacilityUpgraded) return;
             AddChronicleEvent(new ChronicleEvent("FacilityUpgraded", "facility", facility.name, "level", (level + 1).ToString()));
-            CheckAchievements("FacilityUpgraded");
         }
 
         public void OnStructureCollapsed(DestructibleBuilding structure)
         {
             Core.Log("OnStructureCollapsed('" + structure.name + "')", Core.LogLevel.Important);
+            CheckAchievements("StructureCollapsed");
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackStructureCollapsed) return;
             AddChronicleEvent(new ChronicleEvent("StructureCollapsed", "facility", structure.name));
-            CheckAchievements("StructureCollapsed");
         }
 
         public void OnTechnologyResearched(GameEvents.HostTargetAction<RDTech, RDTech.OperationResult> a)
         {
             Core.Log("OnTechnologyResearched(<'" + a.host.name + "', '" + a.target.ToString() + "'>)", Core.LogLevel.Important);
+            CheckAchievements("TechnologyResearched");
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackTechnologyResearched) return;
             AddChronicleEvent(new ChronicleEvent("TechnologyResearched", "tech", a.host.title));
-            CheckAchievements("TechnologyResearched");
         }
 
         public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> e)
         {
             Core.Log("OnSOIChanged(<'" + e.from.name + "', '" + e.to.name + "', '" + e.host.vesselName + "'>)", Core.LogLevel.Important);
-            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange) return;
             if (!IsVesselEligible(e.host)) return;
-            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.name));
             CheckAchievements("SOIChange", e.to, e.host);
+            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange) return;
+            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.name));
         }
 
         double lastLanding = 0;
@@ -523,14 +523,13 @@ namespace SpaceAge
             {
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.SPLASHED:
-                    if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLanding) return;
                     if (Planetarium.GetUniversalTime() < lastLanding + SpaceAgeChronicleSettings.MinLandingInterval)
                     {
                         Core.Log("Landing is not logged (last landing: " + lastLanding + "; current UT:" + Planetarium.GetUniversalTime() + ").");
                         return;
                     }
                     lastLanding = Planetarium.GetUniversalTime();
-                    e.Type = "Landing";
+                    if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLanding) e.Type = "Landing";
                     CheckAchievements("Landing", a.host);
                     break;
                 case Vessel.Situations.SUB_ORBITAL:
@@ -538,8 +537,7 @@ namespace SpaceAge
                     CheckAchievements("Flyby", a.host);
                     break;
                 case Vessel.Situations.ORBITING:
-                    if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackOrbit) return;
-                    e.Type = "Orbit";
+                    if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackOrbit) e.Type = "Orbit";
                     CheckAchievements("Orbit", a.host);
                     break;
             }
