@@ -53,18 +53,21 @@ namespace SpaceAge
         public string FullName
         { get { return GetFullName(Proto.Name, Body); } }
 
+        public override string ToString()
+        { return (Time != Double.NaN ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : "")); }
+
         public bool Register(Achievement old)
         {
-            Core.Log("Registering candidate achievement: " + (Time != Double.NaN ? KSPUtil.PrintDateCompact(Time, true) : "") + " " + Title);
-            if (old != null) Core.Log("Old achievement: " + (old.Time != Double.NaN ? KSPUtil.PrintDateCompact(old.Time, true) : "") + " " + old.Title + ((old.Value != 0 ? ("(" + old.Value + ")") : "")));
+            Core.Log("Registering candidate achievement: " + this + ".");
+            if (old != null) Core.Log("Old achievement: " + old + ".");
             else Core.Log("Old achievement of this type does not exist.");
-            bool res = false;
-            if ((old != null) && ((old.Proto != Proto) || (old.Body != Body))) return false;
-            if (Proto.CrewedOnly && !crewed)
+            if (invalid)
             {
-                Core.Log("This candidate achievement was with an uncrewed vessel. Terminating.");
+                Core.Log("This candidate achievement is invalid. Terminating.");
                 return false;
             }
+            bool res = false;
+            if ((old != null) && ((old.Proto != Proto) || (old.Body != Body))) return false;
             switch (Proto.Type)
             {
                 case ProtoAchievement.Types.Total:
@@ -117,7 +120,11 @@ namespace SpaceAge
 
         public Achievement(ProtoAchievement proto, CelestialBody body = null, Vessel vessel = null, double value = 0)
         {
-            if ((vessel != null) && (vessel.GetCrewCount() > 0)) crewed = true;
+            if (proto == null)
+            {
+                invalid = true;
+                return;
+            }
             Proto = proto;
             if (body != null) Body = body.name;
             if (Proto.HasTime) Time = Planetarium.GetUniversalTime();
@@ -131,8 +138,9 @@ namespace SpaceAge
                     case ProtoAchievement.ValueTypes.Funds: Value = value; break;
                     default: Value = 1; break;
                 }
+            if (proto.CrewedOnly && ((vessel == null) || (vessel.GetCrewCount() == 0))) invalid = true;
         }
 
-        bool crewed = false;
+        bool invalid = false;
     }
 }
