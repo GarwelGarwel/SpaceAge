@@ -41,13 +41,16 @@ namespace SpaceAge
         public bool newestFirst = true;
 
         [GameParameters.CustomIntParameterUI("Achievements per Page", toolTip = "How many Chronicle entries to show in one page", minValue = 5, maxValue = 25, stepSize = 5)]
-        public int achievementsPerPage = 10;
+        public int achievementsPerPage = 15;
 
         public static int AchievementsPerPage
         {
             get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage; }
             set { HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage = value; }
         }
+
+        [GameParameters.CustomParameterUI("Import Stock Achievements", toolTip = "Try to import applicable achievements saved by stock ProgressTracking system. Use when the mod is installed/changed mid-game")]
+        public bool importStockAchievements = false;
 
         [GameParameters.CustomParameterUI("Track Launch Events", toolTip = "Track and save Launch events in the Chronicle")]
         public bool trackLaunch = true;

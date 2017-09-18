@@ -7,18 +7,21 @@ namespace SpaceAge
 {
     class ChronicleEvent
     {
+        double time;
         public double Time
         {
             get { return time; }
             set { time = value; }
         }
 
+        string type;
         public string Type
         {
             get { return type; }
             set { type = value; }
         }
 
+        Dictionary<string, string> data = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         public Dictionary<string, string> Data
         {
             get { return data; }
@@ -26,27 +29,16 @@ namespace SpaceAge
         }
 
         public bool HasData(string key)
-        {
-            return Data.ContainsKey(key);
-        }
+        { return Data.ContainsKey(key); }
 
         public string GetString(string key)
-        {
-            string r;
-            Data.TryGetValue(key, out r);
-            return r;
-        }
+        { return HasData(key) ? Data[key] : null; }
 
         public int GetInt(string key)
         {
-            string r;
-            Data.TryGetValue(key, out r);
-            try { return int.Parse(r); }
-            catch (FormatException e) { return 0; }
+            try { return HasData(key) ? int.Parse(Data[key]) : 0; }
+            catch (FormatException) { return 0; }
         }
-
-        public string Name
-        { get { return Type.ToString(); } }
 
         public string Description
         {
@@ -65,6 +57,7 @@ namespace SpaceAge
                     case "StructureCollapsed": return GetString("facility") + " collapsed.";
                     case "TechnologyResearched": return GetString("tech") + " was researched.";
                     case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influencce.";
+                    case "POIDiscovery": return GetString("id") + " anomaly was discovered on " + GetString("body") + ".";
                     case "Custom": return GetString("description");
                 }
                 return "Something happened.";
@@ -110,9 +103,5 @@ namespace SpaceAge
 
         public ChronicleEvent(ConfigNode node)
         { ConfigNode = node; }
-
-        double time;
-        string type;
-        Dictionary<string, string> data = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
     }
 }

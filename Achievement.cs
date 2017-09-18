@@ -53,54 +53,34 @@ namespace SpaceAge
         public string FullName
         { get { return GetFullName(Proto.Name, Body); } }
 
-        public bool Register(bool useCurrentTime = true)
+        public bool Register(Achievement old)
         {
-            if (Proto.ExcludeHome && (Body == FlightGlobals.GetHomeBodyName())) return false;
+            Core.Log("Registering candidate achievement: " + (Time != Double.NaN ? KSPUtil.PrintDateCompact(Time, true) : "") + " " + Title);
+            if (old != null) Core.Log("Old achievement: " + (old.Time != Double.NaN ? KSPUtil.PrintDateCompact(old.Time, true) : "") + " " + old.Title + ((old.Value != 0 ? ("(" + old.Value + ")") : "")));
+            else Core.Log("Old achievement of this type does not exist.");
+            bool res = false;
+            if ((old != null) && ((old.Proto != Proto) || (old.Body != Body))) return false;
+            if (Proto.CrewedOnly && !crewed)
+            {
+                Core.Log("This candidate achievement was with an uncrewed vessel. Terminating.");
+                return false;
+            }
             switch (Proto.Type)
             {
                 case ProtoAchievement.Types.Total:
-                    Value++;
-                    return true;
+                    if (old != null) Value += old.Value;
+                    res = true;
+                    break;
                 case ProtoAchievement.Types.Max:
-                    return false;
+                    if ((old == null) || (Value > old.Value)) res = true;
+                    break;
                 case ProtoAchievement.Types.First:
-                    if (!Double.IsNaN(Time)) return false;
-                    Time = Planetarium.GetUniversalTime();
-                    return true;
+                    if ((old == null) || (Time < old.Time)) res = true;
+                    break;
             }
-            return false;
-        }
-
-        public bool Register(double value, bool useCurrentTime = true)
-        {
-            switch (Proto.Type)
-            {
-                case ProtoAchievement.Types.Total:
-                    Value += value;
-                    return true;
-                case ProtoAchievement.Types.Max:
-                    if (value <= Value) return false;
-                    Value = value;
-                    if (useCurrentTime) Time = Planetarium.GetUniversalTime();
-                    return true;
-                case ProtoAchievement.Types.First:
-                    return Register(useCurrentTime);
-            }
-            return false;
-        }
-
-        public bool Register(Vessel vessel = null, double value = 0, bool useCurrentTime = true)
-        {
-            if (Proto.CrewedOnly && (vessel.GetCrewCount() == 0)) return false;
-            switch (Proto.ValueType)
-            {
-                case ProtoAchievement.ValueTypes.Cost: return Register(Core.VesselCost(vessel), useCurrentTime);
-                case ProtoAchievement.ValueTypes.Mass: return Register(vessel.totalMass, useCurrentTime);
-                case ProtoAchievement.ValueTypes.PartsCount: return Register(vessel.parts.Count, useCurrentTime);
-                case ProtoAchievement.ValueTypes.CrewCount: return Register(vessel.GetCrewCount(), useCurrentTime);
-                case ProtoAchievement.ValueTypes.Funds: return Register(value, useCurrentTime);
-            }
-            return Register(1, useCurrentTime);
+            if (res) Core.Log("Registration successful: achievement completed!");
+            else Core.Log("Registration failed: this doesn't qualify as an achievement.");
+            return res;
         }
 
         public ConfigNode ConfigNode
@@ -116,12 +96,16 @@ namespace SpaceAge
             }
             set
             {
-                if (value.name != "ACHIEVEMENT") return;
-                Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
-                Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
-                if (Proto.IsBodySpecific && value.HasValue("body")) Body = value.GetValue("body");
-                if (Proto.HasTime && value.HasValue("time")) Time = Double.Parse(value.GetValue("time"));
-                if (Proto.HasValue && value.HasValue("value")) Value = Double.Parse(value.GetValue("value"));
+                try
+                {
+                    if (value.name != "ACHIEVEMENT") throw new Exception();
+                    Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
+                    Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
+                    if (Proto.IsBodySpecific && value.HasValue("body")) Body = value.GetValue("body");
+                    if (Proto.HasTime && value.HasValue("time")) Time = Double.Parse(value.GetValue("time"));
+                    if (Proto.HasValue && value.HasValue("value")) Value = Double.Parse(value.GetValue("value"));
+                }
+                catch (Exception) { throw new ArgumentException("Achievement config node is incorrect: " + value); }
             }
         }
 
@@ -130,5 +114,25 @@ namespace SpaceAge
 
         public Achievement(ConfigNode node)
         { ConfigNode = node; }
+
+        public Achievement(ProtoAchievement proto, CelestialBody body = null, Vessel vessel = null, double value = 0)
+        {
+            if ((vessel != null) && (vessel.GetCrewCount() > 0)) crewed = true;
+            Proto = proto;
+            if (body != null) Body = body.name;
+            if (Proto.HasTime) Time = Planetarium.GetUniversalTime();
+            if (Proto.HasValue)
+                switch (Proto.ValueType)
+                {
+                    case ProtoAchievement.ValueTypes.Cost: Value = Core.VesselCost(vessel); break;
+                    case ProtoAchievement.ValueTypes.Mass: Value = vessel.totalMass; break;
+                    case ProtoAchievement.ValueTypes.PartsCount: Value = vessel.parts.Count; break;
+                    case ProtoAchievement.ValueTypes.CrewCount: Value = vessel.GetCrewCount(); break;
+                    case ProtoAchievement.ValueTypes.Funds: Value = value; break;
+                    default: Value = 1; break;
+                }
+        }
+
+        bool crewed = false;
     }
 }

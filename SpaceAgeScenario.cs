@@ -40,6 +40,7 @@ namespace SpaceAge
             GameEvents.onVesselSOIChanged.Add(OnSOIChanged);
             GameEvents.onVesselSituationChange.Add(OnSituationChanged);
             GameEvents.OnFundsChanged.Add(OnFundsChanged);
+            GameEvents.OnProgressComplete.Add(OnProgressCompleted);
 
             // Adding buttons to Toolbar or AppLauncher
             if (ToolbarManager.ToolbarAvailable && Core.UseBlizzysToolbar)
@@ -59,48 +60,9 @@ namespace SpaceAge
                 appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
             }
 
-            funds = Funding.Instance.Funds;
+            funds = (Funding.Instance != null) ? Funding.Instance.Funds : Double.NaN;
             InitializeProtoAchievements();
-        }
-
-        void InitializeProtoAchievements()
-        {
-            if (protoAchievements != null) return;
-            Core.Log("Initializing ProtoAchievements...");
-            ConfigNode config = ConfigNode.Load(KSPUtil.ApplicationRootPath + "/GameData/SpaceAge/achievements.cfg");
-            protoAchievements = new List<ProtoAchievement>();
-            foreach (ConfigNode n in config.GetNodes())
-                protoAchievements.Add(new ProtoAchievement(n));
-            Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
-        }
-
-        void ParseProgressTracking()
-        {
-            Core.Log(HighLogic.CurrentGame.scenarios.Count + " scenarios found.");
-            ConfigNode trackingNode = null;
-            foreach (ProtoScenarioModule psm in HighLogic.CurrentGame.scenarios)
-                if (psm.moduleName == "ProgressTracking") trackingNode = psm.GetData();
-            if (trackingNode == null)
-            {
-                Core.Log("ProgressTracking scenario not found!", Core.LogLevel.Important);
-                return;
-            }
-            if (trackingNode.HasNode("Progress"))
-                trackingNode = trackingNode.GetNode("Progress");
-            else
-            {
-                Core.Log("ProgressTracking scenario does not contain Progress node!", Core.LogLevel.Error);
-                return;
-            }
-            Core.Log("ProgressTracking config node contains " + trackingNode.CountNodes + " sub-nodes.");
-            Achievement a = null;
-            foreach (ProtoAchievement pa in protoAchievements)
-                if ((pa.StockSynonym != null) && (pa.StockSynonym != "") && (trackingNode.HasNode(pa.StockSynonym)))
-                {
-                    Core.Log(pa.StockSynonym + " progress node found.");
-                    a = new SpaceAge.Achievement(pa);
-                    a.Time = Double.Parse(trackingNode.GetValue(pa.StockCompletedString));
-                }
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().importStockAchievements) ParseProgressTracking();
         }
 
         public void OnDisable()
@@ -120,6 +82,7 @@ namespace SpaceAge
             GameEvents.onVesselSOIChanged.Remove(OnSOIChanged);
             GameEvents.onVesselSituationChange.Remove(OnSituationChanged);
             GameEvents.OnFundsChanged.Remove(OnFundsChanged);
+            GameEvents.OnProgressComplete.Remove(OnProgressCompleted);
 
             // Removing Toolbar & AppLauncher buttons
             if (toolbarButton != null) toolbarButton.Destroy();
@@ -165,8 +128,12 @@ namespace SpaceAge
                     if (n.name == "ACHIEVEMENT")
                     {
                         Core.Log("Processing Achievement node #" + ++i + "...");
-                        Achievement a = new Achievement(n);
-                        achievements.Add(a.FullName, a);
+                        try
+                        {
+                            Achievement a = new Achievement(n);
+                            achievements.Add(a.FullName, a);
+                        }
+                        catch (ArgumentException e) { Core.Log(e.Message); }
                     }
             }
         }
@@ -175,7 +142,77 @@ namespace SpaceAge
         {
             Core.ShowNotification(e.Type + " event detected.");
             chronicle.Add(e);
-            if (window != null) Invalidate();
+            Invalidate();
+        }
+
+        void InitializeProtoAchievements()
+        {
+            if (protoAchievements != null) return;
+            Core.Log("Initializing ProtoAchievements...");
+            ConfigNode config = ConfigNode.Load(KSPUtil.ApplicationRootPath + "/GameData/SpaceAge/achievements.cfg");
+            protoAchievements = new List<ProtoAchievement>();
+            foreach (ConfigNode n in config.GetNodes())
+                protoAchievements.Add(new ProtoAchievement(n));
+            Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
+        }
+
+        int achievementsImported = 0;
+        void ParseProgressNodes(ConfigNode node, CelestialBody body)
+        {
+            Core.Log(node.name + " config node contains " + node.CountNodes + " sub-nodes.");
+            Achievement a = null;
+            foreach (ProtoAchievement pa in protoAchievements)
+                if ((pa.StockSynonym != null) && (pa.StockSynonym != "") && (node.HasNode(pa.StockSynonym)))
+                {
+                    ConfigNode n = node.GetNode(pa.StockSynonym);
+                    Core.Log(pa.StockSynonym + " node found for " + pa.Name + ".");
+                    Core.Log(n.ToString());
+                    a = new SpaceAge.Achievement(pa, body);
+                    if (n.HasValue("completed"))
+                        a.Time = Double.Parse(n.GetValue("completed"));
+                    else if (n.HasValue("completedManned"))
+                            a.Time = Double.Parse(n.GetValue("completedManned"));
+                    else if (!pa.CrewedOnly && n.HasValue("completedUnmanned"))
+                        a.Time = Double.Parse(n.GetValue("completedUnmanned"));
+                    else
+                    {
+                        Core.Log("Time value not found, achievement has not been completed.");
+                        continue;
+                    }
+                    Core.Log("Found candidate achievement: " + KSPUtil.PrintDateCompact(a.Time, true) + " " + a.Title);
+                    if (CheckAchievement(a)) achievementsImported++;
+                }
+        }
+
+        void ParseProgressTracking()
+        {
+            ConfigNode trackingNode = null;
+            foreach (ProtoScenarioModule psm in HighLogic.CurrentGame.scenarios)
+                if (psm.moduleName == "ProgressTracking")
+                {
+                    trackingNode = psm.GetData();
+                    break;
+                }
+            if (trackingNode == null)
+            {
+                Core.Log("ProgressTracking scenario not found!", Core.LogLevel.Important);
+                return;
+            }
+            if (trackingNode.HasNode("Progress"))
+                trackingNode = trackingNode.GetNode("Progress");
+            else
+            {
+                Core.Log("ProgressTracking scenario does not contain Progress node!", Core.LogLevel.Important);
+                Core.Log(trackingNode.ToString());
+                return;
+            }
+            achievementsImported = 0;
+            ParseProgressNodes(trackingNode, null);
+            foreach (CelestialBody b in FlightGlobals.Bodies)
+                if (trackingNode.HasNode(b.name))
+                    ParseProgressNodes(trackingNode.GetNode(b.name), b);
+            if (achievementsImported > 0)
+                Core.ShowNotification(achievementsImported + " old achievements imported from stock ProgressTracking system.");
         }
 
         public static ProtoAchievement FindProtoAchievement(string name)
@@ -187,22 +224,17 @@ namespace SpaceAge
             return null;
         }
 
-        public Achievement FindAchievement(string name, CelestialBody body = null)
-        {
-            try { return achievements[Achievement.GetFullName(name, body?.name)]; }
-            catch (KeyNotFoundException) { return null; }
-        }
+        public Achievement FindAchievement(string fullname)
+        { return achievements.ContainsKey(fullname) ? achievements[fullname] : null; }
 
-        public void RegisterAchievement(Achievement ach, Vessel vessel = null, double value = Double.NaN, bool useCurrentTime = true)
+        bool CheckAchievement(Achievement ach)
         {
-            Achievement a = achievements.ContainsKey(ach.FullName) ? achievements[ach.FullName] : ach;
-            if (a.Register(vessel, value))
+            if (ach.Register(FindAchievement(ach.FullName)))
             {
-                Core.Log("Achievement registered.");
-                achievements[a.FullName] = a;
-                if (a.Proto.Type != ProtoAchievement.Types.Total)
-                    MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", a.Title + " achievement completed!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
+                achievements[ach.FullName] = ach;
+                return true;
             }
+            return false;
         }
 
         void CheckAchievements(string ev, CelestialBody body = null, Vessel vessel = null, double value = 0)
@@ -211,10 +243,10 @@ namespace SpaceAge
             foreach (ProtoAchievement pa in protoAchievements)
                 if (pa.OnEvent == ev)
                 {
-                    Core.Log("Checking ProtoAchievement '" + pa.Name + "'...");
-                    Achievement ach = new Achievement(pa);
-                    ach.Body = body?.name;
-                    RegisterAchievement(ach, vessel, value);
+                    Achievement ach = new Achievement(pa, body, vessel, value);
+                    if (CheckAchievement(ach))
+                        if (pa.Type != ProtoAchievement.Types.Total)
+                            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
                 }
         }
 
@@ -231,7 +263,7 @@ namespace SpaceAge
             if (a == null) return;
             grid.Add(new DialogGUILabel(a.Title, true));
             grid.Add(new DialogGUILabel(a.DisplayValue, true));
-            grid.Add(new DialogGUILabel(a.Proto.HasTime ? KSPUtil.PrintDate(a.Time, true) : "", true));
+            grid.Add(new DialogGUILabel(a.Proto.HasTime ? KSPUtil.PrintDateCompact(a.Time, true) : "", true));
         }
 
         List<Achievement> SortedAchievements
@@ -243,7 +275,7 @@ namespace SpaceAge
                     if (!pa.IsBodySpecific && achievements.ContainsKey(pa.Name)) res.Add(FindAchievement(pa.Name));
                 foreach (CelestialBody b in FlightGlobals.Bodies)
                     foreach (ProtoAchievement pa in protoAchievements)
-                        if (pa.IsBodySpecific && achievements.ContainsKey(Achievement.GetFullName(pa.Name, b.name))) res.Add(FindAchievement(pa.Name, b));
+                        if (pa.IsBodySpecific && achievements.ContainsKey(Achievement.GetFullName(pa.Name, b.name))) res.Add(FindAchievement(Achievement.GetFullName(pa.Name, b.name)));
                 return res;
             }
         }
@@ -254,6 +286,7 @@ namespace SpaceAge
             {
                 List<DialogGUIBase> gridContents;
                 if (Page > PageCount) Page = PageCount;
+                if (PageCount == 0) Page = 1;
                 switch (currentTab)
                 {
                     case Tabs.Chronicle:
@@ -268,7 +301,7 @@ namespace SpaceAge
                                     new DialogGUIButton<int>("X", DeleteItem, Core.NewestFirst ? (chronicle.Count - i - 1) : i)));
                         }
                         return new DialogGUIVerticalLayout(
-                            new DialogGUIVerticalLayout(windowWidth - 10, 0f, 5f, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, gridContents.ToArray()),
+                            new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, gridContents.ToArray()),
                             (HighLogic.LoadedSceneIsFlight ? new DialogGUIHorizontalLayout() :
                             new DialogGUIHorizontalLayout(
                                 windowWidth - 20,
@@ -278,17 +311,11 @@ namespace SpaceAge
                                 new DialogGUIButton("Export", ExportChronicle))));
 
                     case Tabs.Achievements:
-                        gridContents = new List<DialogGUIBase>(SpaceAgeChronicleSettings.AchievementsPerPage * 3);
+                        gridContents = new List<DialogGUIBase>(LinesPerPage * 3);
                         int startingIndex = (Page - 1) * LinesPerPage;
                         Core.Log("Displaying achievements starting from " + startingIndex + " out of " + achievements.Count + "...");
                         foreach (Achievement a in SortedAchievements.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
                             DisplayAchievement(a, gridContents);
-                        //foreach (ProtoAchievement pa in protoAchievements)
-                        //    if (!pa.IsBodySpecific) DisplayAchievement(FindAchievement(pa.Name), gridContents);
-                        //Core.Log("Displaying body achievements...");
-                        //foreach (CelestialBody b in FlightGlobals.Bodies)
-                        //    foreach (ProtoAchievement pa in protoAchievements)
-                        //        if (pa.IsBodySpecific) DisplayAchievement(FindAchievement(pa.Name, b), gridContents);
                         return new DialogGUIGridLayout(new RectOffset(5, 5, 0, 0), new Vector2((windowWidth - 10) / 3 - 3, 20), new Vector2(5, 5), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleLeft, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 3, gridContents.ToArray());
                 }
                 return null;
@@ -339,8 +366,11 @@ namespace SpaceAge
 
         public void Invalidate()
         {
-            UndisplayData();
-            DisplayData();
+            if (window != null)
+            {
+                UndisplayData();
+                DisplayData();
+            }
         }
 
         void SelectTab(Tabs t)
@@ -536,7 +566,7 @@ namespace SpaceAge
             if (!IsVesselEligible(e.host, false)) return;
             CheckAchievements("SOIChange", e.to, e.host);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange) return;
-            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.bodyDisplayName));
+            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.bodyName));
         }
 
         double lastLanding = 0;
@@ -546,7 +576,7 @@ namespace SpaceAge
             if (!IsVesselEligible(a.host, true)) return;
             ChronicleEvent e = new ChronicleEvent();
             e.Data.Add("vessel", a.host.vesselName);
-            e.Data.Add("body", a.host.mainBody.bodyDisplayName);
+            e.Data.Add("body", a.host.mainBody.bodyName);
             if (a.host.GetCrewCount() > 0) e.Data.Add("crew", a.host.GetCrewCount().ToString());
             switch (a.to)
             {
@@ -576,10 +606,26 @@ namespace SpaceAge
         public void OnFundsChanged(double v, TransactionReasons tr)
         {
             Core.Log("OnFundsChanged(" + v + ", " + tr + ")");
+            if (Funding.Instance == null)
+            {
+                Core.Log("Funding is not instantiated. Terminating.");
+                return;
+            }
             Core.Log("Current funds: " + Funding.Instance.Funds + "; SpaceAgeScenario.funds = " + funds);
             if (v > funds) CheckAchievements("Income", v - funds);
             else CheckAchievements("Expense", funds - v);
             funds = v;
+        }
+
+        public void OnProgressCompleted(ProgressNode n)
+        {
+            Core.Log("OnProgressCompleted(" + n.Id + ")");
+            if (n is KSPAchievements.PointOfInterest)
+            {
+                Core.Log("Reached a point of interest: " + ((KSPAchievements.PointOfInterest)n).Id + " on " + ((KSPAchievements.PointOfInterest)n).body);
+                AddChronicleEvent(new ChronicleEvent("POIDiscovery", "body", ((KSPAchievements.PointOfInterest)n).body, "id", ((KSPAchievements.PointOfInterest)n).Id));
+                CheckAchievements("POIDiscovery", FlightGlobals.GetBodyByName(((KSPAchievements.PointOfInterest)n).body));
+            }
         }
     }
 }
