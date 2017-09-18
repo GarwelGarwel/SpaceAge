@@ -564,9 +564,14 @@ namespace SpaceAge
         {
             Core.Log("OnSOIChanged(<'" + e.from.name + "', '" + e.to.name + "', '" + e.host.vesselName + "'>)", Core.LogLevel.Important);
             if (!IsVesselEligible(e.host, false)) return;
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange)
+                AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.bodyName));
+            if (e.from.HasParent(e.to))
+            {
+                Core.Log("This is a return from a child body to its parent's SOI, therefore no SOIChange achievement here.");
+                return;
+            }
             CheckAchievements("SOIChange", e.to, e.host);
-            if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackSOIChange) return;
-            AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.bodyName));
         }
 
         double lastLanding = 0;
@@ -590,10 +595,6 @@ namespace SpaceAge
                     lastLanding = Planetarium.GetUniversalTime();
                     if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLanding) e.Type = "Landing";
                     CheckAchievements("Landing", a.host);
-                    break;
-                case Vessel.Situations.SUB_ORBITAL:
-                case Vessel.Situations.ESCAPING:
-                    CheckAchievements("Flyby", a.host);
                     break;
                 case Vessel.Situations.ORBITING:
                     if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackOrbit) e.Type = "Orbit";
