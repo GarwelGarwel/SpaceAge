@@ -1,6 +1,6 @@
 # SpaceAge
 
-Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v. 0.2.1, it has two modules, the Chronicle and Achievements, implemented (see below).
+Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v0.2, it has two modules, the Chronicle and Achievements, implemented (see below).
 
 The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an occasional NRE or freezeup are possible. Backward compatibility between versions is not guaranteed. Please report errors in the Issues tab or in the forum post.
 
@@ -8,12 +8,13 @@ The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an 
 
 The Chronicle module shows a history of notable events in the playthrough (adjustable in Difficulty Settings):
 - launches
-- orbiting (disabled by default)
+- orbiting
 - landings
 - vessel recoveries
 - vessel destruction
 - deaths
 - flag plants
+- anomaly discoveries (untested!)
 - KSC building upgrades
 - KSC structures damaged
 - tech nodes discoveries
@@ -29,7 +30,7 @@ Currently, the module tracks this data:
 - total (lifetime) income
 - number of launched and lost vessels and kerbals
 - total mass of vessels launched
-- total number of planted flags
+- total numbers of planted flags and discovered anomalies (untested)
 - heaviest vessel launched
 - most complex (by parts count) vessel launched
 - max crew in a vessel (on launch)
@@ -39,32 +40,36 @@ Currently, the module tracks this data:
 - number of destroyed KSC buildings
 
 For every celestial body, it tracks:
-- total number of landings (and, separately, crewed landings)
+- total numbers of landings (and, separately, crewed landings)
+- total numbers of discovered anomalies (untested)
 - the masses of the heaviest vessels that landed on or orbited the celestial body
-- the first flybys, orbits, landings, and flags on the body (crewed and overall)
+- the first flybys, orbits, and landings (crewed and overall) as well as flags planted on the body
+
+Space Age can parse your save data to find and import records of previous discoveries made by the stock ProgressTracking system. This option can be enabled in the settings (default is off). This is handy if you've installed the mod mid-game or added some new achievements to it. However, the stock system saves much less information, so Space Age can only learn so much from it.
 
 **Configuring your own achievements**
 
 You can easily add, modify or remove achievements by editing `achievements.cfg` file in the mod's directory. Each `ACHIEVEMENT` record there corresponds to one type of an achievement. The following fields are used:
 - `name` (obligatory): the internal unique name of the achievement
-- `title`: how the achievement is shown in the UI; the celestial body's name is added to it for body-specific achievements
+- `title`: how the achievement is displayed in the UI; the celestial body's name is added to it for body-specific achievements
 - `bodySpecific`: set to `true` if the achievement should be tracked separately for each celestial body (default is false)
 - `type` (obligatory): set to `Total`, `Max` or `First` to define the achievement's behaviour to either add values, select the highest values or just mark the first time the achievement is completed
 - `valueType` (only for `Total` and `Max` achievements): defines, which value to use for the achievement. Can be `Mass`, `PartsCount`, `CrewCount`, or `Funds` (only with `Income` or `Expense` events). Note that not every event is associated with a vessel, so sometimes you may not be able to access these values.
 - `onEvent` (obligatory): which event activates the achievemnt (see list below)
 - `crewedOnly`: set to `true` if the achievement is only activated when the vessel has crew
+- `stockSynonym`: id of the relevant achievement in the stock ProgressTracking system; only makes sense for `First` achievements
 
-The following events are available for `onEvent` field (for events in *italic* you can use mass, parts count, and crew count):
+The following events are available for `onEvent` field (for events in *italic* you can access mass, parts count, and crew count):
 - *`Launch`*
 - *`Recovery`*
 - *`Destroy`*
 - `Death`
 - `FlagPlant`
+- `AnomalyDiscovery` (untested)
 - `FacilityUpgraded`
 - `StructureCollapsed`
 - `TechnologyResearched`
 - *`SOIChange`*
-- *`Flyby`*
 - *`Orbit`*
 - *`Landing`*
 - `Income`
@@ -72,8 +77,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 
 **Future Plans**
 
-- Add parsing of the stock ProgressTracking system to load old achievements when Space Age is installed mid-game
-- MOAR events, achievements and data to track
+- MOAR events, achievements and data to track (requests sought!)
 - Trends: will draw graphs of your progress (e.g. funds earned)
 
 **Supported Mods**
