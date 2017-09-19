@@ -56,7 +56,7 @@ namespace SpaceAge
         public bool trackLaunch = true;
 
         [GameParameters.CustomParameterUI("Track Orbit Events", toolTip = "Track and save Orbit events in the Chronicle")]
-        public bool trackOrbit = false;
+        public bool trackOrbit = true;
 
         [GameParameters.CustomParameterUI("Track Landing Events", toolTip = "Track and save Landing events in the Chronicle")]
         public bool trackLanding = true;
@@ -93,5 +93,8 @@ namespace SpaceAge
 
         [GameParameters.CustomParameterUI("Track SOI Change Events", toolTip = "Track and save SOI Change events in the Chronicle")]
         public bool trackSOIChange = true;
+
+        [GameParameters.CustomParameterUI("Track Anomaly Discovery Events", toolTip = "Track and save anomaly discovery events in the Chronicle")]
+        public bool trackAnomalyDiscovery = true;
     }
 }
