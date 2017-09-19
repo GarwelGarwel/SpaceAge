@@ -141,6 +141,7 @@ namespace SpaceAge
         public void AddChronicleEvent(ChronicleEvent e)
         {
             Core.ShowNotification(e.Type + " event detected.");
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().unwarpOnEvents && (TimeWarp.CurrentRateIndex != 0)) TimeWarp.SetRate(0, false, !HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications);
             chronicle.Add(e);
             Invalidate();
         }
@@ -212,7 +213,7 @@ namespace SpaceAge
                 if (trackingNode.HasNode(b.name))
                     ParseProgressNodes(trackingNode.GetNode(b.name), b);
             if (achievementsImported > 0)
-                Core.ShowNotification(achievementsImported + " old achievements imported from stock ProgressTracking system.");
+                MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievements Import", achievementsImported + " old achievements imported from stock ProgressTracking system.", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.MESSAGE));
         }
 
         public static ProtoAchievement FindProtoAchievement(string name)

@@ -52,6 +52,9 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Import Stock Achievements", toolTip = "Try to import applicable achievements saved by stock ProgressTracking system. Use when the mod is installed/changed mid-game")]
         public bool importStockAchievements = false;
 
+        [GameParameters.CustomParameterUI("Unwarp on Chronicle Events", toolTip = "End time warp when tracked Chronicle events occur")]
+        public bool unwarpOnEvents = false;
+
         [GameParameters.CustomParameterUI("Track Launch Events", toolTip = "Track and save Launch events in the Chronicle")]
         public bool trackLaunch = true;
 

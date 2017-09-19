@@ -48,7 +48,7 @@ namespace SpaceAge
                 {
                     case "Launch": return GetString("vessel") + " was launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case "Landing": return GetString("vessel") + " landed on " + GetString("body") + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
-                    case "Orbit": return GetString("vessel") + " entered orbit around " + GetString("body") + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "Orbit": return GetString("vessel") + " entered orbit around " + GetString("body") + ".";
                     case "Recovery": return GetString("vessel") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case "Destroy": return GetString("vessel") + " was destroyed.";
                     case "Death": return GetString("kerbal") + " died.";
