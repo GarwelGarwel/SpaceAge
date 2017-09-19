@@ -56,7 +56,7 @@ namespace SpaceAge
                     case "FacilityUpgraded": return GetString("facility") + " was upgraded to level " + GetString("level") + ".";
                     case "StructureCollapsed": return GetString("facility") + " collapsed.";
                     case "TechnologyResearched": return GetString("tech") + " was researched.";
-                    case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influencce.";
+                    case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influence.";
                     case "AnomalyDiscovery": return GetString("id") + " anomaly was discovered on " + GetString("body") + ".";
                     case "Custom": return GetString("description");
                 }
