@@ -534,7 +534,7 @@ namespace SpaceAge
             Core.Log("OnFlagPlanted('" + v.vesselName + "')", Core.LogLevel.Important);
             CheckAchievements("FlagPlant", v);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackFlagPlant) return;
-            AddChronicleEvent(new ChronicleEvent("FlagPlant", "body", v.mainBody.bodyDisplayName));
+            AddChronicleEvent(new ChronicleEvent("FlagPlant", "body", v.mainBody.bodyName));
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
