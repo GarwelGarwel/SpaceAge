@@ -609,7 +609,7 @@ namespace SpaceAge
             Core.Log("OnFundsChanged(" + v + ", " + tr + ")");
             if (Funding.Instance == null)
             {
-                Core.Log("Funding is not instantiated. Terminating.");
+                Core.Log("Funding is not instantiated (perhaps because it is not a Career game). Terminating.");
                 return;
             }
             Core.Log("Current funds: " + Funding.Instance.Funds + "; SpaceAgeScenario.funds = " + funds);
@@ -624,8 +624,8 @@ namespace SpaceAge
             if (n is KSPAchievements.PointOfInterest)
             {
                 Core.Log("Reached a point of interest: " + ((KSPAchievements.PointOfInterest)n).Id + " on " + ((KSPAchievements.PointOfInterest)n).body);
-                AddChronicleEvent(new ChronicleEvent("POIDiscovery", "body", ((KSPAchievements.PointOfInterest)n).body, "id", ((KSPAchievements.PointOfInterest)n).Id));
-                CheckAchievements("POIDiscovery", FlightGlobals.GetBodyByName(((KSPAchievements.PointOfInterest)n).body));
+                if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAnomalyDiscovery) AddChronicleEvent(new ChronicleEvent("AnomalyDiscovery", "body", ((KSPAchievements.PointOfInterest)n).body, "id", ((KSPAchievements.PointOfInterest)n).Id));
+                CheckAchievements("AnomalyDiscovery", FlightGlobals.GetBodyByName(((KSPAchievements.PointOfInterest)n).body));
             }
         }
     }
