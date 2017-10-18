@@ -146,13 +146,13 @@ namespace SpaceAge
             Invalidate();
         }
 
+        #region ACHIEVEMENTS METHODS
         void InitializeProtoAchievements()
         {
             if (protoAchievements != null) return;
             Core.Log("Initializing ProtoAchievements...");
-            ConfigNode config = ConfigNode.Load(KSPUtil.ApplicationRootPath + "/GameData/SpaceAge/achievements.cfg");
             protoAchievements = new List<ProtoAchievement>();
-            foreach (ConfigNode n in config.GetNodes())
+            foreach (ConfigNode n in GameDatabase.Instance.GetConfigNodes("PROTOACHIEVEMENT"))
                 protoAchievements.Add(new ProtoAchievement(n));
             Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
         }
@@ -172,7 +172,7 @@ namespace SpaceAge
                     if (n.HasValue("completed"))
                         a.Time = Double.Parse(n.GetValue("completed"));
                     else if (n.HasValue("completedManned"))
-                            a.Time = Double.Parse(n.GetValue("completedManned"));
+                        a.Time = Double.Parse(n.GetValue("completedManned"));
                     else if (!pa.CrewedOnly && n.HasValue("completedUnmanned"))
                         a.Time = Double.Parse(n.GetValue("completedUnmanned"));
                     else
@@ -257,7 +257,8 @@ namespace SpaceAge
         void CheckAchievements(string ev, double v)
         { CheckAchievements(ev, null, null, v); }
 
-        // UI METHODS BELOW
+        #endregion
+        #region UI METHODS
 
         void DisplayAchievement(Achievement a, List<DialogGUIBase> grid)
         {
@@ -397,7 +398,7 @@ namespace SpaceAge
         }
 
         int PageCount
-        { get { return (int)System.Math.Ceiling((double) ((currentTab == Tabs.Chronicle) ? chronicle.Count : achievements.Count) / LinesPerPage); } }
+        { get { return (int)System.Math.Ceiling((double)((currentTab == Tabs.Chronicle) ? chronicle.Count : achievements.Count) / LinesPerPage); } }
 
         public void PageUp()
         {
@@ -457,7 +458,8 @@ namespace SpaceAge
             AddChronicleEvent(new SpaceAge.ChronicleEvent("Custom", "description", textInput));
         }
 
-        // EVENT HANDLERS BELOW--USED TO TRACK AND RECORD EVENTS
+        #endregion
+        #region EVENT HANDLERS
 
         bool IsVesselEligible(Vessel v, bool mustBeActive)
         { return (v.vesselType != VesselType.Debris) && (v.vesselType != VesselType.EVA) && (v.vesselType != VesselType.Flag) && (v.vesselType != VesselType.SpaceObject) && (v.vesselType != VesselType.Unknown) && (!mustBeActive || (v == FlightGlobals.ActiveVessel)); }
@@ -631,3 +633,4 @@ namespace SpaceAge
         }
     }
 }
+#endregion
