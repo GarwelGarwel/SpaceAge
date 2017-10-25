@@ -5,52 +5,26 @@ namespace SpaceAge
 {
     public class ProtoAchievement
     {
-        string name;
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
+        public string Name { get; set; }
 
         string title = null;
         public string Title
         {
-            get { return title ?? (Name + (IsBodySpecific ? " @ " : "")); }
-            set { title = value; }
+            get => title ?? (Name + (IsBodySpecific ? " @ " : ""));
+            set => title = value;
         }
 
-        bool bodySpecific = false;
-        public bool IsBodySpecific
-        {
-            get { return bodySpecific; }
-            set { bodySpecific = value; }
-        }
+        public bool IsBodySpecific { get; set; } = false;
 
-        bool excludeHome = false;
-        public bool ExcludeHome
-        {
-            get { return excludeHome; }
-            set { excludeHome = value; }
-        }
+        public bool ExcludeHome { get; set; } = false;
 
         public enum Types { Max, Total, First };
-        Types type;
-        public Types Type
-        {
-            get { return type; }
-            set { type = value; }
-        }
+        public Types Type { get; set; }
 
-        public bool HasValue
-        { get { return (Type == Types.Max) || (Type == Types.Total); } }
+        public bool HasValue => (Type == Types.Max) || (Type == Types.Total);
 
         public enum ValueTypes { None, Cost, Mass, PartsCount, CrewCount, Funds };
-        ValueTypes valueType = ValueTypes.None;
-        public ValueTypes ValueType
-        {
-            get { return valueType; }
-            set { valueType = value; }
-        }
+        public ValueTypes ValueType { get; set; } = ValueTypes.None;
 
         public string Unit
         {
@@ -67,32 +41,15 @@ namespace SpaceAge
             }
         }
 
-        public bool HasTime
-        { get { return (Type == Types.First) || (Type == Types.Max); } }
+        public bool HasTime => (Type == Types.First) || (Type == Types.Max);
 
-        string onEvent = "";
-        public string OnEvent
-        {
-            get { return onEvent; }
-            set { onEvent = value; }
-        }
+        public string OnEvent { get; set; } = "";
 
-        bool crewedOnly = false;
-        public bool CrewedOnly
-        {
-            get { return crewedOnly; }
-            set { crewedOnly = value; }
-        }
+        public bool CrewedOnly { get; set; } = false;
 
-        string stockSynonym = null;
-        public string StockSynonym
-        {
-            get { return stockSynonym; }
-            set { stockSynonym = value; }
-        }
+        public string StockSynonym { get; set; } = null;
 
-        public Achievement GetAchievement()
-        { return new SpaceAge.Achievement(this); }
+        public Achievement GetAchievement() => new SpaceAge.Achievement(this);
 
         public ConfigNode ConfigNode
         {
