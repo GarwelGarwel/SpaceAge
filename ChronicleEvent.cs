@@ -7,32 +7,15 @@ namespace SpaceAge
 {
     class ChronicleEvent
     {
-        double time;
-        public double Time
-        {
-            get { return time; }
-            set { time = value; }
-        }
+        public double Time { get; set; }
 
-        string type;
-        public string Type
-        {
-            get { return type; }
-            set { type = value; }
-        }
+        public string Type { get; set; }
 
-        Dictionary<string, string> data = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-        public Dictionary<string, string> Data
-        {
-            get { return data; }
-            set { data = value; }
-        }
+        public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
-        public bool HasData(string key)
-        { return Data.ContainsKey(key); }
+        public bool HasData(string key) => Data.ContainsKey(key);
 
-        public string GetString(string key)
-        { return HasData(key) ? Data[key] : null; }
+        public string GetString(string key) => HasData(key) ? Data[key] : null;
 
         public int GetInt(string key)
         {
