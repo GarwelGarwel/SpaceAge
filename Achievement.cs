@@ -10,29 +10,29 @@ namespace SpaceAge
         ProtoAchievement protoAchievement;
         public ProtoAchievement Proto
         {
-            get { return protoAchievement; }
-            set { protoAchievement = value; }
+            get => protoAchievement;
+            set => protoAchievement = value;
         }
 
         string body = null;
         public string Body
         {
-            get { return Proto.IsBodySpecific ? body : null; }
-            set { body = value; }
+            get => Proto.IsBodySpecific ? body : null;
+            set => body = value;
         }
 
         double time = Double.NaN;
         public double Time
         {
-            get { return Proto.HasTime ? time : Double.NaN; }
-            set { time = value; }
+            get => Proto.HasTime ? time : Double.NaN;
+            set => time = value;
         }
 
         double value = 0;
         public double Value
         {
-            get { return Proto.HasValue ? value : 0; }
-            set { this.value = value; }
+            get => Proto.HasValue ? value : 0;
+            set => this.value = value;
         }
 
         public string DisplayValue
@@ -44,17 +44,13 @@ namespace SpaceAge
             }
         }
 
-        public string Title
-        { get { return Proto.Title + (Proto.IsBodySpecific ? " " + Body : ""); } }
+        public string Title => Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 
-        public static string GetFullName(string name, string body = null)
-        { return name + (body != null ? "@" + body : ""); }
+        public static string GetFullName(string name, string body = null) => name + (body != null ? "@" + body : "");
 
-        public string FullName
-        { get { return GetFullName(Proto.Name, Body); } }
+        public string FullName => GetFullName(Proto.Name, Body);
 
-        public override string ToString()
-        { return (Time != Double.NaN ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : "")); }
+        public override string ToString() => (Time != Double.NaN ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : ""));
 
         public bool Register(Achievement old)
         {

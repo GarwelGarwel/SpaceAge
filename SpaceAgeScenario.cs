@@ -29,8 +29,11 @@ namespace SpaceAge
             Core.Log("SpaceAgeScenario.Start", Core.LogLevel.Important);
 
             // Adding event handlers
-            GameEvents.onLaunch.Add(OnLaunch);
+            GameEvents.VesselSituation.onLaunch.Add(OnLaunch);
+            GameEvents.VesselSituation.onReachSpace.Add(OnReachSpace);
             GameEvents.onVesselRecovered.Add(OnVesselRecovery);
+            GameEvents.VesselSituation.onReturnFromOrbit.Add(OnReturnFromOrbit);
+            GameEvents.VesselSituation.onReturnFromSurface.Add(OnReturnFromSurface);
             GameEvents.onVesselWillDestroy.Add(OnVesselDestroy);
             GameEvents.onCrewKilled.Add(OnCrewKilled);
             GameEvents.onFlagPlant.Add(OnFlagPlanted);
@@ -71,8 +74,11 @@ namespace SpaceAge
             UndisplayData();
 
             // Removing event handlers
-            GameEvents.onLaunch.Remove(OnLaunch);
+            GameEvents.VesselSituation.onLaunch.Remove(OnLaunch);
+            GameEvents.VesselSituation.onReachSpace.Remove(OnReachSpace);
             GameEvents.onVesselRecovered.Remove(OnVesselRecovery);
+            GameEvents.VesselSituation.onReturnFromOrbit.Remove(OnReturnFromOrbit);
+            GameEvents.VesselSituation.onReturnFromSurface.Remove(OnReturnFromSurface);
             GameEvents.onVesselWillDestroy.Remove(OnVesselDestroy);
             GameEvents.onCrewKilled.Remove(OnCrewKilled);
             GameEvents.onFlagPlant.Remove(OnFlagPlanted);
@@ -225,8 +231,7 @@ namespace SpaceAge
             return null;
         }
 
-        public Achievement FindAchievement(string fullname)
-        { return achievements.ContainsKey(fullname) ? achievements[fullname] : null; }
+        public Achievement FindAchievement(string fullname) => achievements.ContainsKey(fullname) ? achievements[fullname] : null;
 
         bool CheckAchievement(Achievement ach)
         {
@@ -251,11 +256,8 @@ namespace SpaceAge
                 }
         }
 
-        void CheckAchievements(string ev, Vessel v)
-        { CheckAchievements(ev, v.mainBody, v); }
-
-        void CheckAchievements(string ev, double v)
-        { CheckAchievements(ev, null, null, v); }
+        void CheckAchievements(string ev, Vessel v) => CheckAchievements(ev, v.mainBody, v);
+        void CheckAchievements(string ev, double v) => CheckAchievements(ev, null, null, v);
 
         #endregion
         #region UI METHODS
@@ -316,8 +318,19 @@ namespace SpaceAge
                         gridContents = new List<DialogGUIBase>(LinesPerPage * 3);
                         int startingIndex = (Page - 1) * LinesPerPage;
                         Core.Log("Displaying achievements starting from " + startingIndex + " out of " + achievements.Count + "...");
-                        foreach (Achievement a in SortedAchievements.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
+                        List<Achievement> achList = SortedAchievements;
+                        string body = null;
+                        foreach (Achievement a in achList.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
+                        {
+                            if ((a.Body != body) && (a.Body != ""))  // Achievement for a new body => display the body's name on a new line
+                            {
+                                body = a.Body;
+                                gridContents.Add(new DialogGUILabel("", true));
+                                gridContents.Add(new DialogGUILabel(body, true));
+                                gridContents.Add(new DialogGUILabel("", true));
+                            }
                             DisplayAchievement(a, gridContents);
+                        }
                         return new DialogGUIGridLayout(new RectOffset(5, 5, 0, 0), new Vector2((windowWidth - 10) / 3 - 3, 20), new Vector2(5, 5), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleLeft, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 3, gridContents.ToArray());
                 }
                 return null;
@@ -383,8 +396,8 @@ namespace SpaceAge
 
         int Page
         {
-            get { return page[(int)currentTab]; }
-            set { page[(int)currentTab] = value; }
+            get => page[(int)currentTab];
+            set => page[(int)currentTab] = value;
         }
 
         int LinesPerPage
@@ -397,8 +410,7 @@ namespace SpaceAge
             }
         }
 
-        int PageCount
-        { get { return (int)System.Math.Ceiling((double)((currentTab == Tabs.Chronicle) ? chronicle.Count : achievements.Count) / LinesPerPage); } }
+        int PageCount => (int)System.Math.Ceiling((double)((currentTab == Tabs.Chronicle) ? chronicle.Count : achievements.Count) / LinesPerPage);
 
         public void PageUp()
         {
@@ -464,29 +476,63 @@ namespace SpaceAge
         bool IsVesselEligible(Vessel v, bool mustBeActive)
         { return (v.vesselType != VesselType.Debris) && (v.vesselType != VesselType.EVA) && (v.vesselType != VesselType.Flag) && (v.vesselType != VesselType.SpaceObject) && (v.vesselType != VesselType.Unknown) && (!mustBeActive || (v == FlightGlobals.ActiveVessel)); }
 
-        public void OnLaunch(EventReport report)
+        public void OnLaunch(Vessel v)
         {
-            Core.Log("OnLaunch(<" + report.eventType + ", " + report.origin + ", " + report.sender + ">)", Core.LogLevel.Important);
-            if (!IsVesselEligible(FlightGlobals.ActiveVessel, false))
+            Core.Log("OnLaunch(" + v.vesselName + ")", Core.LogLevel.Important);
+            if (!IsVesselEligible(v, true))
             {
-                Core.Log("Vessel is ineligible due to being " + FlightGlobals.ActiveVessel.vesselType);
+                Core.Log("Vessel is ineligible due to being " + v.vesselType);
                 return;
             }
-            if (report.eventType != FlightEvents.LAUNCH)
+            if ((v.mainBody != FlightGlobals.GetHomeBody()) || (v.missionTime > 5))
             {
-                Core.Log("Not an actual launch. NO processing.");
+                Core.Log("Fake launch due to main body: " + v.mainBody.name + ", mission time: " + v.missionTime);
                 return;
             }
-            if ((FlightGlobals.ActiveVessel.mainBody != FlightGlobals.GetHomeBody()) || (FlightGlobals.ActiveVessel.missionTime > 5))
-            {
-                Core.Log("Fake launch due to main body: " + FlightGlobals.ActiveVessel.mainBody.name + ", mission time: " + FlightGlobals.ActiveVessel.missionTime);
-                return;
-            }
-            CheckAchievements("Launch", FlightGlobals.ActiveVessel);
+            CheckAchievements("Launch", v);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLaunch) return;
-            ChronicleEvent e = new ChronicleEvent("Launch", "vessel", FlightGlobals.ActiveVessel.vesselName);
-            if (FlightGlobals.ActiveVessel.GetCrewCount() > 0) e.Data.Add("crew", FlightGlobals.ActiveVessel.GetCrewCount().ToString());
+            ChronicleEvent e = new ChronicleEvent("Launch", "vessel", v.vesselName);
+            if (FlightGlobals.ActiveVessel.GetCrewCount() > 0) e.Data.Add("crew", v.GetCrewCount().ToString());
             AddChronicleEvent(e);
+        }
+
+        public void OnReachSpace(Vessel v)
+        {
+            Core.Log("OnReachSpace(" + v.vesselName + ")");
+            if (!IsVesselEligible(v, false)) return;
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackReachSpace)
+            {
+                ChronicleEvent e = new ChronicleEvent("ReachSpace", "vessel", v.vesselName);
+                if (v.GetCrewCount() > 0) e.Data.Add("crew", v.GetCrewCount().ToString());
+                AddChronicleEvent(e);
+            }
+            CheckAchievements("ReachSpace", v);
+        }
+
+        public void OnReturnFromOrbit(Vessel v, CelestialBody b)
+        {
+            Core.Log("OnReturnFromOrbit(" + v.vesselName + ", " + b.bodyName + ")");
+            if (!IsVesselEligible(v, true)) return;
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackReturnFrom)
+            {
+                ChronicleEvent e = new ChronicleEvent("ReturnFromOrbit", "vessel", v.vesselName, "body", b.bodyName);
+                if (v.GetCrewCount() > 0) e.Data.Add("crew", v.GetCrewCount().ToString());
+                AddChronicleEvent(e);
+            }
+            CheckAchievements("ReturnFromOrbit", b, v);
+        }
+
+        public void OnReturnFromSurface(Vessel v, CelestialBody b)
+        {
+            Core.Log("OnReturnFromSurface(" + v.vesselName + ", " + b.bodyName + ")");
+            if (!IsVesselEligible(v, true)) return;
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackReturnFrom)
+            {
+                ChronicleEvent e = new ChronicleEvent("ReturnFromSurface", "vessel", v.vesselName, "body", b.bodyName);
+                if (v.GetCrewCount() > 0) e.Data.Add("crew", v.GetCrewCount().ToString());
+                AddChronicleEvent(e);
+            }
+            CheckAchievements("ReturnFromSurface", b, v);
         }
 
         public void OnVesselRecovery(ProtoVessel v, bool b)

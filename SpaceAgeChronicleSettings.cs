@@ -7,23 +7,17 @@ namespace SpaceAge
 {
     class SpaceAgeChronicleSettings : GameParameters.CustomParameterNode
     {
-        public override string Title
-        { get { return "Chronicle Settings"; } }
+        public override string Title => "Chronicle Settings";
 
-        public override GameParameters.GameMode GameMode
-        { get { return GameParameters.GameMode.ANY; } }
+        public override GameParameters.GameMode GameMode => GameParameters.GameMode.ANY;
 
-        public override string Section
-        { get { return "Space Age"; } }
+        public override string Section => "Space Age";
 
-        public override string DisplaySection
-        { get { return Section; } }
+        public override string DisplaySection => Section;
 
-        public override int SectionOrder
-        { get { return 1; } }
+        public override int SectionOrder => 1;
 
-        public override bool HasPresets
-        { get { return false; } }
+        public override bool HasPresets => false;
 
         [GameParameters.CustomParameterUI("Use Blizzy's Toolbar", toolTip = "Show icon in Blizzy's Toolbar, if available, instead of stock AppLauncher")]
         public bool UseBlizzysToolbar = true;
@@ -41,12 +35,12 @@ namespace SpaceAge
         public bool newestFirst = true;
 
         [GameParameters.CustomIntParameterUI("Achievements per Page", toolTip = "How many Chronicle entries to show in one page", minValue = 5, maxValue = 25, stepSize = 5)]
-        public int achievementsPerPage = 15;
+        public int achievementsPerPage = 10;
 
         public static int AchievementsPerPage
         {
-            get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage; }
-            set { HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage = value; }
+            get => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage;
+            set => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage = value;
         }
 
         [GameParameters.CustomParameterUI("Import Stock Achievements", toolTip = "Try to import applicable achievements saved by stock ProgressTracking system. Use when the mod is installed/changed mid-game")]
@@ -58,8 +52,14 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Track Launch Events", toolTip = "Track and save Launch events in the Chronicle")]
         public bool trackLaunch = true;
 
+        [GameParameters.CustomParameterUI("Track Reach Space Events", toolTip = "Track and save Reach Space events in the Chronicle")]
+        public bool trackReachSpace = true;
+
         [GameParameters.CustomParameterUI("Track Orbit Events", toolTip = "Track and save Orbit events in the Chronicle")]
         public bool trackOrbit = true;
+
+        [GameParameters.CustomParameterUI("Track SOI Change Events", toolTip = "Track and save SOI Change events in the Chronicle")]
+        public bool trackSOIChange = true;
 
         [GameParameters.CustomParameterUI("Track Landing Events", toolTip = "Track and save Landing events in the Chronicle")]
         public bool trackLanding = true;
@@ -69,12 +69,15 @@ namespace SpaceAge
 
         public static float MinLandingInterval
         {
-            get { return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minLandingInterval; }
-            set { HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minLandingInterval = value; }
+            get => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minLandingInterval;
+            set => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minLandingInterval = value;
         }
 
         [GameParameters.CustomParameterUI("Track Recovery Events", toolTip = "Track and save Recovery events in the Chronicle")]
         public bool trackRecovery = true;
+
+        [GameParameters.CustomParameterUI("Track Return From Events", toolTip = "Track and save Return From Orbit/Surface events in the Chronicle")]
+        public bool trackReturnFrom = true;
 
         [GameParameters.CustomParameterUI("Track Destroy Events", toolTip = "Track and save Destroy events in the Chronicle")]
         public bool trackDestroy = true;
@@ -93,9 +96,6 @@ namespace SpaceAge
 
         [GameParameters.CustomParameterUI("Track Tech Researched Events", toolTip = "Track and save Technology Researched events in the Chronicle")]
         public bool trackTechnologyResearched = true;
-
-        [GameParameters.CustomParameterUI("Track SOI Change Events", toolTip = "Track and save SOI Change events in the Chronicle")]
-        public bool trackSOIChange = true;
 
         [GameParameters.CustomParameterUI("Track Anomaly Discovery Events", toolTip = "Track and save anomaly discovery events in the Chronicle")]
         public bool trackAnomalyDiscovery = true;

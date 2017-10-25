@@ -47,16 +47,19 @@ namespace SpaceAge
                 switch (Type)
                 {
                     case "Launch": return GetString("vessel") + " was launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
-                    case "Landing": return GetString("vessel") + " landed on " + GetString("body") + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "ReachSpace": return GetString("vessel") + " reached space.";
+                    case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influence.";
                     case "Orbit": return GetString("vessel") + " entered orbit around " + GetString("body") + ".";
+                    case "Landing": return GetString("vessel") + " landed on " + GetString("body") + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case "Recovery": return GetString("vessel") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "ReturnFromOrbit": return GetString("vessel") + " returned from a " + GetString("body") + "'s orbit.";
+                    case "ReturnFromSurface": return GetString("vessel") + " returned from a " + GetString("body") + "'s surface.";
                     case "Destroy": return GetString("vessel") + " was destroyed.";
                     case "Death": return GetString("kerbal") + " died.";
                     case "FlagPlant": return "A flag was planted on " + GetString("body") + ".";
                     case "FacilityUpgraded": return GetString("facility") + " was upgraded to level " + GetString("level") + ".";
                     case "StructureCollapsed": return GetString("facility") + " collapsed.";
                     case "TechnologyResearched": return GetString("tech") + " was researched.";
-                    case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influence.";
                     case "AnomalyDiscovery": return GetString("id") + " anomaly was discovered on " + GetString("body") + ".";
                     case "Custom": return GetString("description");
                 }
