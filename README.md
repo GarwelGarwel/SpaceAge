@@ -8,9 +8,11 @@ The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an 
 
 The Chronicle module shows a history of notable events in the playthrough (adjustable in Difficulty Settings):
 - launches
+- reaching space
 - orbiting
 - landings
 - vessel recoveries
+- returns from orbit and surface
 - vessel destruction
 - deaths
 - flag plants
@@ -43,7 +45,7 @@ For every celestial body, it tracks:
 - total numbers of landings (and, separately, crewed landings)
 - total numbers of discovered anomalies (untested)
 - the masses of the heaviest vessels that landed on or orbited the celestial body
-- the first flybys, orbits, and landings (crewed and overall) as well as flags planted on the body
+- the first flybys, orbits, landings, and returns (crewed and overall) as well as flags planted on the body
 
 Space Age can parse your save data to find and import records of previous discoveries made by the stock ProgressTracking system. This option can be enabled in the settings (default is off). This is handy if you've installed the mod mid-game or added some new achievements to it. However, the stock system saves much less information, so Space Age can only learn so much from it.
 
@@ -61,7 +63,13 @@ You can easily add, modify or remove achievements by editing `achievements.cfg` 
 
 The following events are available for `onEvent` field (for events in *italic* you can access mass, parts count, and crew count):
 - *`Launch`*
+- *`ReachSpace`*
+- *`Orbit`*
+- *`Landing`*
+- *`SOIChange`*
 - *`Recovery`*
+- *`ReturnFromOrbit`*
+- *`ReturnFromSurface`*
 - *`Destroy`*
 - `Death`
 - `FlagPlant`
@@ -69,23 +77,23 @@ The following events are available for `onEvent` field (for events in *italic* y
 - `FacilityUpgraded`
 - `StructureCollapsed`
 - `TechnologyResearched`
-- *`SOIChange`*
-- *`Orbit`*
-- *`Landing`*
 - `Income`
 - `Expense`
 
 **Future Plans**
 
-- MOAR events, achievements and data to track (requests sought!)
-- Trends: will draw graphs of your progress (e.g. funds earned)
+- More events, achievements and data to track (requests sought!)
+- Average values tracking (maybe)
+- Trends: graphs of your progress (e.g. funds earned)
 
 **Supported Mods**
 
 - [KSP-AVC](https://forum.kerbalspaceprogram.com/index.php?/topic/72169-12-ksp-avc-add-on-version-checker-plugin-1162-miniavc-ksp-avc-online-2016-10-13/)
 - [Blizzy's Toolbar](https://forum.kerbalspaceprogram.com/index.php?/topic/55420-120-toolbar-1713-common-api-for-draggableresizable-buttons-toolbar/)
 
-Space Age shouldn't conflict with any mods as it doesn't change anything in the universe.
+Space Age doesn't change anything in the universe, so it shouldn't affect save games.
+
+The mod has issues with Kerbal Construction Time, which handles technology discoveries and facility upgrades in its own way.
 
 **License**
 
