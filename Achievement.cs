@@ -7,12 +7,7 @@ namespace SpaceAge
 {
     public class Achievement
     {
-        ProtoAchievement protoAchievement;
-        public ProtoAchievement Proto
-        {
-            get => protoAchievement;
-            set => protoAchievement = value;
-        }
+        public ProtoAchievement Proto { get; set; }
 
         string body = null;
         public string Body

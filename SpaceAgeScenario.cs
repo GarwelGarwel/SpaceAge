@@ -42,6 +42,8 @@ namespace SpaceAge
             GameEvents.OnTechnologyResearched.Add(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Add(OnSOIChanged);
             GameEvents.onVesselSituationChange.Add(OnSituationChanged);
+            GameEvents.onDockingComplete.Add(OnDockingComplete);
+            GameEvents.onUndock.Add(OnUndock);
             GameEvents.OnFundsChanged.Add(OnFundsChanged);
             GameEvents.OnProgressComplete.Add(OnProgressCompleted);
 
@@ -571,7 +573,7 @@ namespace SpaceAge
 
         public void OnCrewKilled(EventReport report)
         {
-            Core.Log("OnCrewKilled", Core.LogLevel.Important);
+            Core.Log("OnCrewKilled(<sender: '" + report?.sender + "'>)", Core.LogLevel.Important);
             CheckAchievements("Death", report?.origin?.vessel?.mainBody);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDeath) return;
             AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report?.sender));
@@ -651,6 +653,20 @@ namespace SpaceAge
                     break;
             }
             if ((e.Type != null) && (e.Type != "")) AddChronicleEvent(e);
+        }
+
+        public void OnDockingComplete(GameEvents.FromToAction<Part, Part> a)
+        {
+            Core.Log("OnDockingComplete('" + a.from.partName + " of " + a.from.initialVesselName + "', '" + a.to.partName + " of " + a.to.initialVesselName + "')");
+            if (!IsVesselEligible(a.from.vessel, false) || !IsVesselEligible(a.to.vessel, false)) return;
+            //if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDocking)
+            //    AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", a.from.initialVesselName, "vessel2", a.from.initialVesselName));
+            CheckAchievements("Docking", a.from.vessel.mainBody, a.from.vessel);
+        }
+
+        public void OnUndock(EventReport er)
+        {
+            Core.Log("OnUndock(<sender: '" + er?.sender + "', origin: '" + er?.origin?.partName + " of " + er?.origin?.vessel?.vesselName + "'>");
         }
 
         public void OnFundsChanged(double v, TransactionReasons tr)
