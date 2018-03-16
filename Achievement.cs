@@ -7,26 +7,35 @@ namespace SpaceAge
 {
     public class Achievement
     {
-        public ProtoAchievement Proto { get; set; }
+        ProtoAchievement proto;
+        public ProtoAchievement Proto
+        {
+            get => proto;
+            set
+            {
+                proto = value;
+                if (value == null) invalid = true;
+            }
+        }
 
         string body = null;
         public string Body
         {
-            get => Proto.IsBodySpecific ? body : null;
+            get => invalid ? "N/A" : Proto.IsBodySpecific ? body : null;
             set => body = value;
         }
 
         double time = Double.NaN;
         public double Time
         {
-            get => Proto.HasTime ? time : Double.NaN;
+            get => (!invalid && Proto.HasTime) ? time : Double.NaN;
             set => time = value;
         }
 
         double value = 0;
         public double Value
         {
-            get => Proto.HasValue ? value : 0;
+            get => (!invalid && Proto.HasValue) ? value : 0;
             set => this.value = value;
         }
 
@@ -34,16 +43,17 @@ namespace SpaceAge
         {
             get
             {
+                if (invalid) return "N/A";
                 if (!Proto.HasValue) return "";
                 return ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("F2") : Value.ToString("N0")) + " " + Proto.Unit;
             }
         }
 
-        public string Title => Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
+        public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 
         public static string GetFullName(string name, string body = null) => name + (body != null ? "@" + body : "");
 
-        public string FullName => GetFullName(Proto.Name, Body);
+        public string FullName => invalid ? "N/A" : GetFullName(Proto.Name, Body);
 
         public override string ToString() => (Time != Double.NaN ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : ""));
 
@@ -82,6 +92,7 @@ namespace SpaceAge
             get
             {
                 ConfigNode node = new ConfigNode("ACHIEVEMENT");
+                if (invalid) return node;
                 node.AddValue("name", Proto.Name);
                 if (Proto.IsBodySpecific) node.AddValue("body", Body);
                 if (Proto.HasTime) node.AddValue("time", Time);
@@ -95,6 +106,7 @@ namespace SpaceAge
                     if (value.name != "ACHIEVEMENT") throw new Exception();
                     Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
                     Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
+                    if (invalid) return;
                     if (Proto.IsBodySpecific && value.HasValue("body")) Body = value.GetValue("body");
                     if (Proto.HasTime && value.HasValue("time")) Time = Double.Parse(value.GetValue("time"));
                     if (Proto.HasValue && value.HasValue("value")) Value = Double.Parse(value.GetValue("value"));
@@ -103,20 +115,14 @@ namespace SpaceAge
             }
         }
 
-        public Achievement(ProtoAchievement proto)
-        { Proto = proto; }
+        public Achievement(ProtoAchievement proto) => Proto = proto;
 
-        public Achievement(ConfigNode node)
-        { ConfigNode = node; }
+        public Achievement(ConfigNode node) => ConfigNode = node;
 
         public Achievement(ProtoAchievement proto, CelestialBody body = null, Vessel vessel = null, double value = 0)
         {
-            if (proto == null)
-            {
-                invalid = true;
-                return;
-            }
             Proto = proto;
+            if (invalid) return;
             if (body != null) Body = body.name;
             if (Proto.HasTime) Time = Planetarium.GetUniversalTime();
             if (Proto.HasValue)
