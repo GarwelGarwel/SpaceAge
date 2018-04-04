@@ -659,8 +659,8 @@ namespace SpaceAge
         {
             Core.Log("OnDockingComplete('" + a.from.partName + " of " + a.from.initialVesselName + "', '" + a.to.partName + " of " + a.to.initialVesselName + "')");
             if (!IsVesselEligible(a.from.vessel, false) || !IsVesselEligible(a.to.vessel, false)) return;
-            //if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDocking)
-            //    AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", a.from.initialVesselName, "vessel2", a.from.initialVesselName));
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDocking)
+                AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", a.from.initialVesselName, "vessel2", a.from.initialVesselName));
             CheckAchievements("Docking", a.from.vessel.mainBody, a.from.vessel);
         }
 
