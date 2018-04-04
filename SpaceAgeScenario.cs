@@ -286,7 +286,7 @@ namespace SpaceAge
             }
         }
 
-        public DialogGUIBase windowContents
+        public DialogGUIBase WindowContents
         {
             get
             {
@@ -365,7 +365,7 @@ namespace SpaceAge
                         new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel(Page + "/" + PageCount)),
                         new DialogGUIButton(">", PageDown, () => (Page < PageCount), false),
                         new DialogGUIButton(">>", LastPage, () => (Page < PageCount), false)),
-                    windowContents),
+                    WindowContents),
                 false,
                 HighLogic.UISkin,
                 false);
@@ -402,15 +402,7 @@ namespace SpaceAge
             set => page[(int)currentTab] = value;
         }
 
-        int LinesPerPage
-        {
-            get
-            {
-                if (currentTab == Tabs.Chronicle)
-                    return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().chronicleLinesPerPage;
-                else return HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage;
-            }
-        }
+        int LinesPerPage => (currentTab == Tabs.Chronicle) ? HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().chronicleLinesPerPage : HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage;
 
         int PageCount => (int)System.Math.Ceiling((double)((currentTab == Tabs.Chronicle) ? chronicle.Count : achievements.Count) / LinesPerPage);
 
