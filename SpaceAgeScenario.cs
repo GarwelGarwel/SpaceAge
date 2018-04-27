@@ -89,6 +89,8 @@ namespace SpaceAge
             GameEvents.OnTechnologyResearched.Remove(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Remove(OnSOIChanged);
             GameEvents.onVesselSituationChange.Remove(OnSituationChanged);
+            GameEvents.onDockingComplete.Remove(OnDockingComplete);
+            GameEvents.onUndock.Remove(OnUndock);
             GameEvents.OnFundsChanged.Remove(OnFundsChanged);
             GameEvents.OnProgressComplete.Remove(OnProgressCompleted);
 
