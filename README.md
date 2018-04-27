@@ -14,6 +14,7 @@ The Chronicle module shows a history of notable events in the playthrough (adjus
 - vessel recoveries
 - returns from orbit and surface
 - vessel destruction
+- docking
 - deaths
 - flag plants
 - anomaly discoveries (untested!)
@@ -71,6 +72,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 - *`ReturnFromOrbit`*
 - *`ReturnFromSurface`*
 - *`Destroy`*
+- *`Docking`*
 - `Death`
 - `FlagPlant`
 - `AnomalyDiscovery` (untested)
