@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
-using KSP.UI.Screens;
+using System;
 
 namespace SpaceAge
 {
     class Core
     {
+        // DOES NOT WORK
         public static double VesselCost(Vessel v)
         {
             double c = 0;
@@ -19,6 +20,29 @@ namespace SpaceAge
 
         public static void ShowNotification(string msg)
         { if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications) ScreenMessages.PostScreenMessage(msg); }
+
+        /// <summary>
+        /// Parses UT into a string (e.g. "Y23 D045"), hides zero elements
+        /// </summary>
+        /// <param name="time">Time in seconds</param>
+        /// <param name="showSeconds">If false, seconds will be displayed only if time is less than 1 minute; otherwise always</param>
+        /// <returns></returns>
+        public static string ParseUT(double time, bool showSeconds = false)
+        {
+            if (Double.IsNaN(time)) return "—";
+            double t = time;
+            int y, d, m, h;
+            y = (int)Math.Floor(t / KSPUtil.dateTimeFormatter.Year) + 1;
+            t -= (y - 1) * KSPUtil.dateTimeFormatter.Year;
+            d = (int)Math.Floor(t / KSPUtil.dateTimeFormatter.Day) + 1;
+            t -= (d - 1) * KSPUtil.dateTimeFormatter.Day;
+            h = (int)Math.Floor(t / 3600);
+            t -= h * 3600;
+            m = (int)Math.Floor(t / 60);
+            t -= m * 60;
+            return "Y" + y + " D" + d.ToString("D3") + " " + h + ":" + m.ToString("D2") + (showSeconds ? (":" + ((int) t).ToString("D2")) : "");
+        }
+
 
         public static bool UseBlizzysToolbar => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().UseBlizzysToolbar;
 

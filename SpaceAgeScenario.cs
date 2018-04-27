@@ -17,7 +17,7 @@ namespace SpaceAge
         ApplicationLauncherButton appLauncherButton;
         enum Tabs { Chronicle, Achievements };
         Tabs currentTab = Tabs.Chronicle;
-        const float windowWidth = 500;
+        const float windowWidth = 600;
         int[] page = new int[2] { 1, 1 };
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
@@ -269,7 +269,7 @@ namespace SpaceAge
             if (a == null) return;
             grid.Add(new DialogGUILabel(a.Title, true));
             grid.Add(new DialogGUILabel(a.DisplayValue, true));
-            grid.Add(new DialogGUILabel(a.Proto.HasTime ? KSPUtil.PrintDateCompact(a.Time, true) : "", true));
+            grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.ParseUT(a.Time) : "", true));
         }
 
         List<Achievement> SortedAchievements
@@ -303,7 +303,7 @@ namespace SpaceAge
                             Core.Log("chronicle[" + (Core.NewestFirst ? (chronicle.Count - i - 1) : i) + "]: " + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
                             gridContents.Add(
                                 new DialogGUIHorizontalLayout(
-                                    new DialogGUILabel(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, true),
+                                    new DialogGUILabel("<color=\"white\">" + Core.ParseUT(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time) + "</color>\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, true),
                                     new DialogGUIButton<int>("X", DeleteItem, Core.NewestFirst ? (chronicle.Count - i - 1) : i)));
                         }
                         return new DialogGUIVerticalLayout(
@@ -328,7 +328,7 @@ namespace SpaceAge
                             {
                                 body = a.Body;
                                 gridContents.Add(new DialogGUILabel("", true));
-                                gridContents.Add(new DialogGUILabel(body, true));
+                                gridContents.Add(new DialogGUILabel("<align=\"center\"><color=\"white\"><b>" + body + "</b></color></align>", true));
                                 gridContents.Add(new DialogGUILabel("", true));
                             }
                             DisplayAchievement(a, gridContents);
