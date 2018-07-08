@@ -42,8 +42,8 @@ namespace SpaceAge
             GameEvents.OnTechnologyResearched.Add(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Add(OnSOIChanged);
             GameEvents.onVesselSituationChange.Add(OnSituationChanged);
-            GameEvents.onDockingComplete.Add(OnDockingComplete);
-            GameEvents.onUndock.Add(OnUndock);
+            GameEvents.onVesselDocking.Add(OnVesselDocking);
+            GameEvents.onVesselsUndocking.Add(OnVesselsUndocking);
             GameEvents.OnFundsChanged.Add(OnFundsChanged);
             GameEvents.OnProgressComplete.Add(OnProgressCompleted);
 
@@ -89,8 +89,8 @@ namespace SpaceAge
             GameEvents.OnTechnologyResearched.Remove(OnTechnologyResearched);
             GameEvents.onVesselSOIChanged.Remove(OnSOIChanged);
             GameEvents.onVesselSituationChange.Remove(OnSituationChanged);
-            GameEvents.onDockingComplete.Remove(OnDockingComplete);
-            GameEvents.onUndock.Remove(OnUndock);
+            GameEvents.onVesselDocking.Remove(OnVesselDocking);
+            GameEvents.onVesselsUndocking.Remove(OnVesselsUndocking);
             GameEvents.OnFundsChanged.Remove(OnFundsChanged);
             GameEvents.OnProgressComplete.Remove(OnProgressCompleted);
 
@@ -649,18 +649,26 @@ namespace SpaceAge
             if ((e.Type != null) && (e.Type != "")) AddChronicleEvent(e);
         }
 
-        public void OnDockingComplete(GameEvents.FromToAction<Part, Part> a)
+        public void OnVesselDocking(uint a, uint b)
         {
-            Core.Log("OnDockingComplete('" + a.from.partName + " of " + a.from.initialVesselName + "', '" + a.to.partName + " of " + a.to.initialVesselName + "')");
-            if (!IsVesselEligible(a.from.vessel, false) || !IsVesselEligible(a.to.vessel, false)) return;
+            FlightGlobals.FindVessel(a, out Vessel v1);
+            FlightGlobals.FindVessel(b, out Vessel v2);
+            Core.Log("OnVesselDocking('" + v1?.vesselName + "', '" + v2?.vesselName + "')");
+            if (!IsVesselEligible(v1, false) && !IsVesselEligible(v2, false)) return;
             if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDocking)
-                AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", a.from.initialVesselName, "vessel2", a.from.initialVesselName));
-            CheckAchievements("Docking", a.from.vessel.mainBody, a.from.vessel);
+                AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", v1?.vesselName, "vessel2", v2?.vesselName));
+            if (IsVesselEligible(v1, false)) CheckAchievements("Docking", v1?.mainBody, v1);
+            if (IsVesselEligible(v2, false)) CheckAchievements("Docking", v2?.mainBody, v2);
         }
 
-        public void OnUndock(EventReport er)
+        public void OnVesselsUndocking(Vessel v1, Vessel v2)
         {
-            Core.Log("OnUndock(<sender: '" + er?.sender + "', origin: '" + er?.origin?.partName + " of " + er?.origin?.vessel?.vesselName + "'>");
+            Core.Log("OnVesselsUndocking('" + v1?.name + "', '" + v2?.name + "')");
+            if (!IsVesselEligible(v1, false) && !IsVesselEligible(v2, false)) return;
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDocking)
+                AddChronicleEvent(new ChronicleEvent("Undocking", "vessel1", v1?.vesselName, "vessel2", v2?.vesselName));
+            if (IsVesselEligible(v1, false)) CheckAchievements("Undocking", v1.mainBody, v1);
+            if (IsVesselEligible(v2, false)) CheckAchievements("Undocking", v2.mainBody, v2);
         }
 
         public void OnFundsChanged(double v, TransactionReasons tr)

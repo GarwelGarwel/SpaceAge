@@ -14,7 +14,7 @@ The Chronicle module shows a history of notable events in the playthrough (adjus
 - vessel recoveries
 - returns from orbit and surface
 - vessel destruction
-- docking
+- docking and undocking
 - deaths
 - flag plants
 - anomaly discoveries (untested!)
@@ -73,6 +73,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 - *`ReturnFromSurface`*
 - *`Destroy`*
 - *`Docking`*
+- *`Undocking`*
 - `Death`
 - `FlagPlant`
 - `AnomalyDiscovery` (untested)
@@ -86,7 +87,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 
 - More events, achievements and data to track (requests sought!)
 - Average values tracking (maybe)
-- Trends: graphs of your progress (e.g. funds earned)
+- Trends: graphs of your progress (e.g. funds earned over time)
 
 **Supported Mods**
 
@@ -95,7 +96,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 
 Space Age doesn't change anything in the universe, so it shouldn't affect save games.
 
-The mod has issues with Kerbal Construction Time, which handles technology discoveries and facility upgrades in its own way.
+The mod has minor issues with Kerbal Construction Time, which handles technology discoveries and facility upgrades in its own way. Simply disable or manually delete these entries.
 
 **License**
 
