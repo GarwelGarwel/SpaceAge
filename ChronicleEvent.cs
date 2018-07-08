@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SpaceAge
 {
@@ -75,12 +73,9 @@ namespace SpaceAge
             }
         }
 
-        public ChronicleEvent()
-        { Time = Planetarium.GetUniversalTime(); }
+        public ChronicleEvent() => Time = Planetarium.GetUniversalTime();
 
-        public ChronicleEvent(string type)
-            : this()
-        { Type = type; }
+        public ChronicleEvent(string type) : this() => Type = type;
 
         public ChronicleEvent(string type, params string[] data)
             : this(type)
@@ -90,7 +85,6 @@ namespace SpaceAge
                 Data.Add(data[i], data[i + 1]);
         }
 
-        public ChronicleEvent(ConfigNode node)
-        { ConfigNode = node; }
+        public ChronicleEvent(ConfigNode node) => ConfigNode = node;
     }
 }

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SpaceAge
 {
@@ -39,15 +36,7 @@ namespace SpaceAge
             set => this.value = value;
         }
 
-        public string DisplayValue
-        {
-            get
-            {
-                if (invalid) return "N/A";
-                if (!Proto.HasValue) return "";
-                return ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("F2") : Value.ToString("N0")) + " " + Proto.Unit;
-            }
-        }
+        public string DisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("F2") : Value.ToString("N0")) + " " + Proto.Unit : "";
 
         public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 

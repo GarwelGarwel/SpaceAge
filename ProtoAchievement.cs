@@ -73,7 +73,7 @@ namespace SpaceAge
         }
 
         public ProtoAchievement() { }
-        public ProtoAchievement(string name) { Name = name; }
-        public ProtoAchievement(ConfigNode node) { ConfigNode = node; }
+        public ProtoAchievement(string name) => Name = name;
+        public ProtoAchievement(ConfigNode node) => ConfigNode = node;
     }
 }
