@@ -256,7 +256,10 @@ namespace SpaceAge
                     Achievement ach = new Achievement(pa, body, vessel, value);
                     if (CheckAchievement(ach))
                         if (pa.Type != ProtoAchievement.Types.Total)
+                        {
+                            AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.DisplayValue));
                             MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
+                        }
                 }
         }
 

@@ -29,14 +29,14 @@ namespace SpaceAge
             {
                 switch (Type)
                 {
-                    case "Launch": return GetString("vessel") + " was launched" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "Launch": return GetString("vessel") + " was launched" + (HasData("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case "ReachSpace": return GetString("vessel") + " reached space.";
                     case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influence.";
                     case "Orbit": return GetString("vessel") + " entered orbit around " + GetString("body") + ".";
                     case "Docking": return GetString("vessel1") + " docked with " + GetString("vessel2") + ".";
                     case "Undocking": return GetString("vessel1") + " undocked from " + GetString("vessel2") + ".";
-                    case "Landing": return GetString("vessel") + " landed on " + GetString("body") + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
-                    case "Recovery": return GetString("vessel") + " was recovered" + (Data.ContainsKey("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "Landing": return GetString("vessel") + " landed on " + GetString("body") + (HasData("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
+                    case "Recovery": return GetString("vessel") + " was recovered" + (HasData("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case "ReturnFromOrbit": return GetString("vessel") + " returned from a " + GetString("body") + "'s orbit.";
                     case "ReturnFromSurface": return GetString("vessel") + " returned from a " + GetString("body") + "'s surface.";
                     case "Destroy": return GetString("vessel") + " was destroyed.";
@@ -46,6 +46,7 @@ namespace SpaceAge
                     case "StructureCollapsed": return GetString("facility") + " collapsed.";
                     case "TechnologyResearched": return GetString("tech") + " was researched.";
                     case "AnomalyDiscovery": return GetString("id") + " anomaly was discovered on " + GetString("body") + ".";
+                    case "Achievement": return GetString("title") + ((HasData("value") && GetString("value") != "") ? " (" + GetString("value") + ")" : "") + " achievement completed!";
                     case "Custom": return GetString("description");
                 }
                 return "Something happened.";
