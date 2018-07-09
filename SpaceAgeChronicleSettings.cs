@@ -49,6 +49,9 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Unwarp on Chronicle Events", toolTip = "End time warp when tracked Chronicle events occur")]
         public bool unwarpOnEvents = false;
 
+        [GameParameters.CustomParameterUI("Display Achievements in the Chronicle", toolTip = "Track and save Space Age achievements (except \"totals\") in the Chronicle")]
+        public bool trackAchievements = true;
+
         [GameParameters.CustomParameterUI("Track Launch Events", toolTip = "Track and save Launch events in the Chronicle")]
         public bool trackLaunch = true;
 

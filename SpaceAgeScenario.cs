@@ -257,7 +257,7 @@ namespace SpaceAge
                     if (CheckAchievement(ach))
                         if (pa.Type != ProtoAchievement.Types.Total)
                         {
-                            AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.DisplayValue));
+                            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAchievements) AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.DisplayValue));
                             MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
                         }
                 }
@@ -472,8 +472,7 @@ namespace SpaceAge
         #endregion
         #region EVENT HANDLERS
 
-        bool IsVesselEligible(Vessel v, bool mustBeActive)
-        { return (v.vesselType != VesselType.Debris) && (v.vesselType != VesselType.EVA) && (v.vesselType != VesselType.Flag) && (v.vesselType != VesselType.SpaceObject) && (v.vesselType != VesselType.Unknown) && (!mustBeActive || (v == FlightGlobals.ActiveVessel)); }
+        bool IsVesselEligible(Vessel v, bool mustBeActive) => (v.vesselType != VesselType.Debris) && (v.vesselType != VesselType.EVA) && (v.vesselType != VesselType.Flag) && (v.vesselType != VesselType.SpaceObject) && (v.vesselType != VesselType.Unknown) && (!mustBeActive || (v == FlightGlobals.ActiveVessel));
 
         public void OnLaunch(Vessel v)
         {
