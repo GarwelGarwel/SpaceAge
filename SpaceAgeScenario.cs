@@ -9,7 +9,7 @@ namespace SpaceAge
     [KSPScenario(ScenarioCreationOptions.AddToAllGames, GameScenes.FLIGHT, GameScenes.SPACECENTER, GameScenes.TRACKSTATION)]
     class SpaceAgeScenario : ScenarioModule
     {
-        List<ChronicleEvent> chronicle = new List<ChronicleEvent>();
+        List<ChronicleEvent> chronicle = new List<ChronicleEvent>(), displayChronicle;
         static List<ProtoAchievement> protoAchievements;
         Dictionary<string, Achievement> achievements = new Dictionary<string, Achievement>();
 
@@ -27,6 +27,8 @@ namespace SpaceAge
         public void Start()
         {
             Core.Log("SpaceAgeScenario.Start", Core.LogLevel.Important);
+
+            displayChronicle = chronicle;
 
             // Adding event handlers
             GameEvents.VesselSituation.onLaunch.Add(OnLaunch);
@@ -130,6 +132,7 @@ namespace SpaceAge
                     if (n.name == "EVENT") chronicle.Add(new ChronicleEvent(n));
                 }
             }
+            displayChronicle = chronicle;
             if (node.HasNode("ACHIEVEMENTS"))
             {
                 Core.Log(node.GetNode("ACHIEVEMENTS").CountNodes + " nodes found in ACHIEVEMENTS.");
@@ -302,14 +305,14 @@ namespace SpaceAge
                 {
                     case Tabs.Chronicle:
                         gridContents = new List<DialogGUIBase>(LinesPerPage);
-                        Core.Log("Displaying events " + ((Page - 1) * LinesPerPage + 1) + "-" + Math.Min(Page * LinesPerPage, chronicle.Count) + "...");
-                        for (int i = (Page - 1) * LinesPerPage; i < Math.Min(Page * LinesPerPage, chronicle.Count); i++)
+                        Core.Log("Displaying events " + ((Page - 1) * LinesPerPage + 1) + "-" + Math.Min(Page * LinesPerPage, displayChronicle.Count) + "...");
+                        for (int i = (Page - 1) * LinesPerPage; i < Math.Min(Page * LinesPerPage, displayChronicle.Count); i++)
                         {
-                            Core.Log("chronicle[" + (Core.NewestFirst ? (chronicle.Count - i - 1) : i) + "]: " + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
+                            Core.Log("chronicle[" + (Core.NewestFirst ? (displayChronicle.Count - i - 1) : i) + "]: " + displayChronicle[Core.NewestFirst ? (displayChronicle.Count - i - 1) : i].Description);
                             gridContents.Add(
                                 new DialogGUIHorizontalLayout(
-                                    new DialogGUILabel("<color=\"white\">" + Core.ParseUT(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time) + "</color>\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description, true),
-                                    new DialogGUIButton<int>("X", DeleteItem, Core.NewestFirst ? (chronicle.Count - i - 1) : i)));
+                                    new DialogGUILabel("<color=\"white\">" + Core.ParseUT(displayChronicle[Core.NewestFirst ? (displayChronicle.Count - i - 1) : i].Time) + "</color>\t" + displayChronicle[Core.NewestFirst ? (displayChronicle.Count - i - 1) : i].Description, true),
+                                    new DialogGUIButton<int>("X", DeleteItem, Core.NewestFirst ? (displayChronicle.Count - i - 1) : i)));
                         }
                         return new DialogGUIVerticalLayout(
                             new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, gridContents.ToArray()),
@@ -317,7 +320,8 @@ namespace SpaceAge
                             new DialogGUIHorizontalLayout(
                                 windowWidth - 20,
                                 10,
-                                new DialogGUITextInput("", false, 100, TextInputChanged),
+                                new DialogGUITextInput(textInput, false, 100, TextInputChanged),
+                                new DialogGUIButton("Find", Find, false),
                                 new DialogGUIButton("Add", AddItem, false),
                                 new DialogGUIButton("Export", ExportChronicle))));
 
@@ -352,9 +356,9 @@ namespace SpaceAge
                 new Vector2(1, 1),
                 new Vector2(1, 1),
                 new MultiOptionDialog(
-                    "Space Age Chronicle",
+                    "Space Age",
                     "",
-                    "Space Age Chronicle",
+                    "Space Age",
                     HighLogic.UISkin,
                     windowPosition,
                     new DialogGUIHorizontalLayout(
@@ -409,7 +413,7 @@ namespace SpaceAge
 
         int LinesPerPage => (currentTab == Tabs.Chronicle) ? HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().chronicleLinesPerPage : HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().achievementsPerPage;
 
-        int PageCount => (int)System.Math.Ceiling((double)((currentTab == Tabs.Chronicle) ? chronicle.Count : achievements.Count) / LinesPerPage);
+        int PageCount => (int)System.Math.Ceiling((double)((currentTab == Tabs.Chronicle) ? displayChronicle.Count : achievements.Count) / LinesPerPage);
 
         public void PageUp()
         {
@@ -437,7 +441,8 @@ namespace SpaceAge
 
         public void DeleteItem(int i)
         {
-            chronicle.RemoveAt(i);
+            chronicle.Remove(displayChronicle[i]);
+            if (displayChronicle != chronicle) displayChronicle.RemoveAt(i);
             Invalidate();
         }
 
@@ -449,16 +454,16 @@ namespace SpaceAge
             return s;
         }
 
-        void ExportChronicle()
+        void Find()
         {
-            string filename = KSPUtil.ApplicationRootPath + "/saves/" + HighLogic.SaveFolder + "/" + ((textInput.Trim(' ') == "") ? "chronicle" : KSPUtil.SanitizeFilename(textInput)) + ".txt";
-            Core.Log("ExportChronicle to '" + filename + "'...", Core.LogLevel.Important);
-            TextWriter writer = File.CreateText(filename);
-            for (int i = 0; i < chronicle.Count; i++)
-                writer.WriteLine(KSPUtil.PrintDateCompact(chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Time, true) + "\t" + chronicle[Core.NewestFirst ? (chronicle.Count - i - 1) : i].Description);
-            writer.Close();
-            Core.Log("Done.");
-            ScreenMessages.PostScreenMessage("The Chronicle has been exported to GameData\\SpaceAge\\PluginData\\SpaceAge\\" + filename + ".");
+            if (textInput != "") 
+            {
+                displayChronicle = new List<ChronicleEvent>();
+                foreach (ChronicleEvent e in chronicle)
+                    if (e.Description.ToLower().Contains(textInput.ToLower())) displayChronicle.Add(e);
+            }
+            else displayChronicle = chronicle;
+            Page = 1;
             Invalidate();
         }
 
@@ -467,6 +472,19 @@ namespace SpaceAge
             Core.Log("AddItem (textInput = '" + textInput + "')", Core.LogLevel.Important);
             if (textInput.Trim(' ') == "") return;
             AddChronicleEvent(new SpaceAge.ChronicleEvent("Custom", "description", textInput));
+        }
+
+        void ExportChronicle()
+        {
+            string filename = KSPUtil.ApplicationRootPath + "/saves/" + HighLogic.SaveFolder + "/" + ((textInput.Trim(' ') == "") ? "chronicle" : KSPUtil.SanitizeFilename(textInput)) + ".txt";
+            Core.Log("ExportChronicle to '" + filename + "'...", Core.LogLevel.Important);
+            TextWriter writer = File.CreateText(filename);
+            for (int i = 0; i < displayChronicle.Count; i++)
+                writer.WriteLine(KSPUtil.PrintDateCompact(displayChronicle[Core.NewestFirst ? (displayChronicle.Count - i - 1) : i].Time, true) + "\t" + displayChronicle[Core.NewestFirst ? (displayChronicle.Count - i - 1) : i].Description);
+            writer.Close();
+            Core.Log("Done.");
+            ScreenMessages.PostScreenMessage("The Chronicle has been exported to GameData\\SpaceAge\\PluginData\\SpaceAge\\" + filename + ".");
+            Invalidate();
         }
 
         #endregion
