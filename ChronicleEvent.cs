@@ -31,6 +31,7 @@ namespace SpaceAge
                     case "ReachSpace": return GetString("vessel") + " reached space.";
                     case "SOIChange": return GetString("vessel") + " reached " + GetString("body") + "'s sphere of influence.";
                     case "Orbit": return GetString("vessel") + " entered orbit around " + GetString("body") + ".";
+                    case "Reentry": return GetString("vessel") + " entered atmosphere of " + GetString("body") + ".";
                     case "Docking": return GetString("vessel1") + " docked with " + GetString("vessel2") + ".";
                     case "Undocking": return GetString("vessel1") + " undocked from " + GetString("vessel2") + ".";
                     case "Landing": return GetString("vessel") + " landed on " + GetString("body") + (HasData("crew") ? " with a crew of " + GetInt("crew") : "") + ".";

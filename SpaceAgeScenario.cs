@@ -456,7 +456,8 @@ namespace SpaceAge
 
         void Find()
         {
-            if (textInput != "") 
+            Core.Log("Find (textInput = '" + textInput + "')", Core.LogLevel.Important);
+            if (textInput.Trim(' ') != "") 
             {
                 displayChronicle = new List<ChronicleEvent>();
                 foreach (ChronicleEvent e in chronicle)
@@ -642,7 +643,7 @@ namespace SpaceAge
         double lastLanding = 0;
         public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
         {
-            Core.Log("OnSituationChanged(<'" + a.host.vesselName + "', '" + a.to + "'>)");
+            Core.Log("OnSituationChanged(<'" + a.host.vesselName + "', '" + a.from + "', '" + a.to + "'>)");
             if (!IsVesselEligible(a.host, true)) return;
             ChronicleEvent e = new ChronicleEvent();
             e.Data.Add("vessel", a.host.vesselName);
@@ -664,6 +665,13 @@ namespace SpaceAge
                 case Vessel.Situations.ORBITING:
                     if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackOrbit) e.Type = "Orbit";
                     CheckAchievements("Orbit", a.host);
+                    break;
+                case Vessel.Situations.FLYING:
+                    if ((a.from & (Vessel.Situations.SUB_ORBITAL | Vessel.Situations.ESCAPING | Vessel.Situations.ORBITING)) != 0)
+                    {
+                        if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackReentry) e.Type = "Reentry";
+                        CheckAchievements("Reentry", a.host);
+                    }
                     break;
             }
             if ((e.Type != null) && (e.Type != "")) AddChronicleEvent(e);

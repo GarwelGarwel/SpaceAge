@@ -61,6 +61,9 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Track Orbit Events", toolTip = "Track and save Orbit events in the Chronicle")]
         public bool trackOrbit = true;
 
+        [GameParameters.CustomParameterUI("Track Reentry Events", toolTip = "Track and save atrmospheric (re)entry events in the Chronicle")]
+        public bool trackReentry = true;
+
         [GameParameters.CustomParameterUI("Track Docking Events", toolTip = "Track and save Docking events in the Chronicle")]
         public bool trackDocking = true;
 
