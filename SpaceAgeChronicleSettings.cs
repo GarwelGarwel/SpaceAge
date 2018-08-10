@@ -85,7 +85,7 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Track Recovery Events", toolTip = "Track and save Recovery events in the Chronicle")]
         public bool trackRecovery = true;
 
-        [GameParameters.CustomParameterUI("Track Return From Events", toolTip = "Track and save Return From Orbit/Surface events in the Chronicle")]
+        [GameParameters.CustomParameterUI("Track \"Return From\" Events", toolTip = "Track and save Return From Orbit/Surface events in the Chronicle")]
         public bool trackReturnFrom = true;
 
         [GameParameters.CustomParameterUI("Track Destroy Events", toolTip = "Track and save Destroy events in the Chronicle")]
@@ -97,6 +97,9 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Track Flag Plant Events", toolTip = "Track and save Flag Plant events in the Chronicle")]
         public bool trackFlagPlant = true;
 
+        [GameParameters.CustomParameterUI("Track Anomaly Discovery Events", toolTip = "Track and save anomaly discovery events in the Chronicle")]
+        public bool trackAnomalyDiscovery = true;
+
         [GameParameters.CustomParameterUI("Track Facility Upgraded Events", toolTip = "Track and save Facility Upgraded events in the Chronicle")]
         public bool trackFacilityUpgraded = true;
 
@@ -105,8 +108,5 @@ namespace SpaceAge
 
         [GameParameters.CustomParameterUI("Track Tech Researched Events", toolTip = "Track and save Technology Researched events in the Chronicle")]
         public bool trackTechnologyResearched = true;
-
-        [GameParameters.CustomParameterUI("Track Anomaly Discovery Events", toolTip = "Track and save anomaly discovery events in the Chronicle")]
-        public bool trackAnomalyDiscovery = true;
     }
 }
