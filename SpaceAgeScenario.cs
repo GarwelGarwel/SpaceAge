@@ -154,7 +154,7 @@ namespace SpaceAge
         public void AddChronicleEvent(ChronicleEvent e)
         {
             Core.ShowNotification(e.Type + " event detected.");
-            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().unwarpOnEvents && (TimeWarp.CurrentRateIndex != 0)) TimeWarp.SetRate(0, false, !HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications);
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().unwarpOnEvents && (TimeWarp.CurrentRateIndex != 0)) TimeWarp.SetRate(0, true, !HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications);
             chronicle.Add(e);
             Invalidate();
         }
