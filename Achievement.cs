@@ -36,7 +36,7 @@ namespace SpaceAge
             set => this.value = value;
         }
 
-        public string DisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("F2") : Value.ToString("N0")) + " " + Proto.Unit : "";
+        public string DisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit : "";
 
         public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 
