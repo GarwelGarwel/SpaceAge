@@ -10,6 +10,7 @@ The Chronicle module shows a history of notable events in the playthrough (adjus
 - launches
 - reaching space
 - orbiting
+- reentries
 - landings
 - vessel recoveries
 - returns from orbit and surface
@@ -17,13 +18,13 @@ The Chronicle module shows a history of notable events in the playthrough (adjus
 - docking and undocking
 - deaths
 - flag plants
-- anomaly discoveries (untested!)
+- anomaly discoveries
 - KSC building upgrades
 - KSC structures damaged
 - tech nodes discoveries
 - changes of SOI
 
-You can also manually add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
+You can find (filter) specific events and manually add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
 
 **Achievements**
 
@@ -33,7 +34,7 @@ Currently, the module tracks this data:
 - total (lifetime) income
 - number of launched and lost vessels and kerbals
 - total mass of vessels launched
-- total numbers of planted flags and discovered anomalies (untested)
+- total numbers of planted flags and discovered anomalies
 - heaviest vessel launched
 - most complex (by parts count) vessel launched
 - max crew in a vessel (on launch)
@@ -46,7 +47,7 @@ For every celestial body, it tracks:
 - total numbers of landings (and, separately, crewed landings)
 - total numbers of discovered anomalies (untested)
 - the masses of the heaviest vessels that landed on or orbited the celestial body
-- the first flybys, orbits, landings, and returns (crewed and overall) as well as flags planted on the body
+- the first flybys, orbits, reentries, landings, and returns (crewed and overall) as well as flags planted on the body
 
 Space Age can parse your save data to find and import records of previous discoveries made by the stock ProgressTracking system. This option can be enabled in the settings (default is off). This is handy if you've installed the mod mid-game or added some new achievements to it. However, the stock system saves much less information, so Space Age can only learn so much from it.
 
@@ -66,6 +67,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 - *`Launch`*
 - *`ReachSpace`*
 - *`Orbit`*
+- *`Reentry`*
 - *`Landing`*
 - *`SOIChange`*
 - *`Recovery`*
@@ -76,7 +78,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 - *`Undocking`*
 - `Death`
 - `FlagPlant`
-- `AnomalyDiscovery` (untested)
+- `AnomalyDiscovery`
 - `FacilityUpgraded`
 - `StructureCollapsed`
 - `TechnologyResearched`
@@ -94,10 +96,12 @@ The following events are available for `onEvent` field (for events in *italic* y
 - [KSP-AVC](https://forum.kerbalspaceprogram.com/index.php?/topic/72169-12-ksp-avc-add-on-version-checker-plugin-1162-miniavc-ksp-avc-online-2016-10-13/)
 - [Blizzy's Toolbar](https://forum.kerbalspaceprogram.com/index.php?/topic/55420-120-toolbar-1713-common-api-for-draggableresizable-buttons-toolbar/)
 
-Space Age doesn't change anything in the universe, so it shouldn't affect save games.
+Space Age doesn't change anything in the universe, so it shouldn't affect playability of save games.
 
-The mod has minor issues with Kerbal Construction Time, which handles technology discoveries and facility upgrades in its own way. Simply disable or manually delete these entries.
+Tracking of returns from orbit/surface is not perfect (it uses the stock system, which was intended for internal purposes) and can sometimes generate too many events. Delete unnecessary ones.
+
+The mod has minor issues with Kerbal Construction Time, which handles technology discoveries and facility upgrades in its own way. You can simply disable or manually delete these entries.
 
 **License**
 
-The mod is distributed under MIT license. The icon has been created by Delapouite (http://delapouite.com) and is licensed under CC-BY 3.0.
+The mod is distributed under MIT license. The icon has been created by [Delapouite](http://delapouite.com) and is licensed under CC-BY 3.0.
