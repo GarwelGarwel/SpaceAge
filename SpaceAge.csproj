@@ -57,7 +57,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="achievements.cfg" />
+    <None Include="GameData\SpaceAge\achievements.cfg" />
+    <None Include="GameData\SpaceAge\LICENSE" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
@@ -74,7 +75,11 @@
     <Compile Include="ToolbarWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="SpaceAge.version" />
+    <None Include="GameData\SpaceAge\SpaceAge.version" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="GameData\SpaceAge\icon.png" />
+    <Content Include="GameData\SpaceAge\icon24.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
