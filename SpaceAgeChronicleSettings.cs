@@ -23,9 +23,9 @@ namespace SpaceAge
         public bool UseBlizzysToolbar = true;
 
         [GameParameters.CustomParameterUI("Debug Mode", toolTip = "Verbose logging, obligatory for bug submissions")]
-        public bool debugMode = true;
+        public bool debugMode = false;
 
-        [GameParameters.CustomParameterUI("Show Notifications", toolTip = "Show on-screen notifications when new items added to the Chronicle")]
+        [GameParameters.CustomParameterUI("Show Notifications", toolTip = "Show on-screen notifications when new items are added to the Chronicle")]
         public bool showNotifications = false;
 
         [GameParameters.CustomIntParameterUI("Chronicle Records per Page", toolTip = "How many Chronicle entries to show in one page", minValue = 5, maxValue = 25, stepSize = 5)]
