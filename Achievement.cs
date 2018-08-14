@@ -36,7 +36,15 @@ namespace SpaceAge
             set => this.value = value;
         }
 
-        public string DisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit : "";
+        string hero;
+        public string Hero
+        {
+            get => !invalid ? hero : null;
+            set => hero = value;
+        }
+
+        public string ShortDisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit : "";
+        public string FullDisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit + (Hero != null ? " (" + Hero + ")" : "") : (Hero ?? "");
 
         public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 
@@ -86,6 +94,7 @@ namespace SpaceAge
                 if (Proto.IsBodySpecific) node.AddValue("body", Body);
                 if (Proto.HasTime) node.AddValue("time", Time);
                 if (Proto.HasValue) node.AddValue("value", Value);
+                if (Hero != null) node.AddValue("hero", Hero);
                 return node;
             }
             set
@@ -99,6 +108,7 @@ namespace SpaceAge
                     if (Proto.IsBodySpecific && value.HasValue("body")) Body = value.GetValue("body");
                     if (Proto.HasTime && value.HasValue("time")) Time = Double.Parse(value.GetValue("time"));
                     if (Proto.HasValue && value.HasValue("value")) Value = Double.Parse(value.GetValue("value"));
+                    if (value.HasValue("hero")) Hero = value.GetValue("hero");
                 }
                 catch (Exception) { throw new ArgumentException("Achievement config node is incorrect: " + value); }
             }
@@ -108,12 +118,16 @@ namespace SpaceAge
 
         public Achievement(ConfigNode node) => ConfigNode = node;
 
-        public Achievement(ProtoAchievement proto, CelestialBody body = null, Vessel vessel = null, double value = 0)
+        public Achievement(ProtoAchievement proto, CelestialBody body = null, Vessel vessel = null, double value = 0, string hero = null)
         {
             Proto = proto;
             if (invalid) return;
             if (body != null) Body = body.name;
-            if (Proto.HasTime) Time = Planetarium.GetUniversalTime();
+            if (Proto.HasTime)
+            {
+                Time = Planetarium.GetUniversalTime();
+                Hero = hero;
+            }
             if (Proto.HasValue)
                 switch (Proto.ValueType)
                 {
@@ -124,7 +138,7 @@ namespace SpaceAge
                     case ProtoAchievement.ValueTypes.Funds: Value = value; break;
                     default: Value = 1; break;
                 }
-            if (proto.CrewedOnly && ((vessel == null) || (vessel.GetCrewCount() == 0))) invalid = true;
+            if (Proto.CrewedOnly && ((vessel == null) || (vessel.GetCrewCount() == 0))) invalid = true;
         }
 
         bool invalid = false;

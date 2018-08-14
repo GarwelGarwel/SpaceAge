@@ -250,24 +250,25 @@ namespace SpaceAge
             return false;
         }
 
-        void CheckAchievements(string ev, CelestialBody body = null, Vessel vessel = null, double value = 0)
+        void CheckAchievements(string ev, CelestialBody body = null, Vessel vessel = null, double value = 0, string hero = null)
         {
-            Core.Log("CheckAchievements('" + ev + "', body = '" + body?.name + "', vessel = '" + vessel?.vesselName + "', " + value + ")");
+            Core.Log("CheckAchievements('" + ev + "', body = '" + body?.name + "', vessel = '" + vessel?.vesselName + "', value = " + value + ", hero = '" + (hero ?? "null") + "')");
             foreach (ProtoAchievement pa in protoAchievements)
                 if (pa.OnEvent == ev)
                 {
-                    Achievement ach = new Achievement(pa, body, vessel, value);
+                    Achievement ach = new Achievement(pa, body, vessel, value, hero);
                     if (CheckAchievement(ach))
                         if (pa.Type != ProtoAchievement.Types.Total)
                         {
-                            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAchievements) AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.DisplayValue));
+                            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAchievements) AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.ShortDisplayValue));
                             MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
                         }
                 }
         }
 
-        void CheckAchievements(string ev, Vessel v) => CheckAchievements(ev, v.mainBody, v);
+        void CheckAchievements(string ev, Vessel v) => CheckAchievements(ev, v.mainBody, v, 0, v.vesselName);
         void CheckAchievements(string ev, double v) => CheckAchievements(ev, null, null, v);
+        void CheckAchievements(string ev, string hero) => CheckAchievements(ev, null, null, 0, hero);
 
         #endregion
         #region UI METHODS
@@ -276,7 +277,7 @@ namespace SpaceAge
         {
             if (a == null) return;
             grid.Add(new DialogGUILabel(a.Title, true));
-            grid.Add(new DialogGUILabel(a.DisplayValue, true));
+            grid.Add(new DialogGUILabel(a.FullDisplayValue, true));
             grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.ParseUT(a.Time) : "", true));
         }
 
@@ -589,7 +590,7 @@ namespace SpaceAge
         public void OnCrewKilled(EventReport report)
         {
             Core.Log("OnCrewKilled(<sender: '" + report?.sender + "'>)", Core.LogLevel.Important);
-            CheckAchievements("Death", report?.origin?.vessel?.mainBody);
+            CheckAchievements("Death", report?.origin?.vessel?.mainBody, null, 0, report?.sender);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDeath) return;
             AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report?.sender));
         }
@@ -605,7 +606,7 @@ namespace SpaceAge
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
         {
             Core.Log("OnFacilityUpgraded('" + facility.name + "', " + level + ")", Core.LogLevel.Important);
-            CheckAchievements("FacilityUpgraded");
+            CheckAchievements("FacilityUpgraded", facility.name);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackFacilityUpgraded) return;
             AddChronicleEvent(new ChronicleEvent("FacilityUpgraded", "facility", facility.name, "level", (level + 1).ToString()));
         }
@@ -613,15 +614,15 @@ namespace SpaceAge
         public void OnStructureCollapsed(DestructibleBuilding structure)
         {
             Core.Log("OnStructureCollapsed('" + structure.name + "')", Core.LogLevel.Important);
-            CheckAchievements("StructureCollapsed");
+            CheckAchievements("StructureCollapsed", structure.name);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackStructureCollapsed) return;
             AddChronicleEvent(new ChronicleEvent("StructureCollapsed", "facility", structure.name));
         }
 
         public void OnTechnologyResearched(GameEvents.HostTargetAction<RDTech, RDTech.OperationResult> a)
         {
-            Core.Log("OnTechnologyResearched(<'" + a.host.name + "', '" + a.target.ToString() + "'>)", Core.LogLevel.Important);
-            CheckAchievements("TechnologyResearched");
+            Core.Log("OnTechnologyResearched(<'" + a.host.title + "', '" + a.target.ToString() + "'>)", Core.LogLevel.Important);
+            CheckAchievements("TechnologyResearched", a.host.title);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackTechnologyResearched) return;
             AddChronicleEvent(new ChronicleEvent("TechnologyResearched", "tech", a.host.title));
         }
@@ -682,7 +683,7 @@ namespace SpaceAge
             FlightGlobals.FindVessel(a, out Vessel v1);
             FlightGlobals.FindVessel(b, out Vessel v2);
             Core.Log("OnVesselDocking('" + v1?.vesselName + "', '" + v2?.vesselName + "')");
-            if (!IsVesselEligible(v1, false) && !IsVesselEligible(v2, false)) return;
+            if (!IsVesselEligible(v1, false) || !IsVesselEligible(v2, false)) return;
             if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDocking)
                 AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", v1?.vesselName, "vessel2", v2?.vesselName));
             if (IsVesselEligible(v1, false)) CheckAchievements("Docking", v1?.mainBody, v1);
@@ -692,7 +693,7 @@ namespace SpaceAge
         public void OnVesselsUndocking(Vessel v1, Vessel v2)
         {
             Core.Log("OnVesselsUndocking('" + v1?.name + "', '" + v2?.name + "')");
-            if (!IsVesselEligible(v1, false) && !IsVesselEligible(v2, false)) return;
+            if (!IsVesselEligible(v1, false) || !IsVesselEligible(v2, false)) return;
             if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDocking)
                 AddChronicleEvent(new ChronicleEvent("Undocking", "vessel1", v1?.vesselName, "vessel2", v2?.vesselName));
             if (IsVesselEligible(v1, false)) CheckAchievements("Undocking", v1.mainBody, v1);
@@ -718,9 +719,12 @@ namespace SpaceAge
             Core.Log("OnProgressCompleted(" + n.Id + ")");
             if (n is KSPAchievements.PointOfInterest)
             {
-                Core.Log("Reached a point of interest: " + ((KSPAchievements.PointOfInterest)n).Id + " on " + ((KSPAchievements.PointOfInterest)n).body);
-                if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAnomalyDiscovery) AddChronicleEvent(new ChronicleEvent("AnomalyDiscovery", "body", ((KSPAchievements.PointOfInterest)n).body, "id", ((KSPAchievements.PointOfInterest)n).Id));
-                CheckAchievements("AnomalyDiscovery", FlightGlobals.GetBodyByName(((KSPAchievements.PointOfInterest)n).body));
+                KSPAchievements.PointOfInterest poi = (KSPAchievements.PointOfInterest)n;
+                Core.Log("Reached a point of interest: " + poi.Id + " on " + poi.body);
+                if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAnomalyDiscovery) AddChronicleEvent(new ChronicleEvent("AnomalyDiscovery", "body", poi.body, "id", poi.Id));
+                List<ProtoCrewMember> crew = FlightGlobals.ActiveVessel.GetVesselCrew();
+                Core.Log("Active Vessel: " + FlightGlobals.ActiveVessel.vesselName + "; crew: " + crew.Count);
+                CheckAchievements("AnomalyDiscovery", FlightGlobals.GetBodyByName(poi.body), null, 0, (crew.Count > 0) ? crew[0].name : null);
             }
         }
     }
