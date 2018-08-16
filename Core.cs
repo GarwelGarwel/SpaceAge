@@ -43,6 +43,31 @@ namespace SpaceAge
             return "Y" + y + " D" + d.ToString("D3") + " " + h + ":" + m.ToString("D2") + (showSeconds ? (":" + ((int) t).ToString("D2")) : "");
         }
 
+        public static string GetString(ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;
+
+        public static double GetDouble(ConfigNode n, string key, double defaultValue = 0)
+        {
+            double res;
+            try { res = Double.Parse(n.GetValue(key)); }
+            catch (Exception) { res = defaultValue; }
+            return res;
+        }
+
+        public static int GetInt(ConfigNode n, string key, int defaultValue = 0)
+        {
+            int res;
+            try { res = Int32.Parse(n.GetValue(key)); }
+            catch (Exception) { res = defaultValue; }
+            return res;
+        }
+
+        public static bool GetBool(ConfigNode n, string key, bool defaultValue = false)
+        {
+            bool res;
+            try { res = Boolean.Parse(n.GetValue(key)); }
+            catch (Exception) { res = defaultValue; }
+            return res;
+        }
 
         public static bool UseBlizzysToolbar => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().UseBlizzysToolbar;
 
