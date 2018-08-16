@@ -57,15 +57,15 @@ namespace SpaceAge
         public bool Register(Achievement old)
         {
             Core.Log("Registering candidate achievement: " + this + ".");
-            if (old != null) Core.Log("Old achievement: " + old + ".");
-            else Core.Log("Old achievement of this type does not exist.");
             if (invalid)
             {
                 Core.Log("This candidate achievement is invalid. Terminating.");
                 return false;
             }
-            bool res = false;
+            if (old != null) Core.Log("Old achievement: " + old + ".");
+            else Core.Log("Old achievement of this type does not exist.");
             if ((old != null) && ((old.Proto != Proto) || (old.Body != Body))) return false;
+            bool res = false;
             switch (Proto.Type)
             {
                 case ProtoAchievement.Types.Total:
