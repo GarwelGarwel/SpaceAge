@@ -14,9 +14,11 @@ namespace SpaceAge
             set => title = value;
         }
 
+        public string OnEvent { get; set; } = "";
         public bool IsBodySpecific { get; set; } = false;
 
-        public bool ExcludeHome { get; set; } = false;
+        public enum HomeCountTypes { Default, Only, Exclude };
+        public HomeCountTypes Home { get; set; } = HomeCountTypes.Default;
 
         public enum Types { Max, Total, First };
         public Types Type { get; set; }
@@ -41,9 +43,9 @@ namespace SpaceAge
             }
         }
 
-        public bool HasTime => (Type == Types.First) || (Type == Types.Max);
+        public bool Unique = false;
 
-        public string OnEvent { get; set; } = "";
+        public bool HasTime => (Type == Types.First) || (Type == Types.Max);
 
         public bool CrewedOnly { get; set; } = false;
 
@@ -59,14 +61,16 @@ namespace SpaceAge
                 {
                     Core.Log("Loading protoachievement " + value.GetValue("name") + "...");
                     Name = value.GetValue("name");
-                    if (value.HasValue("title")) Title = value.GetValue("title");
-                    if (value.HasValue("onEvent")) OnEvent = value.GetValue("onEvent");
+                    Title = Core.GetString(value, "title");
+                    OnEvent = Core.GetString(value, "onEvent", "");
                     Type = (Types)Enum.Parse(typeof(Types), value.GetValue("type"), true);
                     if (value.HasValue("valueType")) ValueType = (ValueTypes)Enum.Parse(typeof(ValueTypes), value.GetValue("valueType"), true);
-                    if (value.HasValue("bodySpecific")) IsBodySpecific = Boolean.Parse(value.GetValue("bodySpecific"));
-                    if (value.HasValue("excludeHome")) ExcludeHome = Boolean.Parse(value.GetValue("excludeHome"));
-                    if (value.HasValue("crewedOnly")) CrewedOnly = Boolean.Parse(value.GetValue("crewedOnly"));
-                    if (value.HasValue("stockSynonym")) StockSynonym = value.GetValue("stockSynonym");
+                    Unique = Core.GetBool(value, "unique");
+                    IsBodySpecific = Core.GetBool(value, "bodySpecific");
+                    if (value.HasValue("home")) Home = (HomeCountTypes)Enum.Parse(typeof(HomeCountTypes), value.GetValue("home"), true);
+                    //Home = Core.GetBool(value, "excludeHome");
+                    CrewedOnly = Core.GetBool(value, "crewedOnly");
+                    StockSynonym = Core.GetString(value, "stockSynonym");
                 }
                 catch (Exception) { Core.Log("Error parsing a ProtoAchievement node: " + value, Core.LogLevel.Error); }
             }

@@ -266,7 +266,7 @@ namespace SpaceAge
                 }
         }
 
-        void CheckAchievements(string ev, Vessel v) => CheckAchievements(ev, v.mainBody, v, 0, v.vesselName);
+        void CheckAchievements(string ev, Vessel v) => CheckAchievements(ev, v.mainBody, v);
         void CheckAchievements(string ev, double v) => CheckAchievements(ev, null, null, v);
         void CheckAchievements(string ev, string hero) => CheckAchievements(ev, null, null, 0, hero);
 
