@@ -4,6 +4,8 @@ Space Age is a mod for Kerbal Space Program, which collects and shows various in
 
 The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an occasional NRE or freezeup are possible. Backward compatibility between versions is not guaranteed. Please report errors in the Issues tab or in the forum post.
 
+**Do NOT use the GameData folder on Github to install the mod as it contains WIP, often unfinished versions of files with an outdated DLL. Only use Releases tab to download the mod.**
+
 **Chronicle**
 
 The Chronicle module shows a history of notable events in the playthrough (adjustable in Difficulty Settings):
