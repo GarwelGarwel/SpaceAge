@@ -641,7 +641,7 @@ namespace SpaceAge
             CheckAchievements("SOIChange", e.to, e.host);
         }
 
-        double lastLanding = 0;
+        double lastTakeoff = 0;
         public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
         {
             Core.Log("OnSituationChanged(<'" + a.host.vesselName + "', '" + a.from + "', '" + a.to + "'>)");
@@ -654,12 +654,11 @@ namespace SpaceAge
             {
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.SPLASHED:
-                    if (Planetarium.GetUniversalTime() < lastLanding + SpaceAgeChronicleSettings.MinLandingInterval)
+                    if ((Planetarium.GetUniversalTime() < lastTakeoff + SpaceAgeChronicleSettings.MinJumpDuration) || (a.from == Vessel.Situations.PRELAUNCH))
                     {
-                        Core.Log("Landing is not logged (last landing: " + lastLanding + "; current UT:" + Planetarium.GetUniversalTime() + ").");
+                        Core.Log("Landing is not logged (last takeoff: " + lastTakeoff + "; current UT:" + Planetarium.GetUniversalTime() + ").");
                         return;
                     }
-                    lastLanding = Planetarium.GetUniversalTime();
                     if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackLanding) e.Type = "Landing";
                     CheckAchievements("Landing", a.host);
                     break;
@@ -675,6 +674,7 @@ namespace SpaceAge
                     }
                     break;
             }
+            if ((a.from == Vessel.Situations.LANDED) && ((a.to == Vessel.Situations.FLYING) || (a.to == Vessel.Situations.SUB_ORBITAL))) lastTakeoff = Planetarium.GetUniversalTime();
             if ((e.Type != null) && (e.Type != "")) AddChronicleEvent(e);
         }
 

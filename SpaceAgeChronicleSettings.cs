@@ -73,13 +73,13 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("Track Landing Events", toolTip = "Track and save Landing events in the Chronicle")]
         public bool trackLanding = true;
 
-        [GameParameters.CustomFloatParameterUI("Min Landing Interval", toolTip = "Min time between landings for them to be counted as separate, in seconds", minValue = 0, maxValue = 300, stepCount = 31)]
-        public float minLandingInterval = 60;
+        [GameParameters.CustomFloatParameterUI("Min Jump Duration to Track", toolTip = "Landings after jumps shorter than this will be ignored, in seconds", minValue = 0, maxValue = 120, stepCount = 21)]
+        public float minJumpDuration = 30;
 
-        public static float MinLandingInterval
+        public static float MinJumpDuration
         {
-            get => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minLandingInterval;
-            set => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minLandingInterval = value;
+            get => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minJumpDuration;
+            set => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().minJumpDuration = value;
         }
 
         [GameParameters.CustomParameterUI("Track Recovery Events", toolTip = "Track and save Recovery events in the Chronicle")]
