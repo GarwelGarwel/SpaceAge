@@ -79,7 +79,7 @@ namespace SpaceAge
                         if (old != null)
                         {
                             Value += old.Value;
-                            Ids += old.Ids;
+                            if (Proto.Unique) Ids += old.Ids;
                         }
                         res = true;
                     }
@@ -123,13 +123,11 @@ namespace SpaceAge
                     if (Proto.HasTime) Time = Core.GetDouble(value, "time");
                     if (Proto.HasValue) Value = Core.GetDouble(value, "value");
                     Hero = Core.GetString(value, "hero");
-                    Ids = Core.GetString(value, "ids", "");
+                    if (Proto.Unique) Ids = Core.GetString(value, "ids", "");
                 }
                 catch (Exception) { throw new ArgumentException("Achievement config node is incorrect: " + value); }
             }
         }
-
-        public Achievement(ProtoAchievement proto) => Proto = proto;
 
         public Achievement(ConfigNode node) => ConfigNode = node;
 
