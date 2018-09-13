@@ -56,7 +56,7 @@ namespace SpaceAge
 
         public string FullName => invalid ? "N/A" : GetFullName(Proto.Name, Body);
 
-        public override string ToString() => (Time != Double.NaN ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : ""));
+        public override string ToString() => (!Double.IsNaN(Time) ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : ""));
 
         public bool Register(Achievement old)
         {
