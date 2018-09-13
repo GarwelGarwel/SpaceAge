@@ -1,14 +1,10 @@
 # SpaceAge
 
-Space Age is a mod for Kerbal Space Program, which collects and shows various information about your campaign. As of v0.2, it has two modules, the Chronicle and Achievements, implemented (see below).
-
-The mod is a beta. It shouldn't destroy your ships or kill your kerbals, but an occasional NRE or freezeup are possible. Backward compatibility between versions is not guaranteed. Please report errors in the Issues tab or in the forum post.
-
-**Do NOT use the GameData folder on Github to install the mod as it contains WIP, often unfinished versions of files with an outdated DLL. Only use Releases tab to download the mod.**
+Space Age is a mod for Kerbal Space Program, which lets you see important events and achievements of your playthrough.
 
 **Chronicle**
 
-The Chronicle module shows a history of notable events in the playthrough (adjustable in Difficulty Settings):
+The Chronicle shows a history of notable events in the playthrough (adjustable via Difficulty Settings):
 - launches
 - reaching space
 - orbiting
@@ -30,12 +26,13 @@ You can find (filter) specific events and manually add your own events (like *"C
 
 **Achievements**
 
-Achievements module shows your playthrough's statistics, records, and firsts. Unlike the stock progress tracking, it allows you to see this data any time you want and you can even easily adjust it by changing or even adding new achievements.
+Achievements tab shows your playthrough's statistics, records, and firsts. Unlike the stock progress tracking, it allows you to see this data any time you want and you can even easily adjust it by changing or even adding new achievements.
 
 Currently, the module tracks this data:
 - total (lifetime) income
 - number of launched and lost vessels and kerbals
 - total mass of vessels launched
+- number of unique vessels that reached space
 - total numbers of planted flags and discovered anomalies
 - heaviest vessel launched
 - most complex (by parts count) vessel launched
@@ -58,11 +55,13 @@ Space Age can parse your save data to find and import records of previous discov
 You can easily add, modify or remove achievements by editing `achievements.cfg` file in the mod's directory. Each `ACHIEVEMENT` record there corresponds to one type of an achievement. The following fields are used:
 - `name` (obligatory): the internal unique name of the achievement
 - `title`: how the achievement is displayed in the UI; the celestial body's name is added to it for body-specific achievements
-- `bodySpecific`: set to `true` if the achievement should be tracked separately for each celestial body (default is false)
 - `type` (obligatory): set to `Total`, `Max` or `First` to define the achievement's behaviour to either add values, select the highest values or just mark the first time the achievement is completed
 - `valueType` (only for `Total` and `Max` achievements): defines, which value to use for the achievement. Can be `Mass`, `PartsCount`, `CrewCount`, or `Funds` (only with `Income` or `Expense` events). Note that not every event is associated with a vessel, so sometimes you may not be able to access these values.
 - `onEvent` (obligatory): which event activates the achievemnt (see list below)
+- `bodySpecific`: set to `true` if the achievement should be tracked separately for each celestial body (default is false)
+- `home`: can be `Only` (to count only events in SOI of home planet), `Exclude` (to ignore events in home SOI) or `Default`
 - `crewedOnly`: set to `true` if the achievement is only activated when the vessel has crew
+- `unique` (only for `Total` achievements): set to true if you only want to count each vessel (or kerbal in appropriate cases) once
 - `stockSynonym`: id of the relevant achievement in the stock ProgressTracking system; only makes sense for `First` achievements
 
 The following events are available for `onEvent` field (for events in *italic* you can access mass, parts count, and crew count):
@@ -90,17 +89,17 @@ The following events are available for `onEvent` field (for events in *italic* y
 **Future Plans**
 
 - More events, achievements and data to track (requests sought!)
-- Average values tracking (maybe)
-- Trends: graphs of your progress (e.g. funds earned over time)
+- Tracking unique kerbals in more cases
+- Average values tracking
 
-**Supported Mods**
+**Supported Mods & Known Issues**
 
 - [KSP-AVC](https://forum.kerbalspaceprogram.com/index.php?/topic/72169-12-ksp-avc-add-on-version-checker-plugin-1162-miniavc-ksp-avc-online-2016-10-13/)
 - [Blizzy's Toolbar](https://forum.kerbalspaceprogram.com/index.php?/topic/55420-120-toolbar-1713-common-api-for-draggableresizable-buttons-toolbar/)
 
 Space Age doesn't change anything in the universe, so it shouldn't affect playability of save games.
 
-Tracking of returns from orbit/surface is not perfect (it uses the stock system, which was intended for internal purposes) and can sometimes generate too many events. Delete unnecessary ones.
+Tracking of returns from orbit/surface is far from perfect (it uses the stock system, which was intended for internal purposes) and can sometimes generate too many events. Delete unnecessary ones or disable tracking it in the Settings.
 
 The mod has minor issues with Kerbal Construction Time, which handles technology discoveries and facility upgrades in its own way. You can simply disable or manually delete these entries.
 
