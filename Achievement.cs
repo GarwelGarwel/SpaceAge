@@ -74,7 +74,7 @@ namespace SpaceAge
             {
                 case ProtoAchievement.Types.Total:
                     Core.Log("Unique: " + Proto.Unique + ". Id: " + Ids + ". Old achievement's ids: " + (old?.Ids ?? "N/A"));
-                    if ((old == null) || !Proto.Unique || old.ContainsId(Ids))
+                    if ((old == null) || !Proto.Unique || !old.ContainsId(Ids))
                     {
                         if (old != null)
                         {
