@@ -14,18 +14,13 @@ namespace SpaceAge
             set => title = value;
         }
 
-        public string OnEvent { get; set; } = "";
-        public bool IsBodySpecific { get; set; } = false;
-
-        public enum HomeCountTypes { Default, Only, Exclude };
-        public HomeCountTypes Home { get; set; } = HomeCountTypes.Default;
-
         public enum Types { Max, Total, First };
         public Types Type { get; set; }
 
         public bool HasValue => (Type == Types.Max) || (Type == Types.Total);
+        public bool HasTime => (Type == Types.First) || (Type == Types.Max);
 
-        public enum ValueTypes { None, Cost, Mass, PartsCount, CrewCount, Funds };
+       public enum ValueTypes { None, Cost, Mass, PartsCount, CrewCount, Funds };
         public ValueTypes ValueType { get; set; } = ValueTypes.None;
 
         public string Unit
@@ -43,15 +38,17 @@ namespace SpaceAge
             }
         }
 
-        public bool Unique = false;
+        public string OnEvent { get; set; } = "";
+        public bool IsBodySpecific { get; set; } = false;
 
-        public bool HasTime => (Type == Types.First) || (Type == Types.Max);
+        public enum HomeCountTypes { Default, Only, Exclude };
+        public HomeCountTypes Home { get; set; } = HomeCountTypes.Default;
 
         public bool CrewedOnly { get; set; } = false;
-
+        public bool Unique = false;
         public string StockSynonym { get; set; } = null;
 
-        public Achievement GetAchievement() => new SpaceAge.Achievement(this);
+        public Achievement GetAchievement() => new Achievement(this);
 
         public ConfigNode ConfigNode
         {
@@ -62,14 +59,13 @@ namespace SpaceAge
                     Core.Log("Loading protoachievement " + value.GetValue("name") + "...");
                     Name = value.GetValue("name");
                     Title = Core.GetString(value, "title");
-                    OnEvent = Core.GetString(value, "onEvent", "");
                     Type = (Types)Enum.Parse(typeof(Types), value.GetValue("type"), true);
                     if (value.HasValue("valueType")) ValueType = (ValueTypes)Enum.Parse(typeof(ValueTypes), value.GetValue("valueType"), true);
-                    Unique = Core.GetBool(value, "unique");
+                    OnEvent = Core.GetString(value, "onEvent", "");
                     IsBodySpecific = Core.GetBool(value, "bodySpecific");
                     if (value.HasValue("home")) Home = (HomeCountTypes)Enum.Parse(typeof(HomeCountTypes), value.GetValue("home"), true);
-                    //Home = Core.GetBool(value, "excludeHome");
                     CrewedOnly = Core.GetBool(value, "crewedOnly");
+                    Unique = Core.GetBool(value, "unique");
                     StockSynonym = Core.GetString(value, "stockSynonym");
                 }
                 catch (Exception) { Core.Log("Error parsing a ProtoAchievement node: " + value, Core.LogLevel.Error); }
