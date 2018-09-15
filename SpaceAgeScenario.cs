@@ -132,7 +132,6 @@ namespace SpaceAge
             if (node.HasNode("ACHIEVEMENTS"))
             {
                 Core.Log(node.GetNode("ACHIEVEMENTS").CountNodes + " nodes found in ACHIEVEMENTS.");
-                int i = 0;
                 foreach (ConfigNode n in node.GetNode("ACHIEVEMENTS").GetNodes())
                     if (n.name == "ACHIEVEMENT")
                         try
@@ -710,9 +709,8 @@ namespace SpaceAge
         public void OnProgressCompleted(ProgressNode n)
         {
             Core.Log("OnProgressCompleted(" + n.Id + ")");
-            if (n is KSPAchievements.PointOfInterest)
+            if (n is KSPAchievements.PointOfInterest poi)
             {
-                KSPAchievements.PointOfInterest poi = (KSPAchievements.PointOfInterest)n;
                 Core.Log("Reached a point of interest: " + poi.Id + " on " + poi.body);
                 if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAnomalyDiscovery) AddChronicleEvent(new ChronicleEvent("AnomalyDiscovery", "body", poi.body, "id", poi.Id));
                 List<ProtoCrewMember> crew = FlightGlobals.ActiveVessel.GetVesselCrew();
@@ -721,5 +719,5 @@ namespace SpaceAge
             }
         }
     }
-}
+} 
 #endregion
