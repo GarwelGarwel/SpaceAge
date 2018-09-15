@@ -125,12 +125,8 @@ namespace SpaceAge
             if (node.HasNode("CHRONICLE"))
             {
                 Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Chronicle.");
-                int i = 0;
                 foreach (ConfigNode n in node.GetNode("CHRONICLE").GetNodes())
-                {
-                    Core.Log("Processing chronicle node #" + ++i + "...");
                     if (n.name == "EVENT") chronicle.Add(new ChronicleEvent(n));
-                }
             }
             displayChronicle = chronicle;
             if (node.HasNode("ACHIEVEMENTS"))
@@ -139,15 +135,12 @@ namespace SpaceAge
                 int i = 0;
                 foreach (ConfigNode n in node.GetNode("ACHIEVEMENTS").GetNodes())
                     if (n.name == "ACHIEVEMENT")
-                    {
-                        Core.Log("Processing Achievement node #" + ++i + "...");
                         try
                         {
                             Achievement a = new Achievement(n);
                             achievements.Add(a.FullName, a);
                         }
                         catch (ArgumentException e) { Core.Log(e.Message); }
-                    }
             }
         }
 
