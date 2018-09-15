@@ -45,7 +45,6 @@ namespace SpaceAge
 
         public string Ids { get; set; } = "";
         void AddId(string id) => Ids += "[" + id + "]";
-        bool ContainsId(string id) => Ids.Contains("[" + id + "]");
 
         public string ShortDisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit : "";
         public string FullDisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit + (Hero != null ? " (" + Hero + ")" : "") : (Hero ?? "");
@@ -74,7 +73,7 @@ namespace SpaceAge
             {
                 case ProtoAchievement.Types.Total:
                     Core.Log("Unique: " + Proto.Unique + ". Id: " + Ids + ". Old achievement's ids: " + (old?.Ids ?? "N/A"));
-                    if ((old == null) || !Proto.Unique || !old.ContainsId(Ids))
+                    if ((old == null) || !Proto.Unique || !old.Ids.Contains(Ids))
                     {
                         if (old != null)
                         {
