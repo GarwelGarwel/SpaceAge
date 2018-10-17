@@ -666,7 +666,7 @@ namespace SpaceAge
                     }
                     break;
             }
-            if ((a.from == Vessel.Situations.LANDED) && ((a.to == Vessel.Situations.FLYING) || (a.to == Vessel.Situations.SUB_ORBITAL))) lastTakeoff = Planetarium.GetUniversalTime();
+            if (((a.from == Vessel.Situations.LANDED) || (a.from == Vessel.Situations.SPLASHED)) && ((a.to == Vessel.Situations.FLYING) || (a.to == Vessel.Situations.SUB_ORBITAL))) lastTakeoff = Planetarium.GetUniversalTime();
             if ((e.Type != null) && (e.Type != "")) AddChronicleEvent(e);
         }
 
