@@ -576,7 +576,9 @@ namespace SpaceAge
             }
             CheckAchievements("Destroy", v);
             if (!HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackDestroy) return;
-            AddChronicleEvent(new ChronicleEvent("Destroy", "vessel", v.vesselName));
+            ChronicleEvent e = new ChronicleEvent("Destroy", "vessel", v.vesselName);
+            if (v.terrainAltitude < 100) e.Data.Add("body", v.mainBody.bodyName);
+            AddChronicleEvent(e);
         }
 
         public void OnCrewKilled(EventReport report)
