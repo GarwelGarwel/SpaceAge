@@ -43,7 +43,7 @@ Currently, the module tracks this data:
 - number of destroyed KSC buildings
 
 For every celestial body, it tracks:
-- total numbers of landings (and, separately, crewed landings)
+- total numbers of landings (and, separately, crewed landings) and lost vessels
 - total numbers of discovered anomalies (untested)
 - the masses of the heaviest vessels that landed on or orbited the celestial body
 - the first flybys, orbits, reentries, landings, and returns (crewed and overall) as well as flags planted on the body
@@ -91,6 +91,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 - More events, achievements and data to track (requests sought!)
 - Tracking unique kerbals in more cases
 - Average values tracking
+- Game score feature
 
 **Supported Mods & Known Issues**
 
