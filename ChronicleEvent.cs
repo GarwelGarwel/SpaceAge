@@ -38,7 +38,7 @@ namespace SpaceAge
                     case "Recovery": return GetString("vessel") + " was recovered" + (HasData("crew") ? " with a crew of " + GetInt("crew") : "") + ".";
                     case "ReturnFromOrbit": return GetString("vessel") + " returned from a " + GetString("body") + "'s orbit.";
                     case "ReturnFromSurface": return GetString("vessel") + " returned from a " + GetString("body") + "'s surface.";
-                    case "Destroy": return GetString("vessel") + " was destroyed.";
+                    case "Destroy": return GetString("vessel") + " was destroyed" + (HasData("body") ? " at " + GetString("body") : "") + ".";
                     case "Death": return GetString("kerbal") + " died.";
                     case "FlagPlant": return "A flag was planted on " + GetString("body") + ".";
                     case "FacilityUpgraded": return GetString("facility") + " was upgraded to level " + GetString("level") + ".";
