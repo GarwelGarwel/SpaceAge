@@ -323,6 +323,12 @@ namespace SpaceAge
                         int startingIndex = (Page - 1) * LinesPerPage;
                         Core.Log("Displaying achievements starting from " + startingIndex + " out of " + achievements.Count + "...");
                         List<Achievement> achList = SortedAchievements;
+                        if ((achievements.Count == 0) || (achList.Count == 0))
+                        {
+                            Core.Log("Can't display Achievement tabs. There are " + achievements.Count + " achievements and " + achList.Count + " protoachievements.", Core.LogLevel.Error);
+                            currentTab = Tabs.Chronicle;
+                            return WindowContents;
+                        }
                         string body = null;
                         foreach (Achievement a in achList.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
                         {
@@ -358,7 +364,7 @@ namespace SpaceAge
                         true,
                         false,
                         new DialogGUIButton<Tabs>("Chronicle", SelectTab, Tabs.Chronicle, () => (currentTab != Tabs.Chronicle), true),
-                        new DialogGUIButton<Tabs>("Achievements", SelectTab, Tabs.Achievements, () => (currentTab != Tabs.Achievements), true)),
+                        new DialogGUIButton<Tabs>("Achievements", SelectTab, Tabs.Achievements, () => (currentTab != Tabs.Achievements) && (achievements.Count > 0), true)),
                     new DialogGUIHorizontalLayout(
                         true,
                         false,
