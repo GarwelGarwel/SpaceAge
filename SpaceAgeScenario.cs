@@ -12,6 +12,8 @@ namespace SpaceAge
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>(), displayChronicle;
         static List<ProtoAchievement> protoAchievements;
         Dictionary<string, Achievement> achievements = new Dictionary<string, Achievement>();
+        static List<ProtoScoreRecord> protoScoreRecords;
+        List<ScoreRecord> scoreRecords = new List<ScoreRecord>();
 
         IButton toolbarButton;
         ApplicationLauncherButton appLauncherButton;
@@ -68,7 +70,7 @@ namespace SpaceAge
             }
 
             funds = (Funding.Instance != null) ? Funding.Instance.Funds : Double.NaN;
-            InitializeProtoAchievements();
+            InitializeDatabase();
             if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().importStockAchievements) ParseProgressTracking();
         }
 
@@ -121,7 +123,7 @@ namespace SpaceAge
         {
             Core.Log("SpaceAgeScenario.OnLoad");
             chronicle.Clear();
-            InitializeProtoAchievements();
+            InitializeDatabase();
             if (node.HasNode("CHRONICLE"))
             {
                 Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Chronicle.");
@@ -152,14 +154,18 @@ namespace SpaceAge
         }
 
         #region ACHIEVEMENTS METHODS
-        void InitializeProtoAchievements()
+        void InitializeDatabase()
         {
             if (protoAchievements != null) return;
-            Core.Log("Initializing ProtoAchievements...");
+            Core.Log("Initializing proto records...");
             protoAchievements = new List<ProtoAchievement>();
             foreach (ConfigNode n in GameDatabase.Instance.GetConfigNodes("PROTOACHIEVEMENT"))
                 protoAchievements.Add(new ProtoAchievement(n));
             Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
+            protoScoreRecords = new List<ProtoScoreRecord>();
+            foreach (ConfigNode n in GameDatabase.Instance.GetConfigNodes(ProtoScoreRecord.ConfigNodeName))
+                protoScoreRecords.Add(new ProtoScoreRecord(n));
+            Core.Log("protoScoreRecords contains " + protoScoreRecords.Count + " records.");
         }
 
         int achievementsImported = 0;
@@ -261,6 +267,15 @@ namespace SpaceAge
         void CheckAchievements(string ev, Vessel v) => CheckAchievements(ev, v.mainBody, v);
         void CheckAchievements(string ev, double v) => CheckAchievements(ev, null, null, v);
         void CheckAchievements(string ev, string hero) => CheckAchievements(ev, null, null, 0, hero);
+
+        public static ProtoScoreRecord FindProtoScoreRecord(string name)
+        {
+            Core.Log("Searching among " + protoScoreRecords.Count + " ProtoScoreRecords.");
+            foreach (ProtoScoreRecord psr in protoScoreRecords)
+                if (psr.Name == name) return psr;
+            Core.Log("ProtoScoreRecord '" + name + "' not found!", Core.LogLevel.Error);
+            return null;
+        }
 
         #endregion
         #region UI METHODS
