@@ -51,6 +51,16 @@ namespace SpaceAge
 
         public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 
+        public double BodyMultiplier
+        {
+            get
+            {
+                CelestialBody celestialBody = Body != null ? FlightGlobals.GetBodyByName(Body) : null;
+                return (celestialBody != null) ? celestialBody.scienceValues.RecoveryValue : 1;
+            }
+        }
+        public double Score => Proto.Score * BodyMultiplier;
+
         public static string GetFullName(string name, string body = null) => name + (body != null ? "@" + body : "");
 
         public string FullName => invalid ? "N/A" : GetFullName(Proto.Name, Body);

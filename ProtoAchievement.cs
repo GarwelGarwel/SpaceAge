@@ -47,6 +47,7 @@ namespace SpaceAge
         public bool CrewedOnly { get; set; } = false;
         public bool Unique = false;
         public string StockSynonym { get; set; } = null;
+        public double Score { get; set; }
 
         public Achievement GetAchievement() => new Achievement(this);
 
@@ -67,6 +68,7 @@ namespace SpaceAge
                     CrewedOnly = Core.GetBool(value, "crewedOnly");
                     Unique = Core.GetBool(value, "unique");
                     StockSynonym = Core.GetString(value, "stockSynonym");
+                    Score = Core.GetDouble(value, "score");
                 }
                 catch (Exception) { Core.Log("Error parsing a ProtoAchievement node: " + value, Core.LogLevel.Error); }
             }

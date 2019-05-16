@@ -134,14 +134,18 @@ namespace SpaceAge
             if (node.HasNode("ACHIEVEMENTS"))
             {
                 Core.Log(node.GetNode("ACHIEVEMENTS").CountNodes + " nodes found in ACHIEVEMENTS.");
+                double score = 0;
                 foreach (ConfigNode n in node.GetNode("ACHIEVEMENTS").GetNodes())
                     if (n.name == "ACHIEVEMENT")
                         try
                         {
                             Achievement a = new Achievement(n);
                             achievements.Add(a.FullName, a);
+                            if (a.Proto.Score > 0) Core.Log(a.FullDisplayValue + ": " + a.Score + " points");
+                            score += a.Score;
                         }
                         catch (ArgumentException e) { Core.Log(e.Message); }
+                Core.Log("Total score: " + score);
             }
         }
 
@@ -259,7 +263,7 @@ namespace SpaceAge
                         if (pa.Type != ProtoAchievement.Types.Total)
                         {
                             if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAchievements) AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.ShortDisplayValue));
-                            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!", MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
+                            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!" + (ach.Proto.Score > 0 ? "\r\n" + ach.Score + " progress score points added." : ""), MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
                         }
                 }
         }
@@ -283,7 +287,7 @@ namespace SpaceAge
         void DisplayAchievement(Achievement a, List<DialogGUIBase> grid)
         {
             if (a == null) return;
-            grid.Add(new DialogGUILabel(a.Title, true));
+            grid.Add(new DialogGUILabel(a.Title + (a.Proto.Score > 0 ? " (" + a.Score + " score)" : ""), true));
             grid.Add(new DialogGUILabel(a.FullDisplayValue, true));
             grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.ParseUT(a.Time) : "", true));
         }
