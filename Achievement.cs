@@ -83,7 +83,7 @@ namespace SpaceAge
             {
                 case ProtoAchievement.Types.Total:
                     Core.Log("Unique: " + Proto.Unique + ". Id: " + Ids + ". Old achievement's ids: " + (old?.Ids ?? "N/A"));
-                    if ((old == null) || !Proto.Unique || !old.Ids.Contains(Ids))
+                    if (((old == null) && (Value > 0)) || !Proto.Unique || !old.Ids.Contains(Ids))
                     {
                         if (old != null)
                         {
@@ -95,7 +95,7 @@ namespace SpaceAge
                     else res = false;
                     break;
                 case ProtoAchievement.Types.Max:
-                    if ((old == null) || (Value > old.Value)) res = true;
+                    if (((old == null) && (Value > 0)) || (Value > old.Value)) res = true;
                     break;
                 case ProtoAchievement.Types.First:
                     if ((old == null) || (Time < old.Time)) res = true;
