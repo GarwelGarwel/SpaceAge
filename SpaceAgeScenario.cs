@@ -17,10 +17,10 @@ namespace SpaceAge
 
         IButton toolbarButton;
         ApplicationLauncherButton appLauncherButton;
-        enum Tabs { Chronicle, Achievements };
+        enum Tabs { Chronicle, Achievements, Score };
         Tabs currentTab = Tabs.Chronicle;
         const float windowWidth = 600;
-        int[] page = new int[2] { 1, 1 };
+        int[] page = new int[3] { 1, 1, 1 };
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
 
@@ -313,12 +313,13 @@ namespace SpaceAge
                 List<DialogGUIBase> gridContents;
                 if (Page > PageCount) Page = PageCount;
                 if (PageCount == 0) Page = 1;
+                int startingIndex = (Page - 1) * LinesPerPage;
                 switch (currentTab)
                 {
                     case Tabs.Chronicle:
                         gridContents = new List<DialogGUIBase>(LinesPerPage);
                         Core.Log("Displaying events " + ((Page - 1) * LinesPerPage + 1) + "-" + Math.Min(Page * LinesPerPage, displayChronicle.Count) + "...");
-                        for (int i = (Page - 1) * LinesPerPage; i < Math.Min(Page * LinesPerPage, displayChronicle.Count); i++)
+                        for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, displayChronicle.Count); i++)
                         {
                             Core.Log("chronicle[" + (Core.NewestFirst ? (displayChronicle.Count - i - 1) : i) + "]: " + displayChronicle[Core.NewestFirst ? (displayChronicle.Count - i - 1) : i].Description);
                             gridContents.Add(
@@ -339,7 +340,6 @@ namespace SpaceAge
 
                     case Tabs.Achievements:
                         gridContents = new List<DialogGUIBase>(LinesPerPage * 3);
-                        int startingIndex = (Page - 1) * LinesPerPage;
                         Core.Log("Displaying achievements starting from " + startingIndex + " out of " + achievements.Count + "...");
                         List<Achievement> achList = SortedAchievements;
                         if ((achievements.Count == 0) || (achList.Count == 0))
@@ -361,6 +361,43 @@ namespace SpaceAge
                             DisplayAchievement(a, gridContents);
                         }
                         return new DialogGUIGridLayout(new RectOffset(5, 5, 0, 0), new Vector2((windowWidth - 10) / 3 - 3, 20), new Vector2(5, 5), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleLeft, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 3, gridContents.ToArray());
+                    case Tabs.Score:
+                        List<Achievement> scoreAchievements = new List<Achievement>();
+                        double score = 0;
+                        foreach (Achievement a in achievements.Values)
+                            if (a.Proto.Score > 0)
+                            {
+                                scoreAchievements.Add(a);
+                                score += a.Score;
+                            }
+                        List<string> scoreRecordNames = new List<string>();
+                        foreach (ProtoAchievement pa in protoAchievements)
+                            if ((pa.Score > 0) && !scoreRecordNames.Contains(pa.ScoreName)) scoreRecordNames.Add(pa.ScoreName);
+                        List<string> scoreBodies = new List<string>();
+                        foreach (Achievement a in scoreAchievements) if ((a.Body != null) && !scoreBodies.Contains(a.Body)) scoreBodies.Add(a.Body);
+                        gridContents = new List<DialogGUIBase>((1 + Math.Min(LinesPerPage, scoreBodies.Count)) * (1 + scoreRecordNames.Count));
+                        gridContents.Add(new DialogGUILabel("<color=\"white\">Body</color>"));
+                        foreach (string srn in scoreRecordNames)
+                            gridContents.Add(new DialogGUILabel("<color=\"white\">" + srn + "</color>"));
+                        for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, scoreBodies.Count); i++)
+                        {
+                            gridContents.Add(new DialogGUILabel("<color=\"white\">" + scoreBodies[i] + "</color>"));
+                            foreach (string srn in scoreRecordNames)
+                            {
+                                double s = 0;
+                                bool crewed = false;
+                                foreach (Achievement a in scoreAchievements)
+                                    if ((a.Body == scoreBodies[i]) && (a.Proto.ScoreName == srn))
+                                    {
+                                        s += a.Score;
+                                        if (a.Proto.CrewedOnly) crewed = true;
+                                    }
+                                gridContents.Add(new DialogGUILabel(((s > 0) ? (crewed ? "<color=\"green\">[C]  " : "<color=\"yellow\">[U]  ") + s + "</color>" : "<color=\"white\">—</color>")));
+                            }
+                        }
+                        return new DialogGUIVerticalLayout(true, true, 5, new RectOffset(5, 5, 0, 0), TextAnchor.MiddleLeft,
+                            new DialogGUIGridLayout(new RectOffset(0, 0, 0, 0), new Vector2((windowWidth - 10) / (scoreRecordNames.Count + 1) - 5, 20), new Vector2(5, 5), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleLeft, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, scoreRecordNames.Count + 1, gridContents.ToArray()),
+                            new DialogGUILabel("<color=\"white\"><b>Total score: " + score + "</b></color>"));
                 }
                 return null;
             }
@@ -383,7 +420,8 @@ namespace SpaceAge
                         true,
                         false,
                         new DialogGUIButton<Tabs>("Chronicle", SelectTab, Tabs.Chronicle, () => (currentTab != Tabs.Chronicle), true),
-                        new DialogGUIButton<Tabs>("Achievements", SelectTab, Tabs.Achievements, () => (currentTab != Tabs.Achievements) && (achievements.Count > 0), true)),
+                        new DialogGUIButton<Tabs>("Achievements", SelectTab, Tabs.Achievements, () => (currentTab != Tabs.Achievements) && (achievements.Count > 0), true),
+                        new DialogGUIButton<Tabs>("Score", SelectTab, Tabs.Score, () => (currentTab != Tabs.Score), true)),
                     new DialogGUIHorizontalLayout(
                         true,
                         false,
