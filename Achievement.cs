@@ -59,7 +59,7 @@ namespace SpaceAge
                 return (celestialBody != null) ? celestialBody.scienceValues.RecoveryValue : 1;
             }
         }
-        public double Score => Proto.Score * BodyMultiplier;
+        public double Score => Proto.Score * BodyMultiplier * (Proto.HasValue ? Value : 1);
 
         public static string GetFullName(string name, string body = null) => name + (body != null ? "@" + body : "");
 
@@ -128,7 +128,7 @@ namespace SpaceAge
                     Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
                     Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
                     if (invalid) return;
-                    if (Proto.IsBodySpecific && value.HasValue("body")) Body = value.GetValue("body");
+                    if (Proto.IsBodySpecific) Body = Core.GetString(value, "body", FlightGlobals.GetHomeBodyName());
                     if (Proto.HasTime) Time = Core.GetDouble(value, "time");
                     if (Proto.HasValue) Value = Core.GetDouble(value, "value");
                     Hero = Core.GetString(value, "hero");
