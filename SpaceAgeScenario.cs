@@ -253,6 +253,7 @@ namespace SpaceAge
         void CheckAchievements(string ev, CelestialBody body = null, Vessel vessel = null, double value = 0, string hero = null)
         {
             Core.Log("CheckAchievements('" + ev + "', body = '" + body?.name + "', vessel = '" + vessel?.vesselName + "', value = " + value + ", hero = '" + (hero ?? "null") + "')");
+            bool scored = false;
             foreach (ProtoAchievement pa in protoAchievements)
                 if (pa.OnEvent == ev)
                 {
@@ -261,10 +262,44 @@ namespace SpaceAge
                         if (pa.Type != ProtoAchievement.Types.Total)
                         {
                             if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAchievements) AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.ShortDisplayValue));
-                            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!" + (ach.Proto.Score > 0 ? "\r\n" + ach.Score + " progress score points added." : ""), MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
+                            string msg = "";
+                            if ((ach.Proto.Score > 0) && (ach.Proto.Type == ProtoAchievement.Types.First))
+                            {
+                                scored = true;
+                                double score = ach.Score;
+                                msg = "\r\n" + score + " progress score points added.";
+                                if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+                                {
+                                    double f = score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().fundsPerScore;
+                                    if (f != 0)
+                                    {
+                                        Core.Log("Adding " + f + " funds.");
+                                        Funding.Instance.AddFunds(f, TransactionReasons.Progression);
+                                        msg += "\r\n" + f.ToString("N0") + " funds earned.";
+                                    }
+                                }
+                                if ((HighLogic.CurrentGame.Mode == Game.Modes.CAREER) || (HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX))
+                                {
+                                    float s = (float)score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().sciencePerScore;
+                                    if (s != 0)
+                                    {
+                                        Core.Log("Adding " + s + " science.");
+                                        ResearchAndDevelopment.Instance.AddScience(s, TransactionReasons.Progression);
+                                        msg += "\r\n" + s.ToString("N1") + " science added.";
+                                    }
+                                }
+                                float r = (float)score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().repPerScore;
+                                if (r != 0)
+                                {
+                                    Core.Log("Adding " + r + " rep.");
+                                    Reputation.Instance.AddReputation(r, TransactionReasons.Progression);
+                                    msg += "\r\n" + r.ToString("N0") + " reputation added.";
+                                }
+                            }
+                            MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!" + msg, MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
                         }
                 }
-            UpdateScoreAchievements();
+            if (scored) UpdateScoreAchievements();
         }
 
         void CheckAchievements(string ev, Vessel v) => CheckAchievements(ev, v.mainBody, v);
@@ -303,21 +338,24 @@ namespace SpaceAge
         void UpdateScoreAchievements()
         {
             Core.Log("Updating score achievements...");
+            foreach (ProtoAchievement pa in protoAchievements)
+                if ((pa.Score > 0) && !scoreRecordNames.Contains(pa.ScoreName))
+                    scoreRecordNames.Add(pa.ScoreName);
             scoreAchievements.Clear();
             score = 0;
             foreach (Achievement a in achievements.Values)
                 if (a.Proto.Score > 0)
                 {
+                    Core.Log(a.ShortDisplayValue + " gives " + a.Score + " score.");
                     scoreAchievements.Add(a);
                     score += a.Score;
                 }
-            foreach (ProtoAchievement pa in protoAchievements)
-                if ((pa.Score > 0) && !scoreRecordNames.Contains(pa.ScoreName)) scoreRecordNames.Add(pa.ScoreName);
             scoreBodies.Clear();
             foreach (CelestialBody b in FlightGlobals.Bodies)
                 foreach (Achievement a in scoreAchievements)
-                    if (a.Body == b.name)
+                    if ((a.Body == b.name) || (!a.Proto.IsBodySpecific && (b == FlightGlobals.GetHomeBody())))
                     {
+                        Core.Log("There are some " + b.name + " achievements.");
                         scoreBodies.Add(b.name);
                         break;
                     }
@@ -381,6 +419,9 @@ namespace SpaceAge
                         }
                         return new DialogGUIGridLayout(new RectOffset(5, 5, 0, 0), new Vector2((windowWidth - 10) / 3 - 3, 20), new Vector2(5, 5), UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft, UnityEngine.UI.GridLayoutGroup.Axis.Horizontal, TextAnchor.MiddleLeft, UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount, 3, gridContents.ToArray());
                     case Tabs.Score:
+                        Core.Log("Displaying score bodies from " + startingIndex + " out of " + scoreBodies.Count + "...");
+                        if (scoreAchievements.Count == 0)
+                            return new DialogGUILabel("<align=\"center\">No score yet. Do something awesome!</align>", true);
                         gridContents = new List<DialogGUIBase>((1 + Math.Min(LinesPerPage, scoreBodies.Count)) * (1 + scoreRecordNames.Count));
                         gridContents.Add(new DialogGUILabel("<color=\"white\">Body</color>"));
                         foreach (string srn in scoreRecordNames)
