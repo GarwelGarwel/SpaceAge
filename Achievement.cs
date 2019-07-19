@@ -51,6 +51,16 @@ namespace SpaceAge
 
         public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 
+        public double BodyMultiplier
+        {
+            get
+            {
+                CelestialBody celestialBody = Body != null ? FlightGlobals.GetBodyByName(Body) : null;
+                return (celestialBody != null) ? celestialBody.scienceValues.RecoveryValue : 1;
+            }
+        }
+        public double Score => Proto.Score * BodyMultiplier * (Proto.HasValue ? Value : 1);
+
         public static string GetFullName(string name, string body = null) => name + (body != null ? "@" + body : "");
 
         public string FullName => invalid ? "N/A" : GetFullName(Proto.Name, Body);
@@ -73,7 +83,7 @@ namespace SpaceAge
             {
                 case ProtoAchievement.Types.Total:
                     Core.Log("Unique: " + Proto.Unique + ". Id: " + Ids + ". Old achievement's ids: " + (old?.Ids ?? "N/A"));
-                    if ((old == null) || !Proto.Unique || !old.Ids.Contains(Ids))
+                    if (((old == null) && (Value > 0)) || !Proto.Unique || !old.Ids.Contains(Ids))
                     {
                         if (old != null)
                         {
@@ -85,7 +95,7 @@ namespace SpaceAge
                     else res = false;
                     break;
                 case ProtoAchievement.Types.Max:
-                    if ((old == null) || (Value > old.Value)) res = true;
+                    if (((old == null) && (Value > 0)) || (Value > old.Value)) res = true;
                     break;
                 case ProtoAchievement.Types.First:
                     if ((old == null) || (Time < old.Time)) res = true;
@@ -118,7 +128,7 @@ namespace SpaceAge
                     Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
                     Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
                     if (invalid) return;
-                    if (Proto.IsBodySpecific && value.HasValue("body")) Body = value.GetValue("body");
+                    if (Proto.IsBodySpecific) Body = Core.GetString(value, "body", FlightGlobals.GetHomeBodyName());
                     if (Proto.HasTime) Time = Core.GetDouble(value, "time");
                     if (Proto.HasValue) Value = Core.GetDouble(value, "value");
                     Hero = Core.GetString(value, "hero");

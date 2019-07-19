@@ -108,5 +108,14 @@ namespace SpaceAge
 
         [GameParameters.CustomParameterUI("Track Tech Researched Events", toolTip = "Track and save Technology Researched events in the Chronicle")]
         public bool trackTechnologyResearched = true;
+
+        [GameParameters.CustomFloatParameterUI("Funds per Score Point", toolTip = "How much funds (money) are paid for every point of game score", minValue = 0, maxValue = 10000, stepCount = 100)]
+        public float fundsPerScore = 0;
+
+        [GameParameters.CustomFloatParameterUI("Science per Score Point", toolTip = "How much science is gained for every point of game score", minValue = 0, maxValue = 100)]
+        public float sciencePerScore = 0;
+
+        [GameParameters.CustomFloatParameterUI("Reputation per Score Point", toolTip = "How many reputation points are gained for every point of game score", minValue = 0, maxValue = 100)]
+        public float repPerScore = 0;
     }
 }
