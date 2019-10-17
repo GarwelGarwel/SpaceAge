@@ -257,47 +257,49 @@ namespace SpaceAge
             foreach (ProtoAchievement pa in protoAchievements)
                 if (pa.OnEvent == ev)
                 {
+                    string msg = "";
                     Achievement ach = new Achievement(pa, body, vessel, value, hero);
                     if (CheckAchievement(ach))
+                    {
+                        if (ach.Proto.Score > 0)
+                        {
+                            scored = true;
+                            double score = ach.Score;
+                            msg = "\r\n" + score + " progress score points added.";
+                            if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+                            {
+                                double f = score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().fundsPerScore;
+                                if (f != 0)
+                                {
+                                    Core.Log("Adding " + f + " funds.");
+                                    Funding.Instance.AddFunds(f, TransactionReasons.Progression);
+                                    msg += "\r\n" + f.ToString("N0") + " funds earned.";
+                                }
+                            }
+                            if ((HighLogic.CurrentGame.Mode == Game.Modes.CAREER) || (HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX))
+                            {
+                                float s = (float)score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().sciencePerScore;
+                                if (s != 0)
+                                {
+                                    Core.Log("Adding " + s + " science.");
+                                    ResearchAndDevelopment.Instance.AddScience(s, TransactionReasons.Progression);
+                                    msg += "\r\n" + s.ToString("N1") + " science added.";
+                                }
+                            }
+                            float r = (float)score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().repPerScore;
+                            if (r != 0)
+                            {
+                                Core.Log("Adding " + r + " rep.");
+                                Reputation.Instance.AddReputation(r, TransactionReasons.Progression);
+                                msg += "\r\n" + r.ToString("N0") + " reputation added.";
+                            }
+                        }
                         if (pa.Type != ProtoAchievement.Types.Total)
                         {
                             if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().trackAchievements) AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.ShortDisplayValue));
-                            string msg = "";
-                            if ((ach.Proto.Score > 0) && (ach.Proto.Type == ProtoAchievement.Types.First))
-                            {
-                                scored = true;
-                                double score = ach.Score;
-                                msg = "\r\n" + score + " progress score points added.";
-                                if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
-                                {
-                                    double f = score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().fundsPerScore;
-                                    if (f != 0)
-                                    {
-                                        Core.Log("Adding " + f + " funds.");
-                                        Funding.Instance.AddFunds(f, TransactionReasons.Progression);
-                                        msg += "\r\n" + f.ToString("N0") + " funds earned.";
-                                    }
-                                }
-                                if ((HighLogic.CurrentGame.Mode == Game.Modes.CAREER) || (HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX))
-                                {
-                                    float s = (float)score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().sciencePerScore;
-                                    if (s != 0)
-                                    {
-                                        Core.Log("Adding " + s + " science.");
-                                        ResearchAndDevelopment.Instance.AddScience(s, TransactionReasons.Progression);
-                                        msg += "\r\n" + s.ToString("N1") + " science added.";
-                                    }
-                                }
-                                float r = (float)score * HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().repPerScore;
-                                if (r != 0)
-                                {
-                                    Core.Log("Adding " + r + " rep.");
-                                    Reputation.Instance.AddReputation(r, TransactionReasons.Progression);
-                                    msg += "\r\n" + r.ToString("N0") + " reputation added.";
-                                }
-                            }
                             MessageSystem.Instance.AddMessage(new MessageSystem.Message("Achievement", ach.Title + " achievement completed!" + msg, MessageSystemButton.MessageButtonColor.YELLOW, MessageSystemButton.ButtonIcons.ACHIEVE));
                         }
+                    }
                 }
             if (scored) UpdateScoreAchievements();
         }

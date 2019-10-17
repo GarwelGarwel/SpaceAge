@@ -95,7 +95,7 @@ namespace SpaceAge
                     else res = false;
                     break;
                 case ProtoAchievement.Types.Max:
-                    if (((old == null) && (Value > 0)) || (Value > old.Value)) res = true;
+                    if (((old == null) || (Value > old.Value)) && (Value > 0)) res = true;
                     break;
                 case ProtoAchievement.Types.First:
                     if ((old == null) || (Time < old.Time)) res = true;

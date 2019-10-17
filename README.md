@@ -86,12 +86,32 @@ The following events are available for `onEvent` field (for events in *italic* y
 - `Income`
 - `Expense`
 
+**Score**
+
+This feature is tied to the Achievements system and it tracks your overall game progress by awarding you score for certain important achievements. Number of points depends on the achievement (e.g. landing is worth more than a flyby), celestial body (proportional to its science multiplier for recovery) and whether it was a crewed vessel or a probe. It should be compatible with all planet packs and works in all game modes.
+
+Achievements in the following categories award score:
+
+- First suborbital flight
+- First reaching orbit
+- First flyby of a celestial body
+- First orbiting a celestial body
+- First docking in a SOI of a celestial body (this category that doesn't distinguish between manned and unmanned vessels)
+- First landing on a celestial body
+- First return from orbit of a celestial body
+- First return from the surface of a celestial body
+
+Earned score is displayed in the Score tab for each category and each (unlocked) celestial body. If you have unlocked this achievement only with an unmanned vessel, it will be in yellow and with a `U` mark. If you have unlocked it with a manned vessel, the number will be preceded with a green `M` mark. The total score is shown in the bottom.
+
+You can set the game to award you funds, science and/or reputation for gaining score. Just set the desired amounts per score point in the difficulty settings.
+
+To define your own score categories or change base score values, you may edit the Achievements.cfg file or use Module Manager. See chapter Achievements for details.
+
 **Future Plans**
 
 - More events, achievements and data to track (requests sought!)
 - Tracking unique kerbals in more cases
 - Average values tracking
-- Game score feature
 
 **Supported Mods & Known Issues**
 
