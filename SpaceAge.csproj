@@ -96,6 +96,7 @@
   <ItemGroup>
     <Content Include="GameData\SpaceAge\icon.png" />
     <Content Include="GameData\SpaceAge\icon24.png" />
+    <Content Include="GameData\SpaceAge\SpaceAge.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
   <ProjectExtensions>
