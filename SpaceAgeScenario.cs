@@ -31,6 +31,7 @@ namespace SpaceAge
             displayChronicle = chronicle;
 
             // Adding event handlers
+            GameEvents.onGameNewStart.Add(ResetSettings);
             GameEvents.VesselSituation.onLaunch.Add(OnLaunch);
             GameEvents.VesselSituation.onReachSpace.Add(OnReachSpace);
             GameEvents.onVesselRecovered.Add(OnVesselRecovery);
@@ -78,6 +79,7 @@ namespace SpaceAge
             UndisplayData();
 
             // Removing event handlers
+            GameEvents.onGameNewStart.Remove(ResetSettings);
             GameEvents.VesselSituation.onLaunch.Remove(OnLaunch);
             GameEvents.VesselSituation.onReachSpace.Remove(OnReachSpace);
             GameEvents.onVesselRecovered.Remove(OnVesselRecovery);
@@ -148,15 +150,6 @@ namespace SpaceAge
             UpdateScoreAchievements();
         }
 
-        public void AddChronicleEvent(ChronicleEvent e)
-        {
-            Core.ShowNotification(e.Type + " event detected.");
-            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().unwarpOnEvents && (TimeWarp.CurrentRateIndex != 0)) TimeWarp.SetRate(0, true, !HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications);
-            chronicle.Add(e);
-            Invalidate();
-        }
-
-        #region ACHIEVEMENTS METHODS
         void InitializeDatabase()
         {
             if (protoAchievements != null) return;
@@ -167,6 +160,29 @@ namespace SpaceAge
             Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
         }
 
+        void ResetSettings()
+        {
+            Core.Log("ResetSettings", Core.LogLevel.Important);
+            if (GameDatabase.Instance.ExistsConfigNode("SPACEAGE_CONFIG"))
+            {
+                ConfigNode config = GameDatabase.Instance.GetConfigNode("SPACEAGE_CONFIG");
+                Core.Log("SPACEAGE_CONFIG: " + config, Core.LogLevel.Important);
+                HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().fundsPerScore = (float)Core.GetDouble(config, "fundsPerScore", HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().fundsPerScore);
+                HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().sciencePerScore = (float)Core.GetDouble(config, "sciencePerScore", HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().sciencePerScore);
+                HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().repPerScore = (float)Core.GetDouble(config, "repPerScore", HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().repPerScore);
+            }
+            else Core.Log("No SPACEAGE_CONFIG node found.", Core.LogLevel.Important);
+        }
+
+        public void AddChronicleEvent(ChronicleEvent e)
+        {
+            Core.ShowNotification(e.Type + " event detected.");
+            if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().unwarpOnEvents && (TimeWarp.CurrentRateIndex != 0)) TimeWarp.SetRate(0, true, !HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications);
+            chronicle.Add(e);
+            Invalidate();
+        }
+
+        #region ACHIEVEMENTS METHODS
         int achievementsImported = 0;
         void ParseProgressNodes(ConfigNode node, CelestialBody body)
         {
