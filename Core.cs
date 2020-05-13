@@ -19,7 +19,7 @@ namespace SpaceAge
         }
 
         public static void ShowNotification(string msg)
-        { if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications) ScreenMessages.PostScreenMessage(msg); }
+        { if (SpaceAgeChronicleSettings.Instance.ShowNotifications) ScreenMessages.PostScreenMessage(msg); }
 
         /// <summary>
         /// Parses UT into a string (e.g. "Y23 D045"), hides zero elements
@@ -69,10 +69,6 @@ namespace SpaceAge
             return res;
         }
 
-        public static bool UseBlizzysToolbar => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().UseBlizzysToolbar;
-
-        public static bool NewestFirst => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().newestFirst;
-
         /// <summary>
         /// Log levels:
         /// <list type="bullet">
@@ -87,7 +83,7 @@ namespace SpaceAge
         /// <summary>
         /// Current <see cref="LogLevel"/>: either Debug or Important
         /// </summary>
-        public static LogLevel Level => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().debugMode ? LogLevel.Debug : LogLevel.Important;
+        public static LogLevel Level => SpaceAgeChronicleSettings.Instance.DebugMode ? LogLevel.Debug : LogLevel.Important;
 
         /// <summary>
         /// Write into output_log.txt
