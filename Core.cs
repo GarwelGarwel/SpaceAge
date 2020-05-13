@@ -19,7 +19,10 @@ namespace SpaceAge
         }
 
         public static void ShowNotification(string msg)
-        { if (SpaceAgeChronicleSettings.Instance.ShowNotifications) ScreenMessages.PostScreenMessage(msg); }
+        {
+            if (SpaceAgeChronicleSettings.Instance.ShowNotifications)
+                ScreenMessages.PostScreenMessage(msg);
+        }
 
         /// <summary>
         /// Parses UT into a string (e.g. "Y23 D045"), hides zero elements
@@ -29,7 +32,8 @@ namespace SpaceAge
         /// <returns></returns>
         public static string ParseUT(double time, bool showSeconds = false)
         {
-            if (Double.IsNaN(time)) return "—";
+            if (Double.IsNaN(time))
+                return "—";
             double t = time;
             int y, d, m, h;
             y = (int)Math.Floor(t / KSPUtil.dateTimeFormatter.Year) + 1;
@@ -91,6 +95,9 @@ namespace SpaceAge
         /// <param name="message">Text to log</param>
         /// <param name="messageLevel"><see cref="LogLevel"/> of the entry</param>
         public static void Log(string message, LogLevel messageLevel = LogLevel.Debug)
-        { if (messageLevel <= Level) Debug.Log("[SpaceAge] " + message); }
+        {
+            if (messageLevel <= Level)
+                Debug.Log("[SpaceAge] " + message);
+        }
     }
 }
