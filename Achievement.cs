@@ -184,10 +184,10 @@ namespace SpaceAge
 
             switch (Proto.Home)
             {
-                case ProtoAchievement.HomeCountTypes.Only:
+                case HomeConditionType.Only:
                     invalid = FlightGlobals.GetHomeBody() != body;
                     break;
-                case ProtoAchievement.HomeCountTypes.Exclude:
+                case HomeConditionType.Exclude:
                     invalid = FlightGlobals.GetHomeBody() == body;
                     break;
             }

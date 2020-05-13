@@ -5,7 +5,9 @@ namespace SpaceAge
 {
     public enum AchievementType { Max, Total, First };
 
-    public enum ValueType { None, Cost, Mass, PartsCount, CrewCount, Funds };
+    public enum ValueType { None, Cost, Mass, PartsCount, CrewCount, TotalAssignedCrew, Funds };
+
+    public enum HomeConditionType { Default, Only, Exclude };
 
     public class ProtoAchievement
     {
@@ -42,11 +44,10 @@ namespace SpaceAge
         }
 
         public List<string> OnEvents { get; set; } = new List<string>();
-        //public string OnEvent { get; set; } = "";
+
         public bool IsBodySpecific { get; set; }
 
-        public enum HomeCountTypes { Default, Only, Exclude };
-        public HomeCountTypes Home { get; set; } = HomeCountTypes.Default;
+        public HomeConditionType Home { get; set; } = HomeConditionType.Default;
 
         public bool CrewedOnly { get; set; }
         public bool Unique;
@@ -69,7 +70,7 @@ namespace SpaceAge
                     OnEvents = value.GetValuesList("onEvent");
                     IsBodySpecific = Core.GetBool(value, "bodySpecific");
                     if (value.HasValue("home"))
-                        Home = (HomeCountTypes)Enum.Parse(typeof(HomeCountTypes), value.GetValue("home"), true);
+                        Home = (HomeConditionType)Enum.Parse(typeof(HomeConditionType), value.GetValue("home"), true);
                     CrewedOnly = Core.GetBool(value, "crewedOnly");
                     Unique = Core.GetBool(value, "unique");
                     StockSynonym = Core.GetString(value, "stockSynonym");
