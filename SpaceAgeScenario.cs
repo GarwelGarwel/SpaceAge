@@ -278,7 +278,7 @@ namespace SpaceAge
             Core.Log("CheckAchievements('" + ev + "', body = '" + body?.name + "', vessel = '" + vessel?.vesselName + "', value = " + value + ", hero = '" + (hero ?? "null") + "')");
             bool scored = false;
             foreach (ProtoAchievement pa in protoAchievements)
-                if (pa.OnEvent == ev)
+                if (pa.OnEvents.Contains(ev))
                 {
                     string msg = "";
                     Achievement ach = new Achievement(pa, body, vessel, value, hero);

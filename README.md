@@ -57,7 +57,7 @@ You can easily add, modify or remove achievements by editing `achievements.cfg` 
 - `title`: how the achievement is displayed in the UI; the celestial body's name is added to it for body-specific achievements
 - `type` (obligatory): set to `Total`, `Max` or `First` to define the achievement's behaviour to either add values, select the highest values or just mark the first time the achievement is completed
 - `valueType` (only for `Total` and `Max` achievements): defines, which value to use for the achievement. Can be `Mass`, `PartsCount`, `CrewCount`, or `Funds` (only with `Income` or `Expense` events). Note that not every event is associated with a vessel, so sometimes you may not be able to access these values.
-- `onEvent` (obligatory): which event activates the achievemnt (see list below)
+- `onEvent` (at least 1): event names that activate the achievemnt (see list below), can have multiple entries
 - `bodySpecific`: set to `true` if the achievement should be tracked separately for each celestial body (default is false)
 - `home`: can be `Only` (to count only events in SOI of home planet), `Exclude` (to ignore events in home SOI) or `Default`
 - `crewedOnly`: set to `true` if the achievement is only activated when the vessel has crew
