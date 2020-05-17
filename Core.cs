@@ -5,21 +5,32 @@ namespace SpaceAge
 {
     class Core
     {
-        // DOES NOT WORK
         public static double VesselCost(Vessel v)
         {
-            double c = 0;
-            Core.Log("Calculating costs of " + v.vesselName);
+            double cost = 0;
+            Core.Log("Calculating cost of " + v.vesselName);
             foreach (Part p in v.Parts)
             {
-                Core.Log("Part " + p.name + ": module costs = " + p.GetModuleCosts(0) + "; proto costs = " + p.protoPartSnapshot.moduleCosts);
-                c += p.GetModuleCosts(0);
+                Core.Log("Part " + p.name + ": part cost = " + p.partInfo.cost + "; module costs = " + p.GetModuleCosts(0));
+                cost += p.partInfo.cost;
+                cost += p.GetModuleCosts(0);
+                foreach (PartResource resource in p.Resources)
+                {
+                    double resourceCost = resource.amount * resource.info.unitCost;
+                    if (resource.amount != 0)
+                        Log(resource.amount + " of " + resource.resourceName + " costs " + resourceCost);
+                    cost += resourceCost;
+                }
             }
-            return c;
+            Core.Log("Total cost is " + cost);
+            return cost;
         }
 
         public static void ShowNotification(string msg)
-        { if (HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().showNotifications) ScreenMessages.PostScreenMessage(msg); }
+        {
+            if (SpaceAgeChronicleSettings.Instance.ShowNotifications)
+                ScreenMessages.PostScreenMessage(msg);
+        }
 
         /// <summary>
         /// Parses UT into a string (e.g. "Y23 D045"), hides zero elements
@@ -29,7 +40,8 @@ namespace SpaceAge
         /// <returns></returns>
         public static string ParseUT(double time, bool showSeconds = false)
         {
-            if (Double.IsNaN(time)) return "—";
+            if (Double.IsNaN(time))
+                return "—";
             double t = time;
             int y, d, m, h;
             y = (int)Math.Floor(t / KSPUtil.dateTimeFormatter.Year) + 1;
@@ -69,10 +81,6 @@ namespace SpaceAge
             return res;
         }
 
-        public static bool UseBlizzysToolbar => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().UseBlizzysToolbar;
-
-        public static bool NewestFirst => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().newestFirst;
-
         /// <summary>
         /// Log levels:
         /// <list type="bullet">
@@ -87,7 +95,7 @@ namespace SpaceAge
         /// <summary>
         /// Current <see cref="LogLevel"/>: either Debug or Important
         /// </summary>
-        public static LogLevel Level => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>().debugMode ? LogLevel.Debug : LogLevel.Important;
+        public static LogLevel Level => SpaceAgeChronicleSettings.Instance.DebugMode ? LogLevel.Debug : LogLevel.Important;
 
         /// <summary>
         /// Write into output_log.txt
@@ -95,6 +103,9 @@ namespace SpaceAge
         /// <param name="message">Text to log</param>
         /// <param name="messageLevel"><see cref="LogLevel"/> of the entry</param>
         public static void Log(string message, LogLevel messageLevel = LogLevel.Debug)
-        { if (messageLevel <= Level) Debug.Log("[SpaceAge] " + message); }
+        {
+            if (messageLevel <= Level)
+                Debug.Log("[SpaceAge] " + message);
+        }
     }
 }
