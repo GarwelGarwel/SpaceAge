@@ -99,13 +99,54 @@ namespace SpaceAge
         [GameParameters.CustomFloatParameterUI("Funds per Score Point", toolTip = "How much funds (money) are paid for every point of game score", minValue = 0, maxValue = 10000, stepCount = 100)]
         public float FundsPerScore = 0;
 
-        [GameParameters.CustomFloatParameterUI("Science per Score Point", toolTip = "How much science is gained for every point of game score", minValue = 0, maxValue = 100)]
+        [GameParameters.CustomFloatParameterUI("Science per Score Point", toolTip = "How much science is gained for every point of game score", minValue = 0, maxValue = 50)]
         public float SciencePerScore = 0;
 
-        [GameParameters.CustomFloatParameterUI("Reputation per Score Point", toolTip = "How many reputation points are gained for every point of game score", minValue = 0, maxValue = 100)]
+        [GameParameters.CustomFloatParameterUI("Reputation per Score Point", toolTip = "How many reputation points are gained for every point of game score", minValue = 0, maxValue = 50)]
         public float RepPerScore = 0;
 
         [GameParameters.CustomParameterUI("Debug Mode", toolTip = "Verbose logging, obligatory for bug submissions")]
         public bool DebugMode = false;
+
+        [GameParameters.CustomParameterUI("Reset Settings", toolTip = "Check and quit to game if you want Space Age settings to be reverted to their default values")]
+        public bool ResetSettings = false;
+
+        /// <summary>
+        /// Resets settings to default values (ignores config)
+        /// </summary>
+        internal void Reset()
+        {
+            ShowAppLauncherButton = true;
+            ShowNotifications = false;
+            ChronicleLinesPerPage = 10;
+            NewestFirst = true;
+            AchievementsPerPage = 10;
+            ImportStockAchievements = false;
+            UnwarpOnEvents = false;
+            TrackAchievements = true;
+            TrackLaunch = true;
+            TrackReachSpace = true;
+            TrackOrbit = true;
+            TrackReentry = true;
+            TrackDocking = true;
+            TrackSOIChange = true;
+            TrackLanding = true;
+            MinJumpDuration = 30;
+            TrackRecovery = true;
+            TrackReturnFrom = true;
+            TrackDestroy = true;
+            TrackDeath = true;
+            TrackFlagPlant = true;
+            TrackAnomalyDiscovery = true;
+            TrackFacilityUpgraded = true;
+            TrackStructureCollapsed = true;
+            TrackTechnologyResearched = true;
+            FundsPerScore = 0;
+            SciencePerScore = 0;
+            RepPerScore = 0;
+            ResetSettings = false;
+        }
+
+        public SpaceAgeChronicleSettings() => Reset();
     }
 }

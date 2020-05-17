@@ -33,6 +33,7 @@ namespace SpaceAge
 
             // Adding event handlers
             GameEvents.onGameNewStart.Add(ResetSettings);
+            GameEvents.OnGameSettingsApplied.Add(OnGameSettingsApplied);
             GameEvents.VesselSituation.onLaunch.Add(OnLaunch);
             GameEvents.VesselSituation.onReachSpace.Add(OnReachSpace);
             GameEvents.onVesselRecovered.Add(OnVesselRecovery);
@@ -53,20 +54,20 @@ namespace SpaceAge
 
             // Adding buttons to AppLauncher and Toolbar
             if (SpaceAgeChronicleSettings.Instance.ShowAppLauncherButton)
-            {
-                Core.Log("Registering AppLauncher button...");
-                Texture2D icon = new Texture2D(38, 38);
-                icon.LoadImage(File.ReadAllBytes(System.IO.Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon.png")));
-                appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
-            }
+                RegisterAppLauncherButton();
             if (ToolbarManager.ToolbarAvailable)
             {
-                Core.Log("Registering Blizzy's Toolbar button...");
+                Core.Log("Registering Toolbar button...");
                 toolbarButton = ToolbarManager.Instance.add("SpaceAge", "SpaceAge");
                 toolbarButton.Text = "Space Age";
                 toolbarButton.TexturePath = "SpaceAge/icon24";
                 toolbarButton.ToolTip = "Space Age";
-                toolbarButton.OnClick += (e) => { if (window == null) DisplayData(); else UndisplayData(); };
+                toolbarButton.OnClick += (e) =>
+                {
+                    if (window == null)
+                        DisplayData();
+                    else UndisplayData();
+                };
             }
 
             funds = (Funding.Instance != null) ? Funding.Instance.Funds : Double.NaN;
@@ -82,6 +83,7 @@ namespace SpaceAge
 
             // Removing event handlers
             GameEvents.onGameNewStart.Remove(ResetSettings);
+            GameEvents.OnGameSettingsApplied.Remove(OnGameSettingsApplied);
             GameEvents.VesselSituation.onLaunch.Remove(OnLaunch);
             GameEvents.VesselSituation.onReachSpace.Remove(OnReachSpace);
             GameEvents.onVesselRecovered.Remove(OnVesselRecovery);
@@ -103,8 +105,7 @@ namespace SpaceAge
             // Removing Toolbar & AppLauncher buttons
             if (toolbarButton != null)
                 toolbarButton.Destroy();
-            if ((appLauncherButton != null) && (ApplicationLauncher.Instance != null))
-                ApplicationLauncher.Instance.RemoveModApplication(appLauncherButton);
+            UnregisterAppLauncherButton();
         }
 
         public override void OnSave(ConfigNode node)
@@ -125,8 +126,9 @@ namespace SpaceAge
         public override void OnLoad(ConfigNode node)
         {
             Core.Log("SpaceAgeScenario.OnLoad");
-            chronicle.Clear();
             InitializeDatabase();
+
+            chronicle.Clear();
             if (node.HasNode("CHRONICLE"))
             {
                 Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Chronicle.");
@@ -135,6 +137,7 @@ namespace SpaceAge
                         chronicle.Add(new ChronicleEvent(n));
             }
             displayChronicle = chronicle;
+
             if (node.HasNode("ACHIEVEMENTS"))
             {
                 Core.Log(node.GetNode("ACHIEVEMENTS").CountNodes + " nodes found in ACHIEVEMENTS.");
@@ -151,6 +154,7 @@ namespace SpaceAge
                         catch (ArgumentException e) { Core.Log(e.Message); }
                 Core.Log("Total score: " + score);
             }
+
             UpdateScoreAchievements();
         }
 
@@ -164,9 +168,27 @@ namespace SpaceAge
             Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
         }
 
+        void RegisterAppLauncherButton()
+        {
+            Core.Log("Registering AppLauncher button...");
+            Texture2D icon = new Texture2D(38, 38);
+            icon.LoadImage(File.ReadAllBytes(System.IO.Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon.png")));
+            appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
+        }
+
+        void UnregisterAppLauncherButton()
+        {
+            if ((appLauncherButton != null) && (ApplicationLauncher.Instance != null))
+                ApplicationLauncher.Instance.RemoveModApplication(appLauncherButton);
+        }
+
+        /// <summary>
+        /// Applying default settings, using config files if exist
+        /// </summary>
         void ResetSettings()
         {
             Core.Log("ResetSettings", Core.LogLevel.Important);
+            SpaceAgeChronicleSettings.Instance.Reset();
             if (GameDatabase.Instance.ExistsConfigNode("SPACEAGE_CONFIG"))
             {
                 ConfigNode config = GameDatabase.Instance.GetConfigNode("SPACEAGE_CONFIG");
@@ -175,7 +197,24 @@ namespace SpaceAge
                 SpaceAgeChronicleSettings.Instance.SciencePerScore = (float)Core.GetDouble(config, "sciencePerScore", SpaceAgeChronicleSettings.Instance.SciencePerScore);
                 SpaceAgeChronicleSettings.Instance.RepPerScore = (float)Core.GetDouble(config, "repPerScore", SpaceAgeChronicleSettings.Instance.RepPerScore);
             }
-            else Core.Log("No SPACEAGE_CONFIG node found.", Core.LogLevel.Important);
+            else Core.Log("SPACEAGE_CONFIG node not found.", Core.LogLevel.Important);
+        }
+
+        /// <summary>
+        /// Check if settings need to be reset; show or hide AppLauncher button if the settings have changed
+        /// </summary>
+        void OnGameSettingsApplied()
+        {
+            Core.Log("OnGameSettingsApplied", Core.LogLevel.Important);
+            if (SpaceAgeChronicleSettings.Instance.ResetSettings)
+            {
+                ResetSettings();
+                ScreenMessages.PostScreenMessage("Space Age settings have been reset to their default values.");
+            }
+            if (SpaceAgeChronicleSettings.Instance.ShowAppLauncherButton && appLauncherButton == null)
+                RegisterAppLauncherButton();
+            if (!SpaceAgeChronicleSettings.Instance.ShowAppLauncherButton)
+                UnregisterAppLauncherButton();
         }
 
         public void AddChronicleEvent(ChronicleEvent e)
