@@ -84,8 +84,7 @@ namespace SpaceAge
             
             if (old != null)
                 Core.Log("Old achievement: " + old + ".");
-            else
-                Core.Log("Old achievement of this type does not exist.");
+            else Core.Log("Old achievement of this type does not exist.");
 
             if ((old != null) && ((old.Proto != Proto) || (old.Body != Body)))
                 return false;
@@ -121,8 +120,7 @@ namespace SpaceAge
 
             if (doRegister)
                 Core.Log("Registration successful: achievement completed!");
-            else
-                Core.Log("Registration failed: this doesn't qualify as an achievement.");
+            else Core.Log("Registration failed: this doesn't qualify as an achievement.");
 
             return doRegister;
         }
@@ -147,6 +145,7 @@ namespace SpaceAge
                     node.AddValue("ids", Ids);
                 return node;
             }
+
             set
             {
                 try
@@ -195,7 +194,8 @@ namespace SpaceAge
             if (Proto.HasTime)
             {
                 Time = Planetarium.GetUniversalTime();
-                Hero = hero ?? vessel?.vesselName;
+                if (proto.ValueType != ValueType.TotalAssignedCrew)
+                    Hero = hero ?? vessel?.vesselName;
             }
 
             if (hero != null)
@@ -218,6 +218,9 @@ namespace SpaceAge
                     case ValueType.CrewCount:
                         Value = vessel.GetCrewCount();
                         break;
+                    case ValueType.TotalAssignedCrew:
+                        Value = HighLogic.fetch.currentGame.CrewRoster.GetAssignedCrewCount();
+                        break;
                     case ValueType.Funds:
                         Value = value;
                         break;
@@ -226,7 +229,7 @@ namespace SpaceAge
                         break;
                 }
 
-            if (Proto.CrewedOnly && ((vessel == null) || (vessel.GetCrewCount() == 0)) && !invalid)
+            if (Proto.CrewedOnly && ((vessel == null) || (vessel.GetCrewCount() == 0)))
                 invalid = true;
         }
 
