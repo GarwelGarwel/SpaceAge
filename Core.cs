@@ -5,17 +5,25 @@ namespace SpaceAge
 {
     class Core
     {
-        // DOES NOT WORK
         public static double VesselCost(Vessel v)
         {
-            double c = 0;
-            Core.Log("Calculating costs of " + v.vesselName);
+            double cost = 0;
+            Core.Log("Calculating cost of " + v.vesselName);
             foreach (Part p in v.Parts)
             {
-                Core.Log("Part " + p.name + ": module costs = " + p.GetModuleCosts(0) + "; proto costs = " + p.protoPartSnapshot.moduleCosts);
-                c += p.GetModuleCosts(0);
+                Core.Log("Part " + p.name + ": part cost = " + p.partInfo.cost + "; module costs = " + p.GetModuleCosts(0));
+                cost += p.partInfo.cost;
+                cost += p.GetModuleCosts(0);
+                foreach (PartResource resource in p.Resources)
+                {
+                    double resourceCost = resource.amount * resource.info.unitCost;
+                    if (resource.amount != 0)
+                        Log(resource.amount + " of " + resource.resourceName + " costs " + resourceCost);
+                    cost += resourceCost;
+                }
             }
-            return c;
+            Core.Log("Total cost is " + cost);
+            return cost;
         }
 
         public static void ShowNotification(string msg)
