@@ -35,7 +35,9 @@ Currently, the module tracks this data:
 - number of unique vessels that reached space
 - total numbers of planted flags and discovered anomalies
 - heaviest vessel launched
+- most expensive vessel launched
 - most complex (by parts count) vessel launched
+- max number of kerbals simultaneously assigned to missions
 - max crew in a vessel (on launch)
 - your first launch (crewed and total)
 - the first time your vessel (or your crew) reached the space
@@ -56,8 +58,8 @@ You can easily add, modify or remove achievements by editing `achievements.cfg` 
 - `name` (obligatory): the internal unique name of the achievement
 - `title`: how the achievement is displayed in the UI; the celestial body's name is added to it for body-specific achievements
 - `type` (obligatory): set to `Total`, `Max` or `First` to define the achievement's behaviour to either add values, select the highest values or just mark the first time the achievement is completed
-- `valueType` (only for `Total` and `Max` achievements): defines, which value to use for the achievement. Can be `Mass`, `PartsCount`, `CrewCount`, or `Funds` (only with `Income` or `Expense` events). Note that not every event is associated with a vessel, so sometimes you may not be able to access these values.
-- `onEvent` (obligatory): which event activates the achievemnt (see list below)
+- `valueType` (only for `Total` and `Max` achievements): defines, which value to use for the achievement. Can be `Mass`, `PartsCount`, `CrewCount`, `Cost`, `TotalAssignedCrew` or `Funds` (only with `Income` or `Expense` events). Note that not every event is associated with a vessel, so sometimes you may not be able to access these values.
+- `onEvent` (at least one): event names that activate the achievemnt (see list below), can have multiple entries
 - `bodySpecific`: set to `true` if the achievement should be tracked separately for each celestial body (default is false)
 - `home`: can be `Only` (to count only events in SOI of home planet), `Exclude` (to ignore events in home SOI) or `Default`
 - `crewedOnly`: set to `true` if the achievement is only activated when the vessel has crew
@@ -103,7 +105,7 @@ Achievements in the following categories award score:
 
 Earned score is displayed in the Score tab for each category and each (unlocked) celestial body. If you have unlocked this achievement only with an unmanned vessel, it will be in yellow and with a `U` mark. If you have unlocked it with a manned vessel, the number will be preceded with a green `M` mark. The total score is shown in the bottom.
 
-You can set the game to award you funds, science and/or reputation for gaining score. Just set the desired amounts per score point in the difficulty settings.
+You can set the game to award you funds, science and/or reputation for gaining score. Just set the desired amounts per score point in the difficulty settings. These values can also be set by third-party mods using Module Manager (but still can be amended manually in-game).
 
 To define your own score categories or change base score values, you may edit the Achievements.cfg file or use Module Manager. See chapter Achievements for details.
 

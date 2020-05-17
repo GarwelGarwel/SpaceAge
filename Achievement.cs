@@ -11,14 +11,15 @@ namespace SpaceAge
             set
             {
                 proto = value;
-                if (value == null) invalid = true;
+                if (value == null)
+                    invalid = true;
             }
         }
 
         string body = null;
         public string Body
         {
-            get => invalid ? "N/A" : Proto.IsBodySpecific ? body : null;
+            get => invalid ? "N/A" : (Proto.IsBodySpecific ? body : null);
             set => body = value;
         }
 
@@ -39,15 +40,17 @@ namespace SpaceAge
         string hero;
         public string Hero
         {
-            get => !invalid ? hero : null;
+            get => invalid ? null : hero;
             set => hero = value;
         }
 
         public string Ids { get; set; } = "";
         void AddId(string id) => Ids += "[" + id + "]";
 
-        public string ShortDisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit : "";
-        public string FullDisplayValue => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ProtoAchievement.ValueTypes.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit + (Hero != null ? " (" + Hero + ")" : "") : (Hero ?? "");
+        public string ShortDisplayValue
+            => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ValueType.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit : "";
+        public string FullDisplayValue
+            => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ValueType.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit + (Hero != null ? " (" + Hero + ")" : "") : (Hero ?? "");
 
         public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 
@@ -59,51 +62,67 @@ namespace SpaceAge
                 return (celestialBody != null) ? celestialBody.scienceValues.RecoveryValue : 1;
             }
         }
+
         public double Score => Proto.Score * BodyMultiplier * (Proto.HasValue ? Value : 1);
 
         public static string GetFullName(string name, string body = null) => name + (body != null ? "@" + body : "");
 
         public string FullName => invalid ? "N/A" : GetFullName(Proto.Name, Body);
 
-        public override string ToString() => (!Double.IsNaN(Time) ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : ""));
+        public override string ToString()
+            => (!Double.IsNaN(Time) ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : ""));
 
         public bool Register(Achievement old)
         {
             Core.Log("Registering candidate achievement: " + this + ".");
+
             if (invalid)
             {
                 Core.Log("This candidate achievement is invalid. Terminating.");
                 return false;
             }
-            if (old != null) Core.Log("Old achievement: " + old + ".");
+            
+            if (old != null)
+                Core.Log("Old achievement: " + old + ".");
             else Core.Log("Old achievement of this type does not exist.");
-            if ((old != null) && ((old.Proto != Proto) || (old.Body != Body))) return false;
-            bool res = false;
+
+            if ((old != null) && ((old.Proto != Proto) || (old.Body != Body)))
+                return false;
+
+            bool doRegister = false;
             switch (Proto.Type)
             {
-                case ProtoAchievement.Types.Total:
+                case AchievementType.Total:
                     Core.Log("Unique: " + Proto.Unique + ". Id: " + Ids + ". Old achievement's ids: " + (old?.Ids ?? "N/A"));
                     if (((old == null) && (Value > 0)) || !Proto.Unique || ((old != null) && !old.Ids.Contains(Ids)))
                     {
                         if (old != null)
                         {
                             Value += old.Value;
-                            if (Proto.Unique) Ids += old.Ids;
+                            if (Proto.Unique)
+                                Ids += old.Ids;
                         }
-                        res = true;
+                        doRegister = true;
                     }
-                    else res = false;
+                    else doRegister = false;
                     break;
-                case ProtoAchievement.Types.Max:
-                    if (((old == null) || (Value > old.Value)) && (Value > 0)) res = true;
+
+                case AchievementType.Max:
+                    if (((old == null) || (Value > old.Value)) && (Value > 0))
+                        doRegister = true;
                     break;
-                case ProtoAchievement.Types.First:
-                    if ((old == null) || (Time < old.Time)) res = true;
+
+                case AchievementType.First:
+                    if ((old == null) || (Time < old.Time))
+                        doRegister = true;
                     break;
             }
-            if (res) Core.Log("Registration successful: achievement completed!");
+
+            if (doRegister)
+                Core.Log("Registration successful: achievement completed!");
             else Core.Log("Registration failed: this doesn't qualify as an achievement.");
-            return res;
+
+            return doRegister;
         }
 
         public ConfigNode ConfigNode
@@ -111,28 +130,41 @@ namespace SpaceAge
             get
             {
                 ConfigNode node = new ConfigNode("ACHIEVEMENT");
-                if (invalid) return node;
+                if (invalid)
+                    return node;
                 node.AddValue("name", Proto.Name);
-                if (Proto.IsBodySpecific) node.AddValue("body", Body);
-                if (Proto.HasTime) node.AddValue("time", Time);
-                if (Proto.HasValue) node.AddValue("value", Value);
-                if (Hero != null) node.AddValue("hero", Hero);
-                if (Proto.Unique) node.AddValue("ids", Ids);
+                if (Proto.IsBodySpecific)
+                    node.AddValue("body", Body);
+                if (Proto.HasTime)
+                    node.AddValue("time", Time);
+                if (Proto.HasValue)
+                    node.AddValue("value", Value);
+                if (Hero != null)
+                    node.AddValue("hero", Hero);
+                if (Proto.Unique)
+                    node.AddValue("ids", Ids);
                 return node;
             }
+
             set
             {
                 try
                 {
-                    if (value.name != "ACHIEVEMENT") throw new Exception();
+                    if (value.name != "ACHIEVEMENT")
+                        throw new Exception();
                     Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
                     Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
-                    if (invalid) return;
-                    if (Proto.IsBodySpecific) Body = Core.GetString(value, "body", FlightGlobals.GetHomeBodyName());
-                    if (Proto.HasTime) Time = Core.GetDouble(value, "time");
-                    if (Proto.HasValue) Value = Core.GetDouble(value, "value");
+                    if (invalid)
+                        return;
+                    if (Proto.IsBodySpecific)
+                        Body = Core.GetString(value, "body", FlightGlobals.GetHomeBodyName());
+                    if (Proto.HasTime)
+                        Time = Core.GetDouble(value, "time");
+                    if (Proto.HasValue)
+                        Value = Core.GetDouble(value, "value");
                     Hero = Core.GetString(value, "hero");
-                    if (Proto.Unique) Ids = Core.GetString(value, "ids", "");
+                    if (Proto.Unique)
+                        Ids = Core.GetString(value, "ids", "");
                 }
                 catch (Exception) { throw new ArgumentException("Achievement config node is incorrect: " + value); }
             }
@@ -143,32 +175,62 @@ namespace SpaceAge
         public Achievement(ProtoAchievement proto, CelestialBody body = null, Vessel vessel = null, double value = 0, string hero = null)
         {
             Proto = proto;
-            if (invalid) return;
-            if (body != null) Body = body.name;
+            if (invalid)
+                return;
+
+            if (body != null)
+                Body = body.name;
+
             switch (Proto.Home)
             {
-                case ProtoAchievement.HomeCountTypes.Default: break;
-                case ProtoAchievement.HomeCountTypes.Only: invalid = FlightGlobals.GetHomeBody() != body; break;
-                case ProtoAchievement.HomeCountTypes.Exclude: invalid = FlightGlobals.GetHomeBody() == body; break;
+                case HomeConditionType.Only:
+                    invalid = FlightGlobals.GetHomeBody() != body;
+                    break;
+                case HomeConditionType.Exclude:
+                    invalid = FlightGlobals.GetHomeBody() == body;
+                    break;
             }
+
             if (Proto.HasTime)
             {
                 Time = Planetarium.GetUniversalTime();
-                Hero = hero ?? vessel?.vesselName;
+                if (proto.ValueType != ValueType.TotalAssignedCrew)
+                    Hero = hero ?? vessel?.vesselName;
             }
-            if (hero != null) AddId(hero);
-            else if (vessel != null) AddId(vessel.id.ToString());
+
+            if (hero != null)
+                AddId(hero);
+            else if (vessel != null)
+                AddId(vessel.id.ToString());
+
             if (Proto.HasValue)
                 switch (Proto.ValueType)
                 {
-                    case ProtoAchievement.ValueTypes.Cost: Value = Core.VesselCost(vessel); break;
-                    case ProtoAchievement.ValueTypes.Mass: Value = vessel.totalMass; break;
-                    case ProtoAchievement.ValueTypes.PartsCount: Value = vessel.parts.Count; break;
-                    case ProtoAchievement.ValueTypes.CrewCount: Value = vessel.GetCrewCount(); break;
-                    case ProtoAchievement.ValueTypes.Funds: Value = value; break;
-                    default: Value = 1; break;
+                    case ValueType.Cost:
+                        Value = Core.VesselCost(vessel);
+                        break;
+                    case ValueType.Mass:
+                        Value = vessel.totalMass;
+                        break;
+                    case ValueType.PartsCount:
+                        Value = vessel.parts.Count;
+                        break;
+                    case ValueType.CrewCount:
+                        Value = vessel.GetCrewCount();
+                        break;
+                    case ValueType.TotalAssignedCrew:
+                        Value = HighLogic.fetch.currentGame.CrewRoster.GetAssignedCrewCount();
+                        break;
+                    case ValueType.Funds:
+                        Value = value;
+                        break;
+                    default:
+                        Value = 1;
+                        break;
                 }
-            if (Proto.CrewedOnly && ((vessel == null) || (vessel.GetCrewCount() == 0))) invalid = true;
+
+            if (Proto.CrewedOnly && ((vessel == null) || (vessel.GetCrewCount() == 0)))
+                invalid = true;
         }
 
         bool invalid = false;
