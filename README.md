@@ -58,13 +58,15 @@ You can easily add, modify or remove achievements by editing `achievements.cfg` 
 - `name` (obligatory): the internal unique name of the achievement
 - `title`: how the achievement is displayed in the UI; the celestial body's name is added to it for body-specific achievements
 - `type` (obligatory): set to `Total`, `Max` or `First` to define the achievement's behaviour to either add values, select the highest values or just mark the first time the achievement is completed
-- `valueType` (only for `Total` and `Max` achievements): defines, which value to use for the achievement. Can be `Mass`, `PartsCount`, `CrewCount`, `Cost`, `TotalAssignedCrew` or `Funds` (only with `Income` or `Expense` events). Note that not every event is associated with a vessel, so sometimes you may not be able to access these values.
+- `valueType` (only for `Total` and `Max` achievements): defines, which value to use for the achievement. Can be `Mass`, `PartsCount`, `CrewCount`, `Cost`, `TotalAssignedCrew` or `Funds` (only with `Income` or `Expense` events). Note that not every event is associated with a vessel, so sometimes you may not be able to access these values (e.g. you obviously can't get PartsCount for a StructureCollapsed event)..
 - `onEvent` (at least one): event names that activate the achievemnt (see list below), can have multiple entries
 - `bodySpecific`: set to `true` if the achievement should be tracked separately for each celestial body (default is false)
 - `home`: can be `Only` (to count only events in SOI of home planet), `Exclude` (to ignore events in home SOI) or `Default`
 - `crewedOnly`: set to `true` if the achievement is only activated when the vessel has crew
 - `unique` (only for `Total` achievements): set to true if you only want to count each vessel (or kerbal in appropriate cases) once
 - `stockSynonym`: id of the relevant achievement in the stock ProgressTracking system; only makes sense for `First` achievements
+- `score`: How much base score this achievement awards; it is multiplied by celestial body's recovery science multiplier. For `Max` type achievements, it is also multiplied by the corresponding value
+- `scoreName`: Name (also used as id) of a score category; only applies to achievements with `score` > 0
 
 The following events are available for `onEvent` field (for events in *italic* you can access mass, parts count, and crew count):
 - *`Launch`*
