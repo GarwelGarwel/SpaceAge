@@ -51,8 +51,15 @@ namespace SpaceAge
             GameEvents.OnFundsChanged.Add(OnFundsChanged);
             GameEvents.OnProgressComplete.Add(OnProgressCompleted);
 
-            // Adding buttons to Toolbar or AppLauncher
-            if (ToolbarManager.ToolbarAvailable && SpaceAgeChronicleSettings.Instance.UseBlizzysToolbar)
+            // Adding buttons to AppLauncher and Toolbar
+            if (SpaceAgeChronicleSettings.Instance.ShowAppLauncherButton)
+            {
+                Core.Log("Registering AppLauncher button...");
+                Texture2D icon = new Texture2D(38, 38);
+                icon.LoadImage(File.ReadAllBytes(System.IO.Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon.png")));
+                appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
+            }
+            if (ToolbarManager.ToolbarAvailable)
             {
                 Core.Log("Registering Blizzy's Toolbar button...");
                 toolbarButton = ToolbarManager.Instance.add("SpaceAge", "SpaceAge");
@@ -60,13 +67,6 @@ namespace SpaceAge
                 toolbarButton.TexturePath = "SpaceAge/icon24";
                 toolbarButton.ToolTip = "Space Age";
                 toolbarButton.OnClick += (e) => { if (window == null) DisplayData(); else UndisplayData(); };
-            }
-            else
-            {
-                Core.Log("Registering AppLauncher button...");
-                Texture2D icon = new Texture2D(38, 38);
-                icon.LoadImage(File.ReadAllBytes(System.IO.Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon.png")));
-                appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
             }
 
             funds = (Funding.Instance != null) ? Funding.Instance.Funds : Double.NaN;
@@ -705,7 +705,7 @@ namespace SpaceAge
             double timeSinceLastLaunch = Planetarium.GetUniversalTime() - lastLaunch;
             if (timeSinceLastLaunch < 1)
             {
-                Core.Log("Duplicate OnLaunch call. Previous launch happened " + timeSinceLastLaunch + " s ago.";
+                Core.Log("Duplicate OnLaunch call. Previous launch happened " + timeSinceLastLaunch + " s ago.");
                 return;
             }
 

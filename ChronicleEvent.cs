@@ -87,7 +87,6 @@ namespace SpaceAge
             {
                 Time = Double.Parse(value.GetValue("time"));
                 Type = value.GetValue("type");
-                Core.Log("Loading data for ConfigNode (" + value.CountValues + " values)...");
                 foreach (ConfigNode.Value v in value.values)
                     if ((v.name != "time") && (v.name != "type"))
                         Data.Add(v.name, v.value);

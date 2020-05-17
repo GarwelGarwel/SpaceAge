@@ -5,9 +5,9 @@ namespace SpaceAge
 {
     public enum AchievementType { Max, Total, First };
 
-    public enum ValueType { None, Cost, Mass, PartsCount, CrewCount, TotalAssignedCrew, Funds };
+    public enum ValueType { None = 0, Cost, Mass, PartsCount, CrewCount, TotalAssignedCrew, Funds };
 
-    public enum HomeConditionType { Default, Only, Exclude };
+    public enum HomeConditionType { Default = 0, Only, Exclude };
 
     public class ProtoAchievement
     {
@@ -35,22 +35,22 @@ namespace SpaceAge
                 switch (ValueType)
                 {
                     case ValueType.Funds:
-                    case ValueType.Cost: return "£";
-                    case ValueType.Mass: return "t";
-                    case ValueType.PartsCount: return "parts";
+                    case ValueType.Cost:
+                        return "£";
+                    case ValueType.Mass:
+                        return "t";
+                    case ValueType.PartsCount:
+                        return "parts";
                 }
                 return "";
             }
         }
 
         public List<string> OnEvents { get; set; } = new List<string>();
-
         public bool IsBodySpecific { get; set; }
-
         public HomeConditionType Home { get; set; } = HomeConditionType.Default;
-
         public bool CrewedOnly { get; set; }
-        public bool Unique;
+        public bool Unique { get; set; }
         public string StockSynonym { get; set; } = null;
         public string ScoreName { get; set; }
         public double Score { get; set; }

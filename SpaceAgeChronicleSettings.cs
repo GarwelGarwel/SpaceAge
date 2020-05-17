@@ -21,11 +21,8 @@ namespace SpaceAge
 
         public static SpaceAgeChronicleSettings Instance => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>();
 
-        [GameParameters.CustomParameterUI("Use Blizzy's Toolbar", toolTip = "Show icon in Blizzy's Toolbar, if available, instead of stock AppLauncher")]
-        public bool UseBlizzysToolbar = true;
-
-        [GameParameters.CustomParameterUI("Debug Mode", toolTip = "Verbose logging, obligatory for bug submissions")]
-        public bool DebugMode = false;
+        [GameParameters.CustomParameterUI("Show AppLauncher Button", toolTip = "Show button in the stock AppLauncher bar")]
+        public bool ShowAppLauncherButton = true;
 
         [GameParameters.CustomParameterUI("Show Notifications", toolTip = "Show on-screen notifications when new items are added to the Chronicle")]
         public bool ShowNotifications = false;
@@ -107,5 +104,8 @@ namespace SpaceAge
 
         [GameParameters.CustomFloatParameterUI("Reputation per Score Point", toolTip = "How many reputation points are gained for every point of game score", minValue = 0, maxValue = 100)]
         public float RepPerScore = 0;
+
+        [GameParameters.CustomParameterUI("Debug Mode", toolTip = "Verbose logging, obligatory for bug submissions")]
+        public bool DebugMode = false;
     }
 }
