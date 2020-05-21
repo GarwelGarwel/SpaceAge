@@ -28,24 +28,6 @@ namespace SpaceAge
 
         public ValueType ValueType { get; set; } = ValueType.None;
 
-        public string Unit
-        {
-            get
-            {
-                switch (ValueType)
-                {
-                    case ValueType.Funds:
-                    case ValueType.Cost:
-                        return "£";
-                    case ValueType.Mass:
-                        return "t";
-                    case ValueType.PartsCount:
-                        return "parts";
-                }
-                return "";
-            }
-        }
-
         public List<string> OnEvents { get; set; } = new List<string>();
         public bool IsBodySpecific { get; set; }
         public HomeConditionType Home { get; set; } = HomeConditionType.Default;
