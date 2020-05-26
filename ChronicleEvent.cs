@@ -107,13 +107,24 @@ namespace SpaceAge
 
         public ChronicleEvent() => Time = Planetarium.GetUniversalTime();
 
-        public ChronicleEvent(string type, params string[] data)
+        public ChronicleEvent(string type, params object[] data)
             : this()
         {
             Core.Log("Constructing " + type + " event with " + data.Length + " params.");
             Type = type;
-            for (int i = 0; i < data.Length; i += 2)
-                Data.Add(data[i], data[i + 1]);
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i] is Vessel v)
+                {
+                    Data.Add("vessel", v.vesselName);
+                    Data.Add("vesselId", v.persistentId.ToString());
+                }
+                if (data[i] is string s)
+                {
+                    Data.Add(s, data[i + 1] as string);
+                    i++;
+                }
+            }
         }
 
         public ChronicleEvent(ConfigNode node) => ConfigNode = node;

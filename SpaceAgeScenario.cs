@@ -772,7 +772,7 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackLaunch)
                 return;
 
-            ChronicleEvent e = new ChronicleEvent("Launch", "vessel", v.vesselName);
+            ChronicleEvent e = new ChronicleEvent("Launch", v);
             if (FlightGlobals.ActiveVessel.GetCrewCount() > 0)
                 e.Data.Add("crew", v.GetCrewCount().ToString());
 
@@ -788,7 +788,7 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReachSpace)
             {
-                ChronicleEvent e = new ChronicleEvent("ReachSpace", "vessel", v.vesselName);
+                ChronicleEvent e = new ChronicleEvent("ReachSpace", v);
                 if (v.GetCrewCount() > 0)
                     e.Data.Add("crew", v.GetCrewCount().ToString());
                 AddChronicleEvent(e);
@@ -806,7 +806,7 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
             {
-                ChronicleEvent e = new ChronicleEvent("ReturnFromOrbit", "vessel", v.vesselName, "body", b.bodyName);
+                ChronicleEvent e = new ChronicleEvent("ReturnFromOrbit", v, "body", b.bodyName);
                 if (v.GetCrewCount() > 0)
                     e.Data.Add("crew", v.GetCrewCount().ToString());
                 AddChronicleEvent(e);
@@ -824,7 +824,7 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
             {
-                ChronicleEvent e = new ChronicleEvent("ReturnFromSurface", "vessel", v.vesselName, "body", b.bodyName);
+                ChronicleEvent e = new ChronicleEvent("ReturnFromSurface", v, "body", b.bodyName);
                 if (v.GetCrewCount() > 0)
                     e.Data.Add("crew", v.GetCrewCount().ToString());
                 AddChronicleEvent(e);
@@ -855,7 +855,7 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackRecovery)
                 return;
 
-            ChronicleEvent e = new ChronicleEvent("Recovery", "vessel", v.vesselName);
+            ChronicleEvent e = new ChronicleEvent("Recovery", v);
             if (v.GetVesselCrew().Count > 0)
                 e.Data.Add("crew", v.GetVesselCrew().Count.ToString());
 
@@ -877,7 +877,7 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackDestroy)
                 return;
 
-            ChronicleEvent e = new ChronicleEvent("Destroy", "vessel", v.vesselName);
+            ChronicleEvent e = new ChronicleEvent("Destroy", v);
             if (v.terrainAltitude < 1000)
                 e.Data.Add("body", v.mainBody.bodyName);
 
@@ -952,7 +952,7 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackSOIChange)
-                AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", "vessel", e.host.vesselName, "body", e.to.bodyName));
+                AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", e.host, "body", e.to.bodyName));
 
             if (e.from.HasParent(e.to))
             {
@@ -971,8 +971,7 @@ namespace SpaceAge
             if (!IsVesselEligible(a.host, true))
                 return;
 
-            ChronicleEvent e = new ChronicleEvent();
-            e.Data.Add("vessel", a.host.vesselName);
+            ChronicleEvent e = new ChronicleEvent(null, a.host);
             e.Data.Add("body", a.host.mainBody.bodyName);
             if (a.host.GetCrewCount() > 0)
                 e.Data.Add("crew", a.host.GetCrewCount().ToString());
@@ -1028,7 +1027,7 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
-                AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", v1.vesselName, "vessel2", v2.vesselName));
+                AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
 
             CheckAchievements("Docking", v1.mainBody, v1);
             CheckAchievements("Docking", v2.mainBody, v2);
@@ -1042,7 +1041,7 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
-                AddChronicleEvent(new ChronicleEvent("Undocking", "vessel1", v1.vesselName, "vessel2", v2.vesselName));
+                AddChronicleEvent(new ChronicleEvent("Undocking", "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
 
             CheckAchievements("Undocking", v1.mainBody, v1);
             CheckAchievements("Undocking", v2.mainBody, v2);
@@ -1073,7 +1072,7 @@ namespace SpaceAge
             {
                 Core.Log("Reached a point of interest: " + poi.Id + " on " + poi.body);
                 if (SpaceAgeChronicleSettings.Instance.TrackAnomalyDiscovery)
-                    AddChronicleEvent(new ChronicleEvent("AnomalyDiscovery", "body", poi.body, "id", poi.Id));
+                    AddChronicleEvent(new ChronicleEvent("AnomalyDiscovery", FlightGlobals.ActiveVessel, "body", poi.body, "id", poi.Id));
                 List<ProtoCrewMember> crew = FlightGlobals.ActiveVessel.GetVesselCrew();
                 Core.Log("Active Vessel: " + FlightGlobals.ActiveVessel.vesselName + "; crew: " + crew.Count);
                 CheckAchievements("AnomalyDiscovery", FlightGlobals.GetBodyByName(poi.body), null, 0, (crew.Count > 0) ? crew[0].name : null);
