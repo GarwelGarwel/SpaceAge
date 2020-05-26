@@ -106,6 +106,7 @@
   <ItemGroup>
     <None Include="GameData\SpaceAge\achievements.cfg" />
     <None Include="GameData\SpaceAge\LICENSE" />
+    <None Include="GameData\SpaceAge\Localization\en-us.cfg" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using KSP.Localization;
 
 namespace SpaceAge
 {
@@ -25,6 +26,8 @@ namespace SpaceAge
             Core.Log("Total cost is " + cost);
             return cost;
         }
+
+        public static string GetBodyDisplayName(string bodyName) => FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName;
 
         public static void ShowNotification(string msg)
         {
@@ -52,7 +55,9 @@ namespace SpaceAge
             t -= h * 3600;
             m = (int)Math.Floor(t / 60);
             t -= m * 60;
-            return "Y" + y + " D" + d.ToString("D3") + " " + h + ":" + m.ToString("D2") + (showSeconds ? (":" + ((int) t).ToString("D2")) : "");
+            return showSeconds
+                ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), ((int) t).ToString("D2"))
+                : Localizer.Format("#SpaceAge_DateTime_NoSec", y, d.ToString("D3"), h, m.ToString("D2"));
         }
 
         public static string GetString(ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;
@@ -90,7 +95,7 @@ namespace SpaceAge
         /// <item><definition>Debug: log all information</definition></item>
         /// </list>
         /// </summary>
-        public enum LogLevel { None, Error, Important, Debug };
+        public enum LogLevel { None = 0, Error, Important, Debug };
 
         /// <summary>
         /// Current <see cref="LogLevel"/>: either Debug or Important

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KSP.Localization;
+using System;
 
 namespace SpaceAge
 {
@@ -48,9 +49,41 @@ namespace SpaceAge
         void AddId(string id) => Ids += "[" + id + "]";
 
         public string ShortDisplayValue
-            => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ValueType.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit : "";
+        {
+            get
+            {
+                if (invalid)
+                    return Localizer.Format("#SpaceAge_Invalid");
+                if (!Proto.HasValue)
+                    return "";
+                switch (Proto.ValueType)
+                {
+                    case ValueType.Funds:
+                    case ValueType.Cost:
+                        return Localizer.Format("#SpaceAge_Unit_Funds", Value.ToString("N0"));
+                    case ValueType.Mass:
+                        return Localizer.Format("#SpaceAge_Unit_Mass", Value.ToString("N2"));
+                    case ValueType.PartsCount:
+                        return Localizer.Format("#SpaceAge_Unit_Parts", Value.ToString("N0"));
+                }
+                return Value.ToString("N0");
+            }
+        }
+
         public string FullDisplayValue
-            => invalid ? "N/A" : Proto.HasValue ? ((Proto.ValueType == ValueType.Mass) ? Value.ToString("N2") : Value.ToString("N0")) + " " + Proto.Unit + (Hero != null ? " (" + Hero + ")" : "") : (Hero ?? "");
+        {
+            get
+            {
+                if (invalid)
+                    return Localizer.Format("#SpaceAge_Invalid");
+                string shortValue = ShortDisplayValue;
+                if (shortValue.Length == 0)
+                    return Hero ?? "";
+                if (Hero == null)
+                    return shortValue;
+                return shortValue + " (" + Hero + ")";
+            }
+        }
 
         public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
 
