@@ -121,6 +121,7 @@
     <Compile Include="SpaceAgeChronicleSettings.cs" />
     <Compile Include="SpaceAgeScenario.cs" />
     <Compile Include="ToolbarWrapper.cs" />
+    <Compile Include="VesselRecord.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GameData\SpaceAge\SpaceAge.version" />

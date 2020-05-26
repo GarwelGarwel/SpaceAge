@@ -11,9 +11,9 @@ namespace SpaceAge
     class SpaceAgeScenario : ScenarioModule
     {
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>(), displayChronicle;
+        Dictionary<uint, VesselRecord> vessels = new Dictionary<uint, VesselRecord>();
         static List<ProtoAchievement> protoAchievements;
         Dictionary<string, Achievement> achievements = new Dictionary<string, Achievement>();
-
         List<Achievement> scoreAchievements = new List<Achievement>();
         List<string> scoreRecordNames = new List<string>();
         List<string> scoreBodies = new List<string>();
@@ -118,16 +118,23 @@ namespace SpaceAge
         public override void OnSave(ConfigNode node)
         {
             Core.Log("SpaceAgeScenario.OnSave");
-            ConfigNode chronicleNode = new ConfigNode("CHRONICLE");
+            ConfigNode n = new ConfigNode("CHRONICLE");
             foreach (ChronicleEvent e in chronicle)
-                chronicleNode.AddNode(e.ConfigNode);
-            Core.Log(chronicleNode.CountNodes + " nodes saved.");
-            node.AddNode(chronicleNode);
-            ConfigNode achievementsNode = new ConfigNode("ACHIEVEMENTS");
+                n.AddNode(e.ConfigNode);
+            node.AddNode(n);
+            Core.Log(n.CountNodes + " events saved.");
+
+            n = new ConfigNode("VESSELS");
+            foreach (VesselRecord vessel in vessels.Values)
+                n.AddNode(vessel.ConfigNode);
+            node.AddNode(n);
+            Core.Log(n.CountNodes + " vessels saved.");
+
+            n = new ConfigNode("ACHIEVEMENTS");
             foreach (Achievement a in achievements.Values)
-                achievementsNode.AddNode(a.ConfigNode);
-            Core.Log(achievementsNode.CountNodes + " achievements saved.");
-            node.AddNode(achievementsNode);
+                n.AddNode(a.ConfigNode);
+            node.AddNode(n);
+            Core.Log(n.CountNodes + " achievements saved.");
         }
 
         public override void OnLoad(ConfigNode node)
@@ -144,6 +151,15 @@ namespace SpaceAge
                         chronicle.Add(new ChronicleEvent(n));
             }
             displayChronicle = chronicle;
+
+            vessels.Clear();
+            if (node.HasNode("VESSELS"))
+            {
+                Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Vessels.");
+                foreach (ConfigNode n in node.GetNode("VESSELS").GetNodes())
+                    if (n.name == "VESSEL")
+                        AddVesselRecord(new VesselRecord(n));
+            }
 
             if (node.HasNode("ACHIEVEMENTS"))
             {
@@ -231,6 +247,34 @@ namespace SpaceAge
                 TimeWarp.SetRate(0, true, !SpaceAgeChronicleSettings.Instance.ShowNotifications);
             chronicle.Add(e);
             Invalidate();
+        }
+
+        public void AddVesselRecord(VesselRecord vesselRecord)
+        {
+            if ((vesselRecord.Id > 0) && !vessels.ContainsKey(vesselRecord.Id))
+                vessels.Add(vesselRecord.Id, vesselRecord);
+        }
+
+        public void AddVesselRecord(Vessel vessel)
+        {
+            if ((vessel != null) && !vessels.ContainsKey(vessel.persistentId))
+                vessels.Add(vessel.persistentId, new VesselRecord(vessel));
+        }
+
+        public void DeleteUnusedVesselRecords()
+        {
+            foreach (uint id in vessels.Keys)
+            {
+                bool found = false;
+                foreach (ChronicleEvent ev in chronicle)
+                    if (ev.HasVesselId(id))
+                    {
+                        found = true;
+                        break;
+                    }
+                if (!found)
+                    vessels.Remove(id);
+            }
         }
 
         #region ACHIEVEMENTS METHODS
@@ -488,7 +532,7 @@ namespace SpaceAge
                                 10,
                                 new DialogGUITextInput(textInput, false, 100, (s) => textInput = s),
                                 new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Find"), Find, false),
-                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Add"), AddItem, false),
+                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Add"), AddCustomChronicleEvent, false),
                                 new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Export"), ExportChronicle))));
 
                     case Tab.Achievements:
@@ -688,6 +732,7 @@ namespace SpaceAge
             chronicle.Remove(displayChronicle[i]);
             if (displayChronicle != chronicle)
                 displayChronicle.RemoveAt(i);
+            DeleteUnusedVesselRecords();
             Invalidate();
         }
 
@@ -706,7 +751,7 @@ namespace SpaceAge
             Invalidate();
         }
 
-        void AddItem()
+        void AddCustomChronicleEvent()
         {
             Core.Log("AddItem(textInput = '" + textInput + "')", Core.LogLevel.Important);
             if (textInput.Trim(' ').Length == 0)
@@ -772,10 +817,10 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackLaunch)
                 return;
 
+            AddVesselRecord(v);
             ChronicleEvent e = new ChronicleEvent("Launch", v);
             if (FlightGlobals.ActiveVessel.GetCrewCount() > 0)
                 e.Data.Add("crew", v.GetCrewCount().ToString());
-
             AddChronicleEvent(e);
         }
 
@@ -788,6 +833,7 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReachSpace)
             {
+                AddVesselRecord(v);
                 ChronicleEvent e = new ChronicleEvent("ReachSpace", v);
                 if (v.GetCrewCount() > 0)
                     e.Data.Add("crew", v.GetCrewCount().ToString());
@@ -806,6 +852,7 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
             {
+                AddVesselRecord(v);
                 ChronicleEvent e = new ChronicleEvent("ReturnFromOrbit", v, "body", b.bodyName);
                 if (v.GetCrewCount() > 0)
                     e.Data.Add("crew", v.GetCrewCount().ToString());
@@ -824,6 +871,7 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
             {
+                AddVesselRecord(v);
                 ChronicleEvent e = new ChronicleEvent("ReturnFromSurface", v, "body", b.bodyName);
                 if (v.GetCrewCount() > 0)
                     e.Data.Add("crew", v.GetCrewCount().ToString());
@@ -855,10 +903,10 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackRecovery)
                 return;
 
+            AddVesselRecord(new VesselRecord(v));
             ChronicleEvent e = new ChronicleEvent("Recovery", v);
             if (v.GetVesselCrew().Count > 0)
                 e.Data.Add("crew", v.GetVesselCrew().Count.ToString());
-
             AddChronicleEvent(e);
         }
 
@@ -877,10 +925,10 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackDestroy)
                 return;
 
+            AddVesselRecord(v);
             ChronicleEvent e = new ChronicleEvent("Destroy", v);
             if (v.terrainAltitude < 1000)
                 e.Data.Add("body", v.mainBody.bodyName);
-
             AddChronicleEvent(e);
         }
 
@@ -905,7 +953,7 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackFlagPlant)
                 return;
 
-            AddChronicleEvent(new ChronicleEvent("FlagPlant", "body", v.mainBody.bodyName));
+            AddChronicleEvent(new ChronicleEvent("FlagPlant", "kerbal", v.GetVesselCrew()[0].nameWithGender, "body", v.mainBody.bodyName));
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
@@ -917,7 +965,7 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackFacilityUpgraded)
                 return;
 
-            AddChronicleEvent(new ChronicleEvent("FacilityUpgraded", "facility", facility.name, "level", (level + 1).ToString()));
+            AddChronicleEvent(new ChronicleEvent("FacilityUpgraded", "facility", facility.name, "level", level + 1));
         }
 
         public void OnStructureCollapsed(DestructibleBuilding structure)
@@ -952,7 +1000,10 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackSOIChange)
+            {
+                AddVesselRecord(e.host);
                 AddChronicleEvent(new SpaceAge.ChronicleEvent("SOIChange", e.host, "body", e.to.bodyName));
+            }
 
             if (e.from.HasParent(e.to))
             {
@@ -1013,7 +1064,10 @@ namespace SpaceAge
                 lastTakeoff = Planetarium.GetUniversalTime();
 
             if ((e.Type != null) && (e.Type.Length != 0))
+            {
+                AddVesselRecord(a.host);
                 AddChronicleEvent(e);
+            }
         }
 
         public void OnVesselDocking(uint a, uint b)
@@ -1029,6 +1083,8 @@ namespace SpaceAge
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
                 AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
 
+            AddVesselRecord(v1);
+            AddVesselRecord(v2);
             CheckAchievements("Docking", v1.mainBody, v1);
             CheckAchievements("Docking", v2.mainBody, v2);
         }
@@ -1043,6 +1099,8 @@ namespace SpaceAge
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
                 AddChronicleEvent(new ChronicleEvent("Undocking", "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
 
+            AddVesselRecord(v1);
+            AddVesselRecord(v2);
             CheckAchievements("Undocking", v1.mainBody, v1);
             CheckAchievements("Undocking", v2.mainBody, v2);
         }

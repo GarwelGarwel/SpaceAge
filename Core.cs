@@ -63,28 +63,39 @@ namespace SpaceAge
         public static string GetString(ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;
 
         public static double GetDouble(ConfigNode n, string key, double defaultValue = 0)
-        {
-            double res;
-            try { res = Double.Parse(n.GetValue(key)); }
-            catch (Exception) { res = defaultValue; }
-            return res;
-        }
+              => Double.TryParse(n.GetValue(key), out double val) ? val : defaultValue;
+      //{
+      //      double res;
+      //      try { res = Double.Parse(n.GetValue(key)); }
+      //      catch (Exception) { res = defaultValue; }
+      //      return res;
+      //  }
 
         public static int GetInt(ConfigNode n, string key, int defaultValue = 0)
-        {
-            int res;
-            try { res = Int32.Parse(n.GetValue(key)); }
-            catch (Exception) { res = defaultValue; }
-            return res;
-        }
+               => Int32.TryParse(n.GetValue(key), out int val) ? val : defaultValue;
+        //{
+        //    int res;
+        //    try { res = Int32.Parse(n.GetValue(key)); }
+        //    catch (Exception) { res = defaultValue; }
+        //    return res;
+        //}
+
+        public static uint GetUInt(ConfigNode n, string key, uint defaultValue = 0)
+            => UInt32.TryParse(n.GetValue(key), out uint val) ? val : defaultValue;
+            //uint res;
+            //try { res = UInt32.Parse(n.GetValue(key)); }
+            //catch (Exception) { res = defaultValue; }
+            //return res;
+        //}
 
         public static bool GetBool(ConfigNode n, string key, bool defaultValue = false)
-        {
-            bool res;
-            try { res = Boolean.Parse(n.GetValue(key)); }
-            catch (Exception) { res = defaultValue; }
-            return res;
-        }
+               => Boolean.TryParse(n.GetValue(key), out bool val) ? val : defaultValue;
+        //{
+        //    bool res;
+        //    try { res = Boolean.Parse(n.GetValue(key)); }
+        //    catch (Exception) { res = defaultValue; }
+        //    return res;
+        //}
 
         /// <summary>
         /// Log levels:
