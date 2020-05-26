@@ -27,6 +27,8 @@ namespace SpaceAge
             return cost;
         }
 
+        public static string GetBodyDisplayName(string bodyName) => FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName;
+
         public static void ShowNotification(string msg)
         {
             if (SpaceAgeChronicleSettings.Instance.ShowNotifications)
@@ -93,7 +95,7 @@ namespace SpaceAge
         /// <item><definition>Debug: log all information</definition></item>
         /// </list>
         /// </summary>
-        public enum LogLevel { None, Error, Important, Debug };
+        public enum LogLevel { None = 0, Error, Important, Debug };
 
         /// <summary>
         /// Current <see cref="LogLevel"/>: either Debug or Important

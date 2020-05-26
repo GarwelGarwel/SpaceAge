@@ -14,8 +14,15 @@ namespace SpaceAge
         static List<ProtoAchievement> protoAchievements;
         Dictionary<string, Achievement> achievements = new Dictionary<string, Achievement>();
 
+        List<Achievement> scoreAchievements = new List<Achievement>();
+        List<string> scoreRecordNames = new List<string>();
+        List<string> scoreBodies = new List<string>();
+        double score;
+        double funds;
+
         IButton toolbarButton;
         ApplicationLauncherButton appLauncherButton;
+
         enum Tab { Chronicle, Achievements, Score };
         Tab currentTab = Tab.Chronicle;
 
@@ -23,8 +30,7 @@ namespace SpaceAge
         int[] page = new int[3] { 1, 1, 1 };
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
-
-        double funds;
+        string textInput = "";
 
         public void Start()
         {
@@ -418,11 +424,6 @@ namespace SpaceAge
             }
         }
 
-        List<Achievement> scoreAchievements = new List<Achievement>();
-        List<string> scoreRecordNames = new List<string>();
-        List<string> scoreBodies = new List<string>();
-        double score;
-
         void UpdateScoreAchievements()
         {
             Core.Log("Updating score achievements...");
@@ -485,7 +486,7 @@ namespace SpaceAge
                             new DialogGUIHorizontalLayout(
                                 windowWidth - 20,
                                 10,
-                                new DialogGUITextInput(textInput, false, 100, TextInputChanged),
+                                new DialogGUITextInput(textInput, false, 100, (s) => textInput = s),
                                 new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Find"), Find, false),
                                 new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Add"), AddItem, false),
                                 new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Export"), ExportChronicle))));
@@ -508,7 +509,7 @@ namespace SpaceAge
                             {
                                 body = a.Body;
                                 gridContents.Add(new DialogGUILabel("", true));
-                                gridContents.Add(new DialogGUILabel("<align=\"center\"><color=\"white\"><b>" + body + "</b></color></align>", true));
+                                gridContents.Add(new DialogGUILabel("<align=\"center\"><color=\"white\"><b>" + Localizer.Format("<<1>>", Core.GetBodyDisplayName(body)) + "</b></color></align>", true));
                                 gridContents.Add(new DialogGUILabel("", true));
                             }
                             DisplayAchievement(a, gridContents);
@@ -534,7 +535,7 @@ namespace SpaceAge
                             gridContents.Add(new DialogGUILabel("<color=\"white\">" + srn + "</color>"));
                         for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, scoreBodies.Count); i++)
                         {
-                            gridContents.Add(new DialogGUILabel("<color=\"white\">" + scoreBodies[i] + "</color>"));
+                            gridContents.Add(new DialogGUILabel("<color=\"white\">" + Localizer.Format("<<1>>", Core.GetBodyDisplayName(scoreBodies[i])) + "</color>"));
                             foreach (string srn in scoreRecordNames)
                             {
                                 double s = 0;
@@ -688,14 +689,6 @@ namespace SpaceAge
             if (displayChronicle != chronicle)
                 displayChronicle.RemoveAt(i);
             Invalidate();
-        }
-
-        string textInput = "";
-        public string TextInputChanged(string s)
-        {
-            Core.Log("TextInputChanged('" + s + "')");
-            textInput = s;
-            return s;
         }
 
         void Find()

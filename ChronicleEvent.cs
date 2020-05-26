@@ -19,7 +19,8 @@ namespace SpaceAge
         public int GetInt(string key)
         {
             try { return HasData(key) ? int.Parse(Data[key]) : 0; }
-            catch (FormatException) { return 0; }
+            catch (FormatException)
+            { return 0; }
         }
 
         public string Description
@@ -29,33 +30,41 @@ namespace SpaceAge
                 switch (Type)
                 {
                     case "Launch":
-                        return HasData("crew") ? Localizer.Format("#SpaceAge_CE_Launch_Crew", GetString("vessel"), GetInt("crew")) : Localizer.Format("#SpaceAge_CE_Launch_NoCrew", GetString("vessel"));
+                        return HasData("crew")
+                            ? Localizer.Format("#SpaceAge_CE_Launch_Crew", GetString("vessel"), GetInt("crew"))
+                            : Localizer.Format("#SpaceAge_CE_Launch_NoCrew", GetString("vessel"));
                     case "ReachSpace":
                         return Localizer.Format("#SpaceAge_CE_ReachSpace", GetString("vessel"));
                     case "SOIChange":
-                        return Localizer.Format("#SpaceAge_CE_SOIChange", GetString("vessel"), GetString("body"));
+                        return Localizer.Format("#SpaceAge_CE_SOIChange", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
                     case "Orbit":
-                        return Localizer.Format("#SpaceAge_CE_Orbit", GetString("vessel"), GetString("body"));
+                        return Localizer.Format("#SpaceAge_CE_Orbit", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
                     case "Reentry":
-                        return Localizer.Format("#SpaceAge_CE_Reentry", GetString("vessel"), GetString("body"));
+                        return Localizer.Format("#SpaceAge_CE_Reentry", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
                     case "Docking":
                         return Localizer.Format("#SpaceAge_CE_Docking", GetString("vessel1"), GetString("vessel2"));
                     case "Undocking":
                         return Localizer.Format("#SpaceAge_CE_Undocking", GetString("vessel1"), GetString("vessel2"));
                     case "Landing":
-                        return HasData("crew") ? Localizer.Format("#SpaceAge_CE_Landing_Crew", GetString("vessel"), GetString("body"), GetInt("crew")) : Localizer.Format("#SpaceAge_CE_Landing_NoCrew", GetString("vessel"));
+                        return HasData("crew")
+                            ? Localizer.Format("#SpaceAge_CE_Landing_Crew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")), GetInt("crew"))
+                            : Localizer.Format("#SpaceAge_CE_Landing_NoCrew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
                     case "Recovery":
-                        return HasData("crew") ? Localizer.Format("#SpaceAge_CE_Recovery_Crew", GetString("vessel"), GetInt("crew")) : Localizer.Format("#SpaceAge_CE_Recovery_NoCrew", GetString("vessel"));
+                        return HasData("crew")
+                            ? Localizer.Format("#SpaceAge_CE_Recovery_Crew", GetString("vessel"), GetInt("crew"))
+                            : Localizer.Format("#SpaceAge_CE_Recovery_NoCrew", GetString("vessel"));
                     case "ReturnFromOrbit":
-                        return Localizer.Format("#SpaceAge_CE_ReturnFromOrbit", GetString("vessel"), GetString("body"));
+                        return Localizer.Format("#SpaceAge_CE_ReturnFromOrbit", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
                     case "ReturnFromSurface":
-                        return Localizer.Format("#SpaceAge_CE_ReturnFromSurface", GetString("vessel"), GetString("body"));
+                        return Localizer.Format("#SpaceAge_CE_ReturnFromSurface", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
                     case "Destroy":
-                        return HasData("body") ? Localizer.Format("#SpaceAge_CE_Destroy_Body", GetString("vessel"), GetString("body")) : Localizer.Format("#SpaceAge_CE_Destroy_NoBody", GetString("vessel"));
+                        return HasData("body")
+                            ? Localizer.Format("#SpaceAge_CE_Destroy_Body", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")))
+                            : Localizer.Format("#SpaceAge_CE_Destroy_NoBody", GetString("vessel"));
                     case "Death":
                         return Localizer.Format("#SpaceAge_CE_Death", GetString("kerbal"));
                     case "FlagPlant":
-                        return Localizer.Format("#SpaceAge_CE_FlagPlant", GetString("body"));
+                        return Localizer.Format("#SpaceAge_CE_FlagPlant", Core.GetBodyDisplayName(GetString("body")));
                     case "FacilityUpgraded":
                         return Localizer.Format("#SpaceAge_CE_FacilityUpgraded", GetString("facility"), GetString("level"));
                     case "StructureCollapsed":
@@ -63,9 +72,11 @@ namespace SpaceAge
                     case "TechnologyResearched":
                         return Localizer.Format("#SpaceAge_CE_TechnologyResearched", GetString("tech"));
                     case "AnomalyDiscovery":
-                        return Localizer.Format("#SpaceAge_CE_AnomalyDiscovery", GetString("id"), GetString("body"));
+                        return Localizer.Format("#SpaceAge_CE_AnomalyDiscovery", GetString("id"), Core.GetBodyDisplayName(GetString("body")));
                     case "Achievement":
-                        return (HasData("value") && GetString("value").Length != 0) ? Localizer.Format("#SpaceAge_CE_Achievement_Value", GetString("title"), GetString("value")) : Localizer.Format("#SpaceAge_CE_Achievement_NpValue", GetString("title"));
+                        return (HasData("value") && GetString("value").Length != 0)
+                            ? Localizer.Format("#SpaceAge_CE_Achievement_Value", GetString("title"), GetString("value"))
+                            : Localizer.Format("#SpaceAge_CE_Achievement_NoValue", GetString("title"));
                     case "Custom":
                         return GetString("description");
                 }
