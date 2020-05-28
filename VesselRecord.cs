@@ -10,9 +10,15 @@ namespace SpaceAge
     class VesselRecord
     {
         /// <summary>
-        /// Vessel's persistentId
+        /// Vessel's Guid
         /// </summary>
-        public uint Id { get; protected set; }
+        public string Id { get; protected set; }
+
+        public Guid Guid
+        {
+            get => new Guid(Id);
+            protected set => Id = value.ToString();
+        }
 
         /// <summary>
         /// Vessel's user-readable name
@@ -29,12 +35,12 @@ namespace SpaceAge
         /// </summary>
         public Vessel Vessel
         {
-            get => FlightGlobals.FindVessel(Id, out Vessel vessel) ? vessel : null;
+            get => FlightGlobals.FindVessel(Guid);
             set
             {
                 if (value != null)
                 {
-                    Id = value.persistentId;
+                    Guid = value.id;
                     Name = value.vesselName;
                     LaunchTime = value.launchTime;
                 }
@@ -50,7 +56,7 @@ namespace SpaceAge
         {
             get
             {
-                if (Id <= 0)
+                if (Id == null)
                     return null;
                 ConfigNode node = new ConfigNode("VESSEL");
                 node.AddValue("id", Id);
@@ -60,10 +66,10 @@ namespace SpaceAge
             }
             set
             {
-                Id = Core.GetUInt(value, "id");
+                Id = Core.GetString(value, "id");
                 Name = Core.GetString(value, "name");
                 LaunchTime = Core.GetDouble(value, "launchTime", Planetarium.GetUniversalTime());
-                if (Id <= 0)
+                if (string.IsNullOrEmpty(Id))
                 {
                     Core.Log("Incorrect vessel id in node: " + value, Core.LogLevel.Error);
                     return;
@@ -77,7 +83,7 @@ namespace SpaceAge
 
         public VesselRecord(ProtoVessel protoVessel)
         {
-            Id = protoVessel.persistentId;
+            Guid = protoVessel.vesselID;
             Name = protoVessel.vesselName;
             LaunchTime = protoVessel.launchTime;
         }

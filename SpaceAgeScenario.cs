@@ -11,7 +11,7 @@ namespace SpaceAge
     class SpaceAgeScenario : ScenarioModule
     {
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>(), displayChronicle;
-        Dictionary<uint, VesselRecord> vessels = new Dictionary<uint, VesselRecord>();
+        Dictionary<string, VesselRecord> vessels = new Dictionary<string, VesselRecord>();
         static List<ProtoAchievement> protoAchievements;
         Dictionary<string, Achievement> achievements = new Dictionary<string, Achievement>();
         List<Achievement> scoreAchievements = new List<Achievement>();
@@ -25,6 +25,9 @@ namespace SpaceAge
 
         enum Tab { Chronicle, Achievements, Score };
         Tab currentTab = Tab.Chronicle;
+
+        VesselRecord logVessel = null;
+        bool vesselSelectDialogShown = false;
 
         const float windowWidth = 600;
         int[] page = new int[3] { 1, 1, 1 };
@@ -251,30 +254,21 @@ namespace SpaceAge
 
         public void AddVesselRecord(VesselRecord vesselRecord)
         {
-            if ((vesselRecord.Id > 0) && !vessels.ContainsKey(vesselRecord.Id))
+            if (string.IsNullOrEmpty(vesselRecord.Id) && !vessels.ContainsKey(vesselRecord.Id))
                 vessels.Add(vesselRecord.Id, vesselRecord);
         }
 
         public void AddVesselRecord(Vessel vessel)
         {
-            if ((vessel != null) && !vessels.ContainsKey(vessel.persistentId))
-                vessels.Add(vessel.persistentId, new VesselRecord(vessel));
+            if ((vessel != null) && !vessels.ContainsKey(vessel.id.ToString()))
+                vessels.Add(vessel.id.ToString(), new VesselRecord(vessel));
         }
 
         public void DeleteUnusedVesselRecords()
         {
-            foreach (uint id in vessels.Keys)
-            {
-                bool found = false;
-                foreach (ChronicleEvent ev in chronicle)
-                    if (ev.HasVesselId(id))
-                    {
-                        found = true;
-                        break;
-                    }
-                if (!found)
+            foreach (string id in vessels.Keys)
+                if (!chronicle.Exists((ev) => ev.HasVesselId(id)))
                     vessels.Remove(id);
-            }
         }
 
         #region ACHIEVEMENTS METHODS
@@ -487,13 +481,12 @@ namespace SpaceAge
             
             scoreBodies.Clear();
             foreach (CelestialBody b in FlightGlobals.Bodies)
-                foreach (Achievement a in scoreAchievements)
-                    if ((a.Body == b.name) || (!a.Proto.IsBodySpecific && (b == FlightGlobals.GetHomeBody())))
-                    {
-                        Core.Log("There is at least one " + b.name + " achievement.");
-                        scoreBodies.Add(b.name);
-                        break;
-                    }
+                if (scoreAchievements.Exists((a) => (a.Body == b.name) || (!a.Proto.IsBodySpecific && (b == FlightGlobals.GetHomeBody()))))
+                {
+                    Core.Log("There is at least one " + b.name + " achievement.");
+                    scoreBodies.Add(b.name);
+                    break;
+                }
 
             Core.Log(scoreAchievements.Count + " score achievements of " + scoreRecordNames.Count + " types for " + scoreBodies.Count + " bodies found. Total score: " + score);
             if ((window != null) && (currentTab == Tab.Score))
@@ -505,6 +498,12 @@ namespace SpaceAge
             get
             {
                 List<DialogGUIBase> gridContents;
+
+                if (currentTab == Tab.Chronicle && logVessel != null)
+                {
+                    displayChronicle = chronicle.FindAll((ev) => ev.HasVesselId(logVessel.Id));
+                    Core.Log("Found " + displayChronicle.Count + " ship log records for " + logVessel.Name);
+                }
 
                 if (Page > PageCount)
                     Page = PageCount;
@@ -523,16 +522,18 @@ namespace SpaceAge
                                     new DialogGUILabel(
                                         "<color=\"white\">" + Core.ParseUT(displayChronicle[SpaceAgeChronicleSettings.Instance.NewestFirst ? (displayChronicle.Count - i - 1) : i].Time) + "</color>\t" + displayChronicle[SpaceAgeChronicleSettings.Instance.NewestFirst ? (displayChronicle.Count - i - 1) : i].Description,
                                         true),
-                                    new DialogGUIButton<int>("X", DeleteChronicleItem, SpaceAgeChronicleSettings.Instance.NewestFirst ? (displayChronicle.Count - i - 1) : i)));
+                                    new DialogGUIButton<int>(Localizer.Format("#SpaceAge_UI_Delete"), DeleteChronicleItem, SpaceAgeChronicleSettings.Instance.NewestFirst ? (displayChronicle.Count - i - 1) : i)));
+                        DialogGUIButton logButton = new DialogGUIButton(Localizer.Format("#SpaceAge_UI_LogBtn"), LogButtonClicked);
                         return new DialogGUIVerticalLayout(
                             new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, gridContents.ToArray()),
-                            (HighLogic.LoadedSceneIsFlight ? new DialogGUIHorizontalLayout() :
+                            (HighLogic.LoadedSceneIsFlight ? new DialogGUIHorizontalLayout(logButton) :
                             new DialogGUIHorizontalLayout(
                                 windowWidth - 20,
                                 10,
+                                logButton,
                                 new DialogGUITextInput(textInput, false, 100, (s) => textInput = s),
-                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Find"), Find, false),
-                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Add"), AddCustomChronicleEvent, false),
+                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Find"), Find),
+                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Add"), AddCustomChronicleEvent),
                                 new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Export"), ExportChronicle))));
 
                     case Tab.Achievements:
@@ -583,15 +584,15 @@ namespace SpaceAge
                             foreach (string srn in scoreRecordNames)
                             {
                                 double s = 0;
-                                bool crewed = false;
+                                bool manned = false;
                                 foreach (Achievement a in scoreAchievements)
                                     if ((a.Proto.ScoreName == srn) && ((a.Body == scoreBodies[i]) || (!a.Proto.IsBodySpecific && (scoreBodies[i] == FlightGlobals.GetHomeBodyName()))))
                                     {
                                         s += a.Score;
                                         if (a.Proto.CrewedOnly)
-                                            crewed = true;
+                                            manned = true;
                                     }
-                                gridContents.Add(new DialogGUILabel(((s > 0) ? (crewed ? "<color=\"green\">[M]  " : "<color=\"yellow\">[U]  ") + s + "</color>" : "<color=\"white\">—</color>")));
+                                gridContents.Add(new DialogGUILabel(((s > 0) ? Localizer.Format(manned ? "#SpaceAge_UI_ScoreManned" : "#SpaceAge_UI_ScoreUnmanned", s) : Localizer.Format("#SpaceAge_UI_ScoreNone"))));
                             }
                         }
                         return new DialogGUIVerticalLayout(true, true, 5, new RectOffset(5, 5, 0, 0), TextAnchor.MiddleLeft,
@@ -634,11 +635,11 @@ namespace SpaceAge
                     new DialogGUIHorizontalLayout(
                         true,
                         false,
-                        new DialogGUIButton("<<", FirstPage, () => (Page > 1), false),
-                        new DialogGUIButton("<", PageUp, () => (Page > 1), false),
+                        new DialogGUIButton("<<", FirstPage, () => Page > 1, false),
+                        new DialogGUIButton("<", PageUp, () => Page > 1, false),
                         new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel(Page + "/" + PageCount)),
-                        new DialogGUIButton(">", PageDown, () => (Page < PageCount), false),
-                        new DialogGUIButton(">>", LastPage, () => (Page < PageCount), false)) :
+                        new DialogGUIButton(">", PageDown, () => Page < PageCount, false),
+                        new DialogGUIButton(">>", LastPage, () => Page < PageCount, false)) :
                         new DialogGUIHorizontalLayout(),
                     WindowContents),
                 false,
@@ -736,16 +737,70 @@ namespace SpaceAge
             Invalidate();
         }
 
+        void ShowLogVesselSelectDialog()
+        {
+            Core.Log("ShowLogVesselSelectDialog");
+
+            // Prepare list of options
+            List<DialogGUIToggleButton> vesselsList = new List<DialogGUIToggleButton>();
+            foreach (VesselRecord vr in vessels.Values)
+                if (FlightGlobals.ActiveVessel == null || vr.Guid != FlightGlobals.ActiveVessel.id)
+                    vesselsList.Add(new DialogGUIToggleButton(false, vr.Name, (x) =>
+                    {
+                        logVessel = vr;
+                        HideLogVesselSelectDialog();
+                        Invalidate();
+                    }, h: 30));
+            if (FlightGlobals.ActiveVessel != null && vessels.ContainsKey(FlightGlobals.ActiveVessel.id.ToString()))
+                vesselsList.Add(new DialogGUIToggleButton(false, FlightGlobals.ActiveVessel.vesselName, (x) =>
+                {
+                    logVessel = vessels[FlightGlobals.ActiveVessel.id.ToString()];
+                    HideLogVesselSelectDialog();
+                    Invalidate();
+                }, h: 30));
+            vesselsList.Reverse();
+            vesselsList.Add(new DialogGUIToggleButton(false, Localizer.Format("#SpaceAge_UI_Cancel"), (x) => HideLogVesselSelectDialog(), h: 30));
+            
+            // Display the dialog
+            PopupDialog.SpawnPopupDialog(
+                new MultiOptionDialog(
+                    "LogVesselSelect",
+                    "",
+                    Localizer.Format("#SpaceAge_UI_SelectVessel"),
+                    HighLogic.UISkin,
+                    new DialogGUIVerticalLayout(vesselsList.ToArray())),
+                false,
+                HighLogic.UISkin);
+            vesselSelectDialogShown = true;
+        }
+
+        void HideLogVesselSelectDialog()
+        {
+            Core.Log("HideLogVesselSelectDialog");
+            PopupDialog.DismissPopup("LogVesselSelect");
+            vesselSelectDialogShown = false;
+        }
+
+        void LogButtonClicked()
+        {
+            Core.Log("LogButtonClicked. Log vessel: " + (logVessel?.Name ?? "none"), Core.LogLevel.Important);
+            if (logVessel == null)
+                if (vesselSelectDialogShown)
+                    HideLogVesselSelectDialog();
+                else ShowLogVesselSelectDialog();
+            else
+            {
+                logVessel = null;
+                displayChronicle = chronicle;
+                Invalidate();
+            }
+        }
+
         void Find()
         {
             Core.Log("Find(textInput = '" + textInput + "')", Core.LogLevel.Important);
-            if (textInput.Trim(' ').Length != 0) 
-            {
-                displayChronicle = new List<ChronicleEvent>();
-                foreach (ChronicleEvent e in chronicle)
-                    if (e.Description.ToLower().Contains(textInput.ToLower()))
-                        displayChronicle.Add(e);
-            }
+            if (textInput.Trim(' ').Length != 0)
+                displayChronicle = chronicle.FindAll((e) => e.Description.ToLower().Contains(textInput.ToLower()));
             else displayChronicle = chronicle;
             Page = 1;
             Invalidate();
@@ -754,9 +809,8 @@ namespace SpaceAge
         void AddCustomChronicleEvent()
         {
             Core.Log("AddItem(textInput = '" + textInput + "')", Core.LogLevel.Important);
-            if (textInput.Trim(' ').Length == 0)
-                return;
-            AddChronicleEvent(new SpaceAge.ChronicleEvent("Custom", "description", textInput));
+            if (textInput.Trim(' ').Length != 0)
+                AddChronicleEvent(new SpaceAge.ChronicleEvent("Custom", "description", textInput));
         }
 
         void ExportChronicle()

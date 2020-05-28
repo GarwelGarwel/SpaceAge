@@ -23,16 +23,16 @@ namespace SpaceAge
             { return 0; }
         }
 
-        public List<uint> GetVesselIds()
+        public List<string> GetVesselIds()
         {
-            List<uint> ids = new List<uint>();
+            List<string> ids = new List<string>();
             foreach (KeyValuePair<string, string> kvp in Data)
                 if (kvp.Key.Contains("vesselId"))
-                    ids.Add(UInt32.TryParse(kvp.Value, out uint id) ? id : 0);
+                    ids.Add(kvp.Value);
             return ids;
         }
 
-        public bool HasVesselId(uint vesselId) => GetVesselIds().Contains(vesselId);
+        public bool HasVesselId(string vesselId) => GetVesselIds().Contains(vesselId);
 
         public string Description
         {
@@ -128,7 +128,12 @@ namespace SpaceAge
                 if (data[i] is Vessel v)
                 {
                     Data.Add("vessel", v.vesselName);
-                    Data.Add("vesselId", v.persistentId.ToString());
+                    Data.Add("vesselId", v.id.ToString());
+                }
+                if (data[i] is ProtoVessel pv)
+                {
+                    Data.Add("vessel", pv.vesselName);
+                    Data.Add("vesselId", pv.vesselID.ToString());
                 }
                 if (data[i] is string s)
                 {
