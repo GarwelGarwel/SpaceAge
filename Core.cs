@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using KSP.Localization;
 using System;
-using KSP.Localization;
+using UnityEngine;
 
 namespace SpaceAge
 {
@@ -15,8 +15,13 @@ namespace SpaceAge
     /// </summary>
     internal enum LogLevel { None = 0, Error, Important, Debug };
 
-    static class Core
+    internal static class Core
     {
+        /// <summary>
+        /// Current <see cref="LogLevel"/>: either Debug or Important
+        /// </summary>
+        internal static LogLevel Level => SpaceAgeChronicleSettings.Instance.DebugMode ? LogLevel.Debug : LogLevel.Important;
+
         public static double GetCost(this Vessel v)
         {
             double cost = 0;
@@ -67,7 +72,7 @@ namespace SpaceAge
             m = (int)Math.Floor(t / 60);
             t -= m * 60;
             return showSeconds
-                ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), ((int) t).ToString("D2"))
+                ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), ((int)t).ToString("D2"))
                 : Localizer.Format("#SpaceAge_DateTime_NoSec", y, d.ToString("D3"), h, m.ToString("D2"));
         }
 
@@ -84,11 +89,6 @@ namespace SpaceAge
 
         public static bool GetBool(this ConfigNode n, string key, bool defaultValue = false)
                => Boolean.TryParse(n.GetValue(key), out bool val) ? val : defaultValue;
-
-        /// <summary>
-        /// Current <see cref="LogLevel"/>: either Debug or Important
-        /// </summary>
-        internal static LogLevel Level => SpaceAgeChronicleSettings.Instance.DebugMode ? LogLevel.Debug : LogLevel.Important;
 
         /// <summary>
         /// Write into output_log.txt

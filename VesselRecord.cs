@@ -1,14 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SpaceAge
 {
-    class VesselRecord
+    public class VesselRecord
     {
+        public VesselRecord(ConfigNode node) => ConfigNode = node;
+
+        public VesselRecord(Vessel vessel) => Vessel = vessel;
+
+        public VesselRecord(ProtoVessel protoVessel)
+        {
+            Guid = protoVessel.vesselID;
+            Name = protoVessel.vesselName;
+            LaunchTime = protoVessel.launchTime;
+        }
+
         /// <summary>
         /// Vessel's Guid
         /// </summary>
@@ -75,17 +81,6 @@ namespace SpaceAge
                     return;
                 }
             }
-        }
-
-        public VesselRecord(ConfigNode node) => ConfigNode = node;
-
-        public VesselRecord(Vessel vessel) => Vessel = vessel;
-
-        public VesselRecord(ProtoVessel protoVessel)
-        {
-            Guid = protoVessel.vesselID;
-            Name = protoVessel.vesselName;
-            LaunchTime = protoVessel.launchTime;
         }
     }
 }

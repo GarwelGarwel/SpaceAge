@@ -11,9 +11,13 @@ namespace SpaceAge
 
     public class ProtoAchievement
     {
-        public string Name { get; set; }
+        private string title = null;
 
-        string title = null;
+        public ProtoAchievement(string name) => Name = name;
+
+        public ProtoAchievement(ConfigNode node) => ConfigNode = node;
+
+        public string Name { get; set; }
 
         public string Title
         {
@@ -23,8 +27,8 @@ namespace SpaceAge
 
         public AchievementType Type { get; set; }
 
-        public bool HasValue => (Type == AchievementType.Max) || (Type == AchievementType.Total);
-        public bool HasTime => (Type == AchievementType.First) || (Type == AchievementType.Max);
+        public bool HasValue => Type == AchievementType.Max || Type == AchievementType.Total;
+        public bool HasTime => Type == AchievementType.First || Type == AchievementType.Max;
 
         public ValueType ValueType { get; set; } = ValueType.None;
 
@@ -62,11 +66,5 @@ namespace SpaceAge
                 catch (Exception) { Core.Log("Error parsing a ProtoAchievement node: " + value, LogLevel.Error); }
             }
         }
-
-        public ProtoAchievement() { }
-
-        public ProtoAchievement(string name) => Name = name;
-        
-        public ProtoAchievement(ConfigNode node) => ConfigNode = node;
     }
 }

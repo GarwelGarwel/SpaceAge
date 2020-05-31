@@ -2,22 +2,8 @@
 
 namespace SpaceAge
 {
-    class SpaceAgeChronicleSettings : GameParameters.CustomParameterNode
+    internal class SpaceAgeChronicleSettings : GameParameters.CustomParameterNode
     {
-        public override string Title => Localizer.Format("#SpaceAge_Settings_Title");
-
-        public override GameParameters.GameMode GameMode => GameParameters.GameMode.ANY;
-
-        public override string Section => "Space Age";
-
-        public override string DisplaySection => Section;
-
-        public override int SectionOrder => 1;
-
-        public override bool HasPresets => false;
-
-        public static SpaceAgeChronicleSettings Instance => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>();
-
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_ShowAppLauncherButton", toolTip = "#SpaceAge_Settings_ShowAppLauncherButton_desc")]
         public bool ShowAppLauncherButton = true;
 
@@ -108,6 +94,21 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_ResetSettings", toolTip = "#SpaceAge_Settings_ResetSettings_desc")]
         public bool ResetSettings = false;
 
+        public SpaceAgeChronicleSettings() => Reset();
+
+        public static SpaceAgeChronicleSettings Instance => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>();
+        public override string Title => Localizer.Format("#SpaceAge_Settings_Title");
+
+        public override GameParameters.GameMode GameMode => GameParameters.GameMode.ANY;
+
+        public override string Section => "Space Age";
+
+        public override string DisplaySection => Section;
+
+        public override int SectionOrder => 1;
+
+        public override bool HasPresets => false;
+
         /// <summary>
         /// Resets settings to default values (ignores config)
         /// </summary>
@@ -143,7 +144,5 @@ namespace SpaceAge
             RepPerScore = 0;
             ResetSettings = false;
         }
-
-        public SpaceAgeChronicleSettings() => Reset();
     }
 }
