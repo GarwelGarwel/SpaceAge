@@ -66,12 +66,12 @@ namespace SpaceAge
             }
             set
             {
-                Id = Core.GetString(value, "id");
-                Name = Core.GetString(value, "name");
-                LaunchTime = Core.GetDouble(value, "launchTime", Planetarium.GetUniversalTime());
+                Id = value.GetString("id");
+                Name = value.GetString("name");
+                LaunchTime = value.GetDouble("launchTime", Planetarium.GetUniversalTime());
                 if (string.IsNullOrEmpty(Id))
                 {
-                    Core.Log("Incorrect vessel id in node: " + value, Core.LogLevel.Error);
+                    Core.Log("Incorrect vessel id in node: " + value, LogLevel.Error);
                     return;
                 }
             }

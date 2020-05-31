@@ -181,25 +181,19 @@ namespace SpaceAge
 
             set
             {
-                try
-                {
-                    if (value.name != "ACHIEVEMENT")
-                        throw new Exception();
-                    Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
-                    Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
-                    if (invalid)
-                        return;
-                    if (Proto.IsBodySpecific)
-                        Body = Core.GetString(value, "body", FlightGlobals.GetHomeBodyName());
-                    if (Proto.HasTime)
-                        Time = Core.GetDouble(value, "time");
-                    if (Proto.HasValue)
-                        Value = Core.GetDouble(value, "value");
-                    Hero = Core.GetString(value, "hero");
-                    if (Proto.Unique)
-                        Ids = Core.GetString(value, "ids", "");
-                }
-                catch (Exception) { throw new ArgumentException("Achievement config node is incorrect: " + value); }
+                Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
+                Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
+                if (invalid)
+                    return;
+                if (Proto.IsBodySpecific)
+                    Body = value.GetString("body", FlightGlobals.GetHomeBodyName());
+                if (Proto.HasTime)
+                    Time = value.GetDouble("time");
+                if (Proto.HasValue)
+                    Value = value.GetDouble("value");
+                Hero = value.GetString("hero");
+                if (Proto.Unique)
+                    Ids = value.GetString("ids", "");
             }
         }
 
@@ -240,7 +234,7 @@ namespace SpaceAge
                 switch (Proto.ValueType)
                 {
                     case ValueType.Cost:
-                        Value = Core.VesselCost(vessel);
+                        Value = vessel.GetCost();
                         break;
                     case ValueType.Mass:
                         Value = vessel.totalMass;

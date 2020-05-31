@@ -1,6 +1,7 @@
 ﻿using KSP.Localization;
 using System;
 using System.Collections.Generic;
+using UniLinq;
 
 namespace SpaceAge
 {
@@ -10,27 +11,21 @@ namespace SpaceAge
 
         public string Type { get; set; }
 
+        public bool LogOnly { get; set; } = false;
+
         public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         public bool HasData(string key) => Data.ContainsKey(key);
 
         public string GetString(string key) => HasData(key) ? Data[key] : null;
 
-        public int GetInt(string key)
-        {
-            try { return HasData(key) ? int.Parse(Data[key]) : 0; }
-            catch (FormatException)
-            { return 0; }
-        }
+        public int GetInt(string key) =>
+            HasData(key) ? (int.TryParse(Data[key], out int res) ? res : 0) : 0;
 
         public List<string> GetVesselIds()
-        {
-            List<string> ids = new List<string>();
-            foreach (KeyValuePair<string, string> kvp in Data)
-                if (kvp.Key.Contains("vesselId"))
-                    ids.Add(kvp.Value);
-            return ids;
-        }
+            => new List<string>(Data
+                .Where(kvp => kvp.Key.Contains("vesselId"))
+                .Select(kvp => kvp.Value));
 
         public bool HasVesselId(string vesselId) => GetVesselIds().Contains(vesselId);
 
@@ -102,6 +97,8 @@ namespace SpaceAge
                 ConfigNode node = new ConfigNode("EVENT");
                 node.AddValue("time", Time);
                 node.AddValue("type", Type);
+                if (LogOnly)
+                    node.AddValue("logOnly", true);
                 foreach (KeyValuePair<string, string> kvp in Data)
                     node.AddValue(kvp.Key, kvp.Value);
                 return node;
@@ -110,13 +107,18 @@ namespace SpaceAge
             {
                 Time = Double.Parse(value.GetValue("time"));
                 Type = value.GetValue("type");
+                LogOnly = value.GetBool("logOnly");
                 foreach (ConfigNode.Value v in value.values)
-                    if ((v.name != "time") && (v.name != "type"))
+                    if ((v.name != "time") && (v.name != "type") && (v.name != "logOnly") && (v.value.Length != 0))
                         Data.Add(v.name, v.value);
             }
         }
 
         public ChronicleEvent() => Time = Planetarium.GetUniversalTime();
+
+        public ChronicleEvent(string type, bool logOnly, params object[] data)
+            : this(type, data)
+            => LogOnly = logOnly;
 
         public ChronicleEvent(string type, params object[] data)
             : this()

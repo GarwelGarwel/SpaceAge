@@ -4,9 +4,20 @@ using KSP.Localization;
 
 namespace SpaceAge
 {
-    class Core
+    /// <summary>
+    /// Log levels:
+    /// <list type="bullet">
+    /// <item><definition>None: do not log</definition></item>
+    /// <item><definition>Error: log only errors</definition></item>
+    /// <item><definition>Important: log only errors and important information</definition></item>
+    /// <item><definition>Debug: log all information</definition></item>
+    /// </list>
+    /// </summary>
+    internal enum LogLevel { None = 0, Error, Important, Debug };
+
+    static class Core
     {
-        public static double VesselCost(Vessel v)
+        public static double GetCost(this Vessel v)
         {
             double cost = 0;
             Core.Log("Calculating cost of " + v.vesselName);
@@ -60,65 +71,31 @@ namespace SpaceAge
                 : Localizer.Format("#SpaceAge_DateTime_NoSec", y, d.ToString("D3"), h, m.ToString("D2"));
         }
 
-        public static string GetString(ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;
+        public static string GetString(this ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;
 
-        public static double GetDouble(ConfigNode n, string key, double defaultValue = 0)
+        public static double GetDouble(this ConfigNode n, string key, double defaultValue = 0)
               => Double.TryParse(n.GetValue(key), out double val) ? val : defaultValue;
-      //{
-      //      double res;
-      //      try { res = Double.Parse(n.GetValue(key)); }
-      //      catch (Exception) { res = defaultValue; }
-      //      return res;
-      //  }
 
-        public static int GetInt(ConfigNode n, string key, int defaultValue = 0)
+        public static int GetInt(this ConfigNode n, string key, int defaultValue = 0)
                => Int32.TryParse(n.GetValue(key), out int val) ? val : defaultValue;
-        //{
-        //    int res;
-        //    try { res = Int32.Parse(n.GetValue(key)); }
-        //    catch (Exception) { res = defaultValue; }
-        //    return res;
-        //}
 
-        public static uint GetUInt(ConfigNode n, string key, uint defaultValue = 0)
+        public static uint GetUInt(this ConfigNode n, string key, uint defaultValue = 0)
             => UInt32.TryParse(n.GetValue(key), out uint val) ? val : defaultValue;
-            //uint res;
-            //try { res = UInt32.Parse(n.GetValue(key)); }
-            //catch (Exception) { res = defaultValue; }
-            //return res;
-        //}
 
-        public static bool GetBool(ConfigNode n, string key, bool defaultValue = false)
+        public static bool GetBool(this ConfigNode n, string key, bool defaultValue = false)
                => Boolean.TryParse(n.GetValue(key), out bool val) ? val : defaultValue;
-        //{
-        //    bool res;
-        //    try { res = Boolean.Parse(n.GetValue(key)); }
-        //    catch (Exception) { res = defaultValue; }
-        //    return res;
-        //}
-
-        /// <summary>
-        /// Log levels:
-        /// <list type="bullet">
-        /// <item><definition>None: do not log</definition></item>
-        /// <item><definition>Error: log only errors</definition></item>
-        /// <item><definition>Important: log only errors and important information</definition></item>
-        /// <item><definition>Debug: log all information</definition></item>
-        /// </list>
-        /// </summary>
-        public enum LogLevel { None = 0, Error, Important, Debug };
 
         /// <summary>
         /// Current <see cref="LogLevel"/>: either Debug or Important
         /// </summary>
-        public static LogLevel Level => SpaceAgeChronicleSettings.Instance.DebugMode ? LogLevel.Debug : LogLevel.Important;
+        internal static LogLevel Level => SpaceAgeChronicleSettings.Instance.DebugMode ? LogLevel.Debug : LogLevel.Important;
 
         /// <summary>
         /// Write into output_log.txt
         /// </summary>
         /// <param name="message">Text to log</param>
         /// <param name="messageLevel"><see cref="LogLevel"/> of the entry</param>
-        public static void Log(string message, LogLevel messageLevel = LogLevel.Debug)
+        internal static void Log(string message, LogLevel messageLevel = LogLevel.Debug)
         {
             if (messageLevel <= Level)
                 Debug.Log("[SpaceAge] " + message);

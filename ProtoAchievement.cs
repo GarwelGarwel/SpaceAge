@@ -45,21 +45,21 @@ namespace SpaceAge
                 {
                     Core.Log("Loading protoachievement " + value.GetValue("name") + "...");
                     Name = value.GetValue("name");
-                    Title = Core.GetString(value, "title");
+                    Title = value.GetString("title");
                     Type = (AchievementType)Enum.Parse(typeof(AchievementType), value.GetValue("type"), true);
                     if (value.HasValue("valueType"))
                         ValueType = (ValueType)Enum.Parse(typeof(ValueType), value.GetValue("valueType"), true);
                     OnEvents = value.GetValuesList("onEvent");
-                    IsBodySpecific = Core.GetBool(value, "bodySpecific");
+                    IsBodySpecific = value.GetBool("bodySpecific");
                     if (value.HasValue("home"))
                         Home = (HomeConditionType)Enum.Parse(typeof(HomeConditionType), value.GetValue("home"), true);
-                    CrewedOnly = Core.GetBool(value, "crewedOnly");
-                    Unique = Core.GetBool(value, "unique");
-                    StockSynonym = Core.GetString(value, "stockSynonym");
-                    ScoreName = Core.GetString(value, "scoreName", OnEvents.Count > 0 ? OnEvents[0] : null);
-                    Score = Core.GetDouble(value, "score");
+                    CrewedOnly = value.GetBool("crewedOnly");
+                    Unique = value.GetBool("unique");
+                    StockSynonym = value.GetString("stockSynonym");
+                    ScoreName = value.GetString("scoreName", OnEvents.Count > 0 ? OnEvents[0] : null);
+                    Score = value.GetDouble("score");
                 }
-                catch (Exception) { Core.Log("Error parsing a ProtoAchievement node: " + value, Core.LogLevel.Error); }
+                catch (Exception) { Core.Log("Error parsing a ProtoAchievement node: " + value, LogLevel.Error); }
             }
         }
 

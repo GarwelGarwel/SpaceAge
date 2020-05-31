@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using KSP.Localization;
 using KSP.UI.Screens;
+using UniLinq;
 using UnityEngine;
 
 namespace SpaceAge
@@ -34,10 +35,11 @@ namespace SpaceAge
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
         string textInput = "";
+        string searchTerm = "";
 
         public void Start()
         {
-            Core.Log("SpaceAgeScenario.Start", Core.LogLevel.Important);
+            Core.Log("SpaceAgeScenario.Start", LogLevel.Important);
 
             displayChronicle = chronicle;
 
@@ -149,9 +151,9 @@ namespace SpaceAge
             if (node.HasNode("CHRONICLE"))
             {
                 Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Chronicle.");
-                foreach (ConfigNode n in node.GetNode("CHRONICLE").GetNodes())
-                    if (n.name == "EVENT")
-                        chronicle.Add(new ChronicleEvent(n));
+                chronicle.AddRange(node.GetNode("CHRONICLE").GetNodes()
+                    .Where(n => n.name == "EVENT")
+                    .Select(n => new ChronicleEvent(n)));
             }
             displayChronicle = chronicle;
 
@@ -159,25 +161,24 @@ namespace SpaceAge
             if (node.HasNode("VESSELS"))
             {
                 Core.Log(node.GetNode("CHRONICLE").CountNodes + " nodes found in Vessels.");
-                foreach (ConfigNode n in node.GetNode("VESSELS").GetNodes())
-                    if (n.name == "VESSEL")
-                        AddVesselRecord(new VesselRecord(n));
+                foreach (ConfigNode n in node.GetNode("VESSELS").GetNodes().Where(n => n.name == "VESSEL"))
+                    AddVesselRecord(new VesselRecord(n));
             }
 
             if (node.HasNode("ACHIEVEMENTS"))
             {
                 Core.Log(node.GetNode("ACHIEVEMENTS").CountNodes + " nodes found in ACHIEVEMENTS.");
                 double score = 0;
-                foreach (ConfigNode n in node.GetNode("ACHIEVEMENTS").GetNodes())
-                    if (n.name == "ACHIEVEMENT")
-                        try
-                        {
-                            Achievement a = new Achievement(n);
-                            achievements.Add(a.FullName, a);
-                            if (a.Proto.Score > 0) Core.Log(a.FullDisplayValue + ": " + a.Score + " points");
-                            score += a.Score;
-                        }
-                        catch (ArgumentException e) { Core.Log(e.Message); }
+                foreach (ConfigNode n in node.GetNode("ACHIEVEMENTS").GetNodes().Where(n => n.name == "ACHIEVEMENT"))
+                    try
+                    {
+                        Achievement a = new Achievement(n);
+                        achievements.Add(a.FullName, a);
+                        if (a.Proto.Score > 0)
+                            Core.Log(a.FullDisplayValue + ": " + a.Score + " points");
+                        score += a.Score;
+                    }
+                    catch (ArgumentException e) { Core.Log(e.Message); }
                 Core.Log("Total score: " + score);
             }
 
@@ -186,11 +187,9 @@ namespace SpaceAge
 
         void InitializeDatabase()
         {
-            if (protoAchievements != null) return;
-            Core.Log("Initializing proto records...");
-            protoAchievements = new List<ProtoAchievement>();
-            foreach (ConfigNode n in GameDatabase.Instance.GetConfigNodes("PROTOACHIEVEMENT"))
-                protoAchievements.Add(new ProtoAchievement(n));
+            if (protoAchievements != null)
+                return;
+            protoAchievements = new List<ProtoAchievement>(GameDatabase.Instance.GetConfigNodes("PROTOACHIEVEMENT").Select(n => new ProtoAchievement(n)));
             Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
         }
 
@@ -213,17 +212,17 @@ namespace SpaceAge
         /// </summary>
         void ResetSettings()
         {
-            Core.Log("ResetSettings", Core.LogLevel.Important);
+            Core.Log("ResetSettings", LogLevel.Important);
             SpaceAgeChronicleSettings.Instance.Reset();
             if (GameDatabase.Instance.ExistsConfigNode("SPACEAGE_CONFIG"))
             {
                 ConfigNode config = GameDatabase.Instance.GetConfigNode("SPACEAGE_CONFIG");
-                Core.Log("SPACEAGE_CONFIG: " + config, Core.LogLevel.Important);
-                SpaceAgeChronicleSettings.Instance.FundsPerScore = (float)Core.GetDouble(config, "fundsPerScore", SpaceAgeChronicleSettings.Instance.FundsPerScore);
-                SpaceAgeChronicleSettings.Instance.SciencePerScore = (float)Core.GetDouble(config, "sciencePerScore", SpaceAgeChronicleSettings.Instance.SciencePerScore);
-                SpaceAgeChronicleSettings.Instance.RepPerScore = (float)Core.GetDouble(config, "repPerScore", SpaceAgeChronicleSettings.Instance.RepPerScore);
+                Core.Log("SPACEAGE_CONFIG: " + config, LogLevel.Important);
+                SpaceAgeChronicleSettings.Instance.FundsPerScore = (float)config.GetDouble("fundsPerScore", SpaceAgeChronicleSettings.Instance.FundsPerScore);
+                SpaceAgeChronicleSettings.Instance.SciencePerScore = (float)config.GetDouble("sciencePerScore", SpaceAgeChronicleSettings.Instance.SciencePerScore);
+                SpaceAgeChronicleSettings.Instance.RepPerScore = (float)config.GetDouble("repPerScore", SpaceAgeChronicleSettings.Instance.RepPerScore);
             }
-            else Core.Log("SPACEAGE_CONFIG node not found.", Core.LogLevel.Important);
+            else Core.Log("SPACEAGE_CONFIG node not found.", LogLevel.Important);
         }
 
         /// <summary>
@@ -231,7 +230,7 @@ namespace SpaceAge
         /// </summary>
         void OnGameSettingsApplied()
         {
-            Core.Log("OnGameSettingsApplied", Core.LogLevel.Important);
+            Core.Log("OnGameSettingsApplied", LogLevel.Important);
             if (SpaceAgeChronicleSettings.Instance.ResetSettings)
             {
                 ResetSettings();
@@ -266,9 +265,8 @@ namespace SpaceAge
 
         public void DeleteUnusedVesselRecords()
         {
-            foreach (string id in vessels.Keys)
-                if (!chronicle.Exists((ev) => ev.HasVesselId(id)))
-                    vessels.Remove(id);
+            foreach (string id in vessels.Keys.Where(id => !chronicle.Exists((ev) => ev.HasVesselId(id))))
+                vessels.Remove(id);
         }
 
         #region ACHIEVEMENTS METHODS
@@ -278,43 +276,37 @@ namespace SpaceAge
         {
             Core.Log(node.name + " config node contains " + node.CountNodes + " sub-nodes.");
             Achievement a;
-            foreach (ProtoAchievement pa in protoAchievements)
-                if ((pa.StockSynonym != null) && (pa.StockSynonym.Length != 0) && (node.HasNode(pa.StockSynonym)))
+            foreach (ProtoAchievement pa in protoAchievements
+                .Where(pa => pa.StockSynonym != null && pa.StockSynonym.Length != 0 && node.HasNode(pa.StockSynonym)))
+            {
+                ConfigNode n = node.GetNode(pa.StockSynonym);
+                Core.Log(pa.StockSynonym + " node found for " + pa.Name + ".");
+                Core.Log(n.ToString());
+                a = new SpaceAge.Achievement(pa, body);
+                if (n.HasValue("completed"))
+                    a.Time = Double.Parse(n.GetValue("completed"));
+                else if (n.HasValue("completedManned"))
+                    a.Time = Double.Parse(n.GetValue("completedManned"));
+                else if (!pa.CrewedOnly && n.HasValue("completedUnmanned"))
+                    a.Time = Double.Parse(n.GetValue("completedUnmanned"));
+                else
                 {
-                    ConfigNode n = node.GetNode(pa.StockSynonym);
-                    Core.Log(pa.StockSynonym + " node found for " + pa.Name + ".");
-                    Core.Log(n.ToString());
-                    a = new SpaceAge.Achievement(pa, body);
-                    if (n.HasValue("completed"))
-                        a.Time = Double.Parse(n.GetValue("completed"));
-                    else if (n.HasValue("completedManned"))
-                        a.Time = Double.Parse(n.GetValue("completedManned"));
-                    else if (!pa.CrewedOnly && n.HasValue("completedUnmanned"))
-                        a.Time = Double.Parse(n.GetValue("completedUnmanned"));
-                    else
-                    {
-                        Core.Log("Time value not found, achievement has not been completed.");
-                        continue;
-                    }
-                    Core.Log("Found candidate achievement: " + KSPUtil.PrintDateCompact(a.Time, true) + " " + a.Title);
-                    if (CheckAchievement(a))
-                        achievementsImported++;
+                    Core.Log("Time value not found, achievement has not been completed.");
+                    continue;
                 }
+                Core.Log("Found candidate achievement: " + KSPUtil.PrintDateCompact(a.Time, true) + " " + a.Title);
+                if (CheckAchievement(a))
+                    achievementsImported++;
+            }
         }
 
         void ParseProgressTracking()
         {
-            ConfigNode trackingNode = null;
-            foreach (ProtoScenarioModule psm in HighLogic.CurrentGame.scenarios)
-                if (psm.moduleName == "ProgressTracking")
-                {
-                    trackingNode = psm.GetData();
-                    break;
-                }
+            ConfigNode trackingNode = HighLogic.CurrentGame.scenarios.Find(psm => psm.moduleName == "ProgressTracking").GetData();
 
             if (trackingNode == null)
             {
-                Core.Log("ProgressTracking scenario not found!", Core.LogLevel.Important);
+                Core.Log("ProgressTracking scenario not found!", LogLevel.Important);
                 return;
             }
 
@@ -322,16 +314,15 @@ namespace SpaceAge
                 trackingNode = trackingNode.GetNode("Progress");
             else
             {
-                Core.Log("ProgressTracking scenario does not contain Progress node!", Core.LogLevel.Important);
+                Core.Log("ProgressTracking scenario does not contain Progress node!", LogLevel.Important);
                 Core.Log(trackingNode.ToString());
                 return;
             }
 
             achievementsImported = 0;
             ParseProgressNodes(trackingNode, null);
-            foreach (CelestialBody b in FlightGlobals.Bodies)
-                if (trackingNode.HasNode(b.name))
-                    ParseProgressNodes(trackingNode.GetNode(b.name), b);
+            foreach (CelestialBody b in FlightGlobals.Bodies.Where(b => trackingNode.HasNode(b.name)))
+                ParseProgressNodes(trackingNode.GetNode(b.name), b);
 
             if (achievementsImported > 0)
             {
@@ -344,15 +335,7 @@ namespace SpaceAge
             }
         }
 
-        public static ProtoAchievement FindProtoAchievement(string name)
-        {
-            Core.Log("Searching among " + protoAchievements.Count + " ProtoAchievements.");
-            foreach (ProtoAchievement pa in protoAchievements)
-                if (pa.Name == name)
-                    return pa;
-            Core.Log("ProtoAchievement '" + name + "' not found!", Core.LogLevel.Error);
-            return null;
-        }
+        public static ProtoAchievement FindProtoAchievement(string name) => protoAchievements.Find(pa => pa.Name == name);
 
         public Achievement FindAchievement(string fullname) => achievements.ContainsKey(fullname) ? achievements[fullname] : null;
 
@@ -374,59 +357,58 @@ namespace SpaceAge
             Core.Log("CheckAchievements('" + ev + "', body = '" + body?.name + "', vessel = '" + vessel?.vesselName + "', value = " + value + ", hero = '" + (hero ?? "null") + "')");
 
             bool scored = false;
-            foreach (ProtoAchievement pa in protoAchievements)
-                if (pa.OnEvents.Contains(ev))
+            foreach (ProtoAchievement pa in protoAchievements.Where(pa => pa.OnEvents.Contains(ev)))
+            {
+                string msg = "";
+                Achievement ach = new Achievement(pa, body, vessel, value, hero);
+                if (CheckAchievement(ach))
                 {
-                    string msg = "";
-                    Achievement ach = new Achievement(pa, body, vessel, value, hero);
-                    if (CheckAchievement(ach))
+                    if (ach.Proto.Score > 0)
                     {
-                        if (ach.Proto.Score > 0)
+                        scored = true;
+                        double score = ach.Score;
+                        msg = "\r\n" + Localizer.Format("#SpaceAge_PS_PointsAdded", score);
+                        if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
                         {
-                            scored = true;
-                            double score = ach.Score;
-                            msg = "\r\n" + Localizer.Format("#SpaceAge_PS_PointsAdded", score);
-                            if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+                            double f = score * SpaceAgeChronicleSettings.Instance.FundsPerScore;
+                            if (f != 0)
                             {
-                                double f = score * SpaceAgeChronicleSettings.Instance.FundsPerScore;
-                                if (f != 0)
-                                {
-                                    Core.Log("Adding " + f + " funds.");
-                                    Funding.Instance.AddFunds(f, TransactionReasons.Progression);
-                                    msg += "\r\n" + Localizer.Format("#SpaceAge_PS_Funds", f.ToString("N0"));
-                                }
-                            }
-                            if ((HighLogic.CurrentGame.Mode == Game.Modes.CAREER) || (HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX))
-                            {
-                                float s = (float)score * SpaceAgeChronicleSettings.Instance.SciencePerScore;
-                                if (s != 0)
-                                {
-                                    Core.Log("Adding " + s + " science.");
-                                    ResearchAndDevelopment.Instance.AddScience(s, TransactionReasons.Progression);
-                                    msg += "\r\n" + Localizer.Format("#SpaceAge_PS_Science", s.ToString("N1"));
-                                }
-                            }
-                            float r = (float)score * SpaceAgeChronicleSettings.Instance.RepPerScore;
-                            if (r != 0)
-                            {
-                                Core.Log("Adding " + r + " rep.");
-                                Reputation.Instance.AddReputation(r, TransactionReasons.Progression);
-                                msg += "\r\n" + Localizer.Format("#SpaceAge_PS_Reputation", r.ToString("N0"));
+                                Core.Log("Adding " + f + " funds.");
+                                Funding.Instance.AddFunds(f, TransactionReasons.Progression);
+                                msg += "\r\n" + Localizer.Format("#SpaceAge_PS_Funds", f.ToString("N0"));
                             }
                         }
-                        if (pa.Type != AchievementType.Total)
+                        if ((HighLogic.CurrentGame.Mode == Game.Modes.CAREER) || (HighLogic.CurrentGame.Mode == Game.Modes.SCIENCE_SANDBOX))
                         {
-                            Core.Log(ach.FullName + " completed.");
-                            if (SpaceAgeChronicleSettings.Instance.TrackAchievements)
-                                AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.ShortDisplayValue));
-                            MessageSystem.Instance.AddMessage(new MessageSystem.Message(
-                                Localizer.Format("#SpaceAge_PS_Title"),
-                                Localizer.Format("#SpaceAge_PS_AchievementCompleted", ach.Title) + msg,
-                                MessageSystemButton.MessageButtonColor.YELLOW,
-                                MessageSystemButton.ButtonIcons.ACHIEVE));
+                            float s = (float)score * SpaceAgeChronicleSettings.Instance.SciencePerScore;
+                            if (s != 0)
+                            {
+                                Core.Log("Adding " + s + " science.");
+                                ResearchAndDevelopment.Instance.AddScience(s, TransactionReasons.Progression);
+                                msg += "\r\n" + Localizer.Format("#SpaceAge_PS_Science", s.ToString("N1"));
+                            }
+                        }
+                        float r = (float)score * SpaceAgeChronicleSettings.Instance.RepPerScore;
+                        if (r != 0)
+                        {
+                            Core.Log("Adding " + r + " rep.");
+                            Reputation.Instance.AddReputation(r, TransactionReasons.Progression);
+                            msg += "\r\n" + Localizer.Format("#SpaceAge_PS_Reputation", r.ToString("N0"));
                         }
                     }
+                    if (pa.Type != AchievementType.Total)
+                    {
+                        Core.Log(ach.FullName + " completed.");
+                        if (SpaceAgeChronicleSettings.Instance.TrackAchievements)
+                            AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.ShortDisplayValue));
+                        MessageSystem.Instance.AddMessage(new MessageSystem.Message(
+                            Localizer.Format("#SpaceAge_PS_Title"),
+                            Localizer.Format("#SpaceAge_PS_AchievementCompleted", ach.Title) + msg,
+                            MessageSystemButton.MessageButtonColor.YELLOW,
+                            MessageSystemButton.ButtonIcons.ACHIEVE));
+                    }
                 }
+            }
             if (scored)
                 UpdateScoreAchievements();
         }
@@ -440,7 +422,8 @@ namespace SpaceAge
 
         void DisplayAchievement(Achievement a, List<DialogGUIBase> grid)
         {
-            if (a == null) return;
+            if (a == null)
+                return;
             grid.Add(new DialogGUILabel(a.Proto.Score > 0 ? Localizer.Format("#SpaceAge_UI_AchievementScore", a.Title, a.Score) : a.Title, true));
             grid.Add(new DialogGUILabel(a.FullDisplayValue, true));
             grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.ParseUT(a.Time) : "", true));
@@ -450,14 +433,13 @@ namespace SpaceAge
         {
             get
             {
-                List<Achievement> res = new List<Achievement>();
-                foreach (ProtoAchievement pa in protoAchievements)
-                    if (!pa.IsBodySpecific && achievements.ContainsKey(pa.Name))
-                        res.Add(FindAchievement(pa.Name));
+                List<Achievement> res = new List<Achievement>(protoAchievements
+                    .Where(pa => !pa.IsBodySpecific && achievements.ContainsKey(pa.Name))
+                    .Select(pa => FindAchievement(pa.Name)));
                 foreach (CelestialBody b in FlightGlobals.Bodies)
-                    foreach (ProtoAchievement pa in protoAchievements)
-                        if (pa.IsBodySpecific && achievements.ContainsKey(Achievement.GetFullName(pa.Name, b.name)))
-                            res.Add(FindAchievement(Achievement.GetFullName(pa.Name, b.name)));
+                    res.AddRange(protoAchievements
+                        .Where(pa => pa.IsBodySpecific && achievements.ContainsKey(Achievement.GetFullName(pa.Name, b.name)))
+                        .Select(pa => FindAchievement(Achievement.GetFullName(pa.Name, b.name))));
                 return res;
             }
         }
@@ -465,28 +447,22 @@ namespace SpaceAge
         void UpdateScoreAchievements()
         {
             Core.Log("Updating score achievements...");
-            foreach (ProtoAchievement pa in protoAchievements)
-                if ((pa.Score > 0) && !scoreRecordNames.Contains(pa.ScoreName))
-                    scoreRecordNames.Add(pa.ScoreName);
+            scoreRecordNames.AddRange(protoAchievements
+                .Where(pa => pa.Score > 0 && !scoreRecordNames.Contains(pa.ScoreName))
+                .Select(pa => pa.ScoreName));
 
             scoreAchievements.Clear();
             score = 0;
-            foreach (Achievement a in achievements.Values)
-                if (a.Proto.Score > 0)
-                {
-                    Core.Log(a.FullName + " gives " + a.Score + " score.");
-                    scoreAchievements.Add(a);
-                    score += a.Score;
-                }
-            
-            scoreBodies.Clear();
-            foreach (CelestialBody b in FlightGlobals.Bodies)
-                if (scoreAchievements.Exists((a) => (a.Body == b.name) || (!a.Proto.IsBodySpecific && (b == FlightGlobals.GetHomeBody()))))
-                {
-                    Core.Log("There is at least one " + b.name + " achievement.");
-                    scoreBodies.Add(b.name);
-                    break;
-                }
+            foreach (Achievement a in achievements.Values.Where(a => a.Proto.Score > 0))
+            {
+                Core.Log(a.FullName + " gives " + a.Score + " score.");
+                scoreAchievements.Add(a);
+                score += a.Score;
+            }
+
+            scoreBodies = new List<string>(FlightGlobals.Bodies
+                .Where(b => scoreAchievements.Exists(a => (a.Body == b.name) || (!a.Proto.IsBodySpecific && (b == FlightGlobals.GetHomeBody()))))
+                .Select(b => b.name));
 
             Core.Log(scoreAchievements.Count + " score achievements of " + scoreRecordNames.Count + " types for " + scoreBodies.Count + " bodies found. Total score: " + score);
             if ((window != null) && (currentTab == Tab.Score))
@@ -498,12 +474,6 @@ namespace SpaceAge
             get
             {
                 List<DialogGUIBase> gridContents;
-
-                if (currentTab == Tab.Chronicle && logVessel != null)
-                {
-                    displayChronicle = chronicle.FindAll((ev) => ev.HasVesselId(logVessel.Id));
-                    Core.Log("Found " + displayChronicle.Count + " ship log records for " + logVessel.Name);
-                }
 
                 if (Page > PageCount)
                     Page = PageCount;
@@ -542,9 +512,8 @@ namespace SpaceAge
                         List<Achievement> achList = SortedAchievements;
                         if ((achievements.Count == 0) || (achList.Count == 0))
                         {
-                            Core.Log("Can't display Achievement tabs. There are " + achievements.Count + " achievements and " + achList.Count + " protoachievements.", Core.LogLevel.Error);
-                            currentTab = Tab.Chronicle;
-                            return WindowContents;
+                            Core.Log("Can't display Achievement tabs. There are " + achievements.Count + " achievements and " + achList.Count + " protoachievements.", LogLevel.Error);
+                            return new DialogGUILabel("<align=\"center\">" + Localizer.Format("#SpaceAge_UI_NoAchievements") + "</align>", true);
                         }
                         string body = null;
                         foreach (Achievement a in achList.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
@@ -576,8 +545,7 @@ namespace SpaceAge
                             return new DialogGUILabel("<align=\"center\">" + Localizer.Format("#SpaceAge_UI_NoScore") + "</align>", true);
                         gridContents = new List<DialogGUIBase>((1 + Math.Min(LinesPerPage, scoreBodies.Count)) * (1 + scoreRecordNames.Count));
                         gridContents.Add(new DialogGUILabel("<color=\"white\">" + Localizer.Format("#SpaceAge_UI_Body") + "</color>"));
-                        foreach (string srn in scoreRecordNames)
-                            gridContents.Add(new DialogGUILabel("<color=\"white\">" + srn + "</color>"));
+                        gridContents.AddRange(scoreRecordNames.Select(srn => new DialogGUILabel("<color=\"white\">" + srn + "</color>")));
                         for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, scoreBodies.Count); i++)
                         {
                             gridContents.Add(new DialogGUILabel("<color=\"white\">" + Localizer.Format("<<1>>", Core.GetBodyDisplayName(scoreBodies[i])) + "</color>"));
@@ -585,8 +553,9 @@ namespace SpaceAge
                             {
                                 double s = 0;
                                 bool manned = false;
-                                foreach (Achievement a in scoreAchievements)
-                                    if ((a.Proto.ScoreName == srn) && ((a.Body == scoreBodies[i]) || (!a.Proto.IsBodySpecific && (scoreBodies[i] == FlightGlobals.GetHomeBodyName()))))
+                                foreach (Achievement a in scoreAchievements.Where(a
+                                    => a.Proto.ScoreName == srn
+                                    && (a.Body == scoreBodies[i] || (!a.Proto.IsBodySpecific && scoreBodies[i] == FlightGlobals.GetHomeBodyName()))))
                                     {
                                         s += a.Score;
                                         if (a.Proto.CrewedOnly)
@@ -614,7 +583,27 @@ namespace SpaceAge
 
         public void DisplayData()
         {
-            Core.Log("DisplayData", Core.LogLevel.Important);
+            Core.Log("DisplayData", LogLevel.Important);
+
+            if (currentTab == Tab.Chronicle)
+            {
+                if (logVessel != null)
+                {
+                    displayChronicle = chronicle.FindAll((ev) => ev.HasVesselId(logVessel.Id));
+                    Core.Log("Found " + displayChronicle.Count + " ship log records for " + logVessel.Name);
+                }
+                else
+                {
+                    displayChronicle = chronicle.FindAll((ev) => !ev.LogOnly);
+                    Core.Log("Found " + displayChronicle.Count + " chronicle records.");
+                }
+                if (searchTerm.Length != 0)
+                {
+                    string searchTermLowcase = searchTerm.ToLower();
+                    displayChronicle = displayChronicle.FindAll((ev) => ev.Description.ToLower().Contains(searchTermLowcase));
+                    Core.Log("Filtered " + displayChronicle.Count + " search results for '" + searchTerm + "'.");
+                }
+            }
 
             window = PopupDialog.SpawnPopupDialog(
                 new Vector2(1, 1),
@@ -742,24 +731,23 @@ namespace SpaceAge
             Core.Log("ShowLogVesselSelectDialog");
 
             // Prepare list of options
-            List<DialogGUIToggleButton> vesselsList = new List<DialogGUIToggleButton>();
-            foreach (VesselRecord vr in vessels.Values)
-                if (FlightGlobals.ActiveVessel == null || vr.Guid != FlightGlobals.ActiveVessel.id)
-                    vesselsList.Add(new DialogGUIToggleButton(false, vr.Name, (x) =>
+            List<DialogGUIToggleButton> vesselsList = new List<DialogGUIToggleButton>(vessels.Values
+                .Where(vr => FlightGlobals.ActiveVessel == null || vr.Guid != FlightGlobals.ActiveVessel.id)
+                .Select(vr => new DialogGUIToggleButton(false, vr.Name, x =>
                     {
                         logVessel = vr;
                         HideLogVesselSelectDialog();
                         Invalidate();
-                    }, h: 30));
+                    }, h: 30)));
             if (FlightGlobals.ActiveVessel != null && vessels.ContainsKey(FlightGlobals.ActiveVessel.id.ToString()))
-                vesselsList.Add(new DialogGUIToggleButton(false, FlightGlobals.ActiveVessel.vesselName, (x) =>
+                vesselsList.Add(new DialogGUIToggleButton(false, FlightGlobals.ActiveVessel.vesselName, x =>
                 {
                     logVessel = vessels[FlightGlobals.ActiveVessel.id.ToString()];
                     HideLogVesselSelectDialog();
                     Invalidate();
                 }, h: 30));
             vesselsList.Reverse();
-            vesselsList.Add(new DialogGUIToggleButton(false, Localizer.Format("#SpaceAge_UI_Cancel"), (x) => HideLogVesselSelectDialog(), h: 30));
+            vesselsList.Add(new DialogGUIToggleButton(false, Localizer.Format("#SpaceAge_UI_Cancel"), x => HideLogVesselSelectDialog(), h: 30));
             
             // Display the dialog
             PopupDialog.SpawnPopupDialog(
@@ -783,7 +771,7 @@ namespace SpaceAge
 
         void LogButtonClicked()
         {
-            Core.Log("LogButtonClicked. Log vessel: " + (logVessel?.Name ?? "none"), Core.LogLevel.Important);
+            Core.Log("LogButtonClicked. Log vessel: " + (logVessel?.Name ?? "none"), LogLevel.Important);
             if (logVessel == null)
                 if (vesselSelectDialogShown)
                     HideLogVesselSelectDialog();
@@ -791,24 +779,21 @@ namespace SpaceAge
             else
             {
                 logVessel = null;
-                displayChronicle = chronicle;
                 Invalidate();
             }
         }
 
         void Find()
         {
-            Core.Log("Find(textInput = '" + textInput + "')", Core.LogLevel.Important);
-            if (textInput.Trim(' ').Length != 0)
-                displayChronicle = chronicle.FindAll((e) => e.Description.ToLower().Contains(textInput.ToLower()));
-            else displayChronicle = chronicle;
+            Core.Log("Find(textInput = '" + textInput + "')", LogLevel.Important);
+            searchTerm = textInput.Trim(' ');
             Page = 1;
             Invalidate();
         }
 
         void AddCustomChronicleEvent()
         {
-            Core.Log("AddItem(textInput = '" + textInput + "')", Core.LogLevel.Important);
+            Core.Log("AddItem(textInput = '" + textInput + "')", LogLevel.Important);
             if (textInput.Trim(' ').Length != 0)
                 AddChronicleEvent(new SpaceAge.ChronicleEvent("Custom", "description", textInput));
         }
@@ -816,7 +801,7 @@ namespace SpaceAge
         void ExportChronicle()
         {
             string filename = KSPUtil.ApplicationRootPath + "/saves/" + HighLogic.SaveFolder + "/" + ((textInput.Trim(' ') == "") ? "chronicle" : KSPUtil.SanitizeFilename(textInput)) + ".txt";
-            Core.Log("ExportChronicle to '" + filename + "'...", Core.LogLevel.Important);
+            Core.Log("ExportChronicle to '" + filename + "'...", LogLevel.Important);
             TextWriter writer = File.CreateText(filename);
             for (int i = 0; i < displayChronicle.Count; i++)
                 writer.WriteLine(KSPUtil.PrintDateCompact(displayChronicle[
@@ -844,7 +829,7 @@ namespace SpaceAge
         double lastLaunch = -1;
         public void OnLaunch(Vessel v)
         {
-            Core.Log("OnLaunch(" + v?.vesselName + ")", Core.LogLevel.Important);
+            Core.Log("OnLaunch(" + v?.vesselName + ")", LogLevel.Important);
             
             if (!IsVesselEligible(v, true))
             {
@@ -856,12 +841,6 @@ namespace SpaceAge
             if (timeSinceLastLaunch < 1)
             {
                 Core.Log("Duplicate OnLaunch call. Previous launch happened " + timeSinceLastLaunch + " s ago.");
-                return;
-            }
-
-            if ((v.mainBody != FlightGlobals.GetHomeBody()) || (v.missionTime >= 1))
-            {
-                Core.Log("Fake launch due to main body: " + v.mainBody.name + ", mission time: " + v.missionTime);
                 return;
             }
 
@@ -937,18 +916,18 @@ namespace SpaceAge
 
         public void OnVesselRecovery(ProtoVessel v, bool b)
         {
-            Core.Log("OnVesselRecovery('" + v.vesselName + "', " + b + ")", Core.LogLevel.Important);
+            Core.Log("OnVesselRecovery('" + v.vesselName + "', " + b + ")", LogLevel.Important);
             Core.Log("missionTime = " + v.missionTime + "; launchTime = " + v.launchTime + "; autoClean = " + v.autoClean);
 
             if (!IsVesselEligible(v.vesselRef, false))
             {
-                Core.Log(v.vesselName + " is " + v.vesselType + ". NO adding to Chronicle.", Core.LogLevel.Important);
+                Core.Log(v.vesselName + " is " + v.vesselType + ". NO adding to Chronicle.", LogLevel.Important);
                 return;
             }
 
             if (v.missionTime <= 0)
             {
-                Core.Log(v.vesselName + " has not been launched. NO adding to Chronicle.", Core.LogLevel.Important);
+                Core.Log(v.vesselName + " has not been launched. NO adding to Chronicle.", LogLevel.Important);
                 return;
             }
 
@@ -966,11 +945,10 @@ namespace SpaceAge
 
         public void OnVesselDestroy(Vessel v)
         {
-            Core.Log("OnVesselDestroy('" + v.vesselName + "')", Core.LogLevel.Important);
-
+            Core.Log("OnVesselDestroy('" + v.vesselName + "')", LogLevel.Important);
             if (!IsVesselEligible(v, true))
             {
-                Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.", Core.LogLevel.Important);
+                Core.Log(v.name + " is " + v.vesselType + ". NO adding to Chronicle.", LogLevel.Important);
                 return;
             }
 
@@ -988,68 +966,52 @@ namespace SpaceAge
 
         public void OnCrewKilled(EventReport report)
         {
-            Core.Log("OnCrewKilled(<sender: '" + report?.sender + "'>)", Core.LogLevel.Important);
-
+            Core.Log("OnCrewKilled(<sender: '" + report?.sender + "'>)", LogLevel.Important);
             CheckAchievements("Death", report?.origin?.vessel?.mainBody, null, 0, report?.sender);
-
             if (!SpaceAgeChronicleSettings.Instance.TrackDeath)
                 return;
-
             AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report?.sender));
         }
 
         public void OnFlagPlanted(Vessel v)
         {
-            Core.Log("OnFlagPlanted('" + v.vesselName + "')", Core.LogLevel.Important);
-
+            Core.Log("OnFlagPlanted('" + v.vesselName + "')", LogLevel.Important);
             CheckAchievements("FlagPlant", v);
-
             if (!SpaceAgeChronicleSettings.Instance.TrackFlagPlant)
                 return;
-
             AddChronicleEvent(new ChronicleEvent("FlagPlant", "kerbal", v.GetVesselCrew()[0].nameWithGender, "body", v.mainBody.bodyName));
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
         {
-            Core.Log("OnFacilityUpgraded('" + facility.name + "', " + level + ")", Core.LogLevel.Important);
-
+            Core.Log("OnFacilityUpgraded('" + facility.name + "', " + level + ")", LogLevel.Important);
             CheckAchievements("FacilityUpgraded", facility.name);
-
             if (!SpaceAgeChronicleSettings.Instance.TrackFacilityUpgraded)
                 return;
-
             AddChronicleEvent(new ChronicleEvent("FacilityUpgraded", "facility", facility.name, "level", level + 1));
         }
 
         public void OnStructureCollapsed(DestructibleBuilding structure)
         {
-            Core.Log("OnStructureCollapsed('" + structure.name + "')", Core.LogLevel.Important);
-
+            Core.Log("OnStructureCollapsed('" + structure.name + "')", LogLevel.Important);
             CheckAchievements("StructureCollapsed", structure.name);
-
             if (!SpaceAgeChronicleSettings.Instance.TrackStructureCollapsed)
                 return;
-
             AddChronicleEvent(new ChronicleEvent("StructureCollapsed", "facility", structure.name));
         }
 
         public void OnTechnologyResearched(GameEvents.HostTargetAction<RDTech, RDTech.OperationResult> a)
         {
-            Core.Log("OnTechnologyResearched(<'" + a.host.title + "', '" + a.target.ToString() + "'>)", Core.LogLevel.Important);
-
+            Core.Log("OnTechnologyResearched(<'" + a.host.title + "', '" + a.target.ToString() + "'>)", LogLevel.Important);
             CheckAchievements("TechnologyResearched", a.host.title);
-
             if (!SpaceAgeChronicleSettings.Instance.TrackTechnologyResearched)
                 return;
-
             AddChronicleEvent(new ChronicleEvent("TechnologyResearched", "tech", a.host.title));
         }
 
         public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> e)
         {
-            Core.Log("OnSOIChanged(<'" + e.from.name + "', '" + e.to.name + "', '" + e.host.vesselName + "'>)", Core.LogLevel.Important);
-
+            Core.Log("OnSOIChanged(<'" + e.from.name + "', '" + e.to.name + "', '" + e.host.vesselName + "'>)", LogLevel.Important);
             if (!IsVesselEligible(e.host, false))
                 return;
 
