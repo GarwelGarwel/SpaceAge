@@ -1,6 +1,6 @@
-﻿{
+{
   "NAME": "Space Age",
-  "URL": "https://github.com/GarwelGarwel/SpaceAge/raw/master/SpaceAge.version",
+  "URL": "https://github.com/GarwelGarwel/SpaceAge/raw/master/GameData/SpaceAge/SpaceAge.version",
   "DOWNLOAD": "https://github.com/GarwelGarwel/SpaceAge/releases/latest",
   "VERSION": {
     "MAJOR": 1,
