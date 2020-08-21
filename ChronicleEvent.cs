@@ -7,39 +7,6 @@ namespace SpaceAge
 {
     public class ChronicleEvent
     {
-        public ChronicleEvent() => Time = Planetarium.GetUniversalTime();
-
-        public ChronicleEvent(string type, bool logOnly, params object[] data)
-            : this(type, data)
-            => LogOnly = logOnly;
-
-        public ChronicleEvent(string type, params object[] data)
-            : this()
-        {
-            Core.Log("Constructing " + type + " event with " + data.Length + " params.");
-            Type = type;
-            for (int i = 0; i < data.Length; i++)
-            {
-                if (data[i] is Vessel v)
-                {
-                    Data.Add("vessel", v.vesselName);
-                    Data.Add("vesselId", v.id.ToString());
-                }
-                if (data[i] is ProtoVessel pv)
-                {
-                    Data.Add("vessel", pv.vesselName);
-                    Data.Add("vesselId", pv.vesselID.ToString());
-                }
-                if (data[i] is string s)
-                {
-                    Data.Add(s, data[i + 1] as string ?? data[i + 1].ToString());
-                    i++;
-                }
-            }
-        }
-
-        public ChronicleEvent(ConfigNode node) => ConfigNode = node;
-
         public double Time { get; set; }
 
         public string Type { get; set; }
@@ -58,6 +25,11 @@ namespace SpaceAge
                         return HasData("crew")
                             ? Localizer.Format("#SpaceAge_CE_Launch_Crew", GetString("vessel"), GetInt("crew"))
                             : Localizer.Format("#SpaceAge_CE_Launch_NoCrew", GetString("vessel"));
+
+                    case "Takeoff":
+                        return HasData("crew")
+                            ? (GetString("vessel") + " took off from " + Core.GetBodyDisplayName(GetString("body")) + " with a crew of " + GetInt("crew"))
+                            : (GetString("vessel") + " took off from " + Core.GetBodyDisplayName(GetString("body")));
 
                     case "ReachSpace":
                         return Localizer.Format("#SpaceAge_CE_ReachSpace", GetString("vessel"));
@@ -151,6 +123,35 @@ namespace SpaceAge
                         Data.Add(v.name, v.value);
             }
         }
+
+        public ChronicleEvent() => Time = Planetarium.GetUniversalTime();
+
+        public ChronicleEvent(string type, params object[] data)
+            : this()
+        {
+            Core.Log("Constructing " + type + " event with " + data.Length + " params.");
+            Type = type;
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i] is Vessel v)
+                {
+                    Data.Add("vessel", v.vesselName);
+                    Data.Add("vesselId", v.id.ToString());
+                }
+                if (data[i] is ProtoVessel pv)
+                {
+                    Data.Add("vessel", pv.vesselName);
+                    Data.Add("vesselId", pv.vesselID.ToString());
+                }
+                if (data[i] is string s)
+                {
+                    Data.Add(s, data[i + 1] as string ?? data[i + 1].ToString());
+                    i++;
+                }
+            }
+        }
+
+        public ChronicleEvent(ConfigNode node) => ConfigNode = node;
 
         public bool HasData(string key) => Data.ContainsKey(key);
 

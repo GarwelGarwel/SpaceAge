@@ -4,19 +4,8 @@ namespace SpaceAge
 {
     public class VesselRecord
     {
-        public VesselRecord(ConfigNode node) => ConfigNode = node;
-
-        public VesselRecord(Vessel vessel) => Vessel = vessel;
-
-        public VesselRecord(ProtoVessel protoVessel)
-        {
-            Guid = protoVessel.vesselID;
-            Name = protoVessel.vesselName;
-            LaunchTime = protoVessel.launchTime;
-        }
-
         /// <summary>
-        /// Vessel's Guid
+        /// Vessel's Guid as a string
         /// </summary>
         public string Id { get; protected set; }
 
@@ -81,6 +70,17 @@ namespace SpaceAge
                     return;
                 }
             }
+        }
+
+        public VesselRecord(ConfigNode node) => ConfigNode = node;
+
+        public VesselRecord(Vessel vessel) => Vessel = vessel;
+
+        public VesselRecord(ProtoVessel protoVessel)
+        {
+            Guid = protoVessel.vesselID;
+            Name = protoVessel.vesselName;
+            LaunchTime = protoVessel.launchTime;
         }
     }
 }

@@ -13,10 +13,6 @@ namespace SpaceAge
     {
         private string title = null;
 
-        public ProtoAchievement(string name) => Name = name;
-
-        public ProtoAchievement(ConfigNode node) => ConfigNode = node;
-
         public string Name { get; set; }
 
         public string Title
@@ -27,18 +23,26 @@ namespace SpaceAge
 
         public AchievementType Type { get; set; }
 
-        public bool HasValue => Type == AchievementType.Max || Type == AchievementType.Total;
-        public bool HasTime => Type == AchievementType.First || Type == AchievementType.Max;
+        public bool HasValue => (Type == AchievementType.Max) || (Type == AchievementType.Total);
+
+        public bool HasTime => (Type == AchievementType.First) || (Type == AchievementType.Max);
 
         public ValueType ValueType { get; set; } = ValueType.None;
 
         public List<string> OnEvents { get; set; } = new List<string>();
+
         public bool IsBodySpecific { get; set; }
+
         public HomeConditionType Home { get; set; } = HomeConditionType.Default;
+
         public bool CrewedOnly { get; set; }
+
         public bool Unique { get; set; }
+
         public string StockSynonym { get; set; } = null;
+
         public string ScoreName { get; set; }
+
         public double Score { get; set; }
 
         public ConfigNode ConfigNode
@@ -63,8 +67,15 @@ namespace SpaceAge
                     ScoreName = value.GetString("scoreName", OnEvents.Count > 0 ? OnEvents[0] : null);
                     Score = value.GetDouble("score");
                 }
-                catch (Exception) { Core.Log("Error parsing a ProtoAchievement node: " + value, LogLevel.Error); }
+                catch (Exception)
+                {
+                    Core.Log("Error parsing a ProtoAchievement node: " + value, LogLevel.Error);
+                }
             }
         }
+
+        public ProtoAchievement(string name) => Name = name;
+
+        public ProtoAchievement(ConfigNode node) => ConfigNode = node;
     }
 }
