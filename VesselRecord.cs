@@ -23,7 +23,7 @@ namespace SpaceAge
         /// <summary>
         /// Universal Time of launch
         /// </summary>
-        public double LaunchTime { get; set; }
+        public long LaunchTime { get; set; }
 
         /// <summary>
         /// Reference to the vessel (may be null if the vessel is destroyed)
@@ -37,7 +37,7 @@ namespace SpaceAge
                 {
                     Guid = value.id;
                     Name = value.vesselName;
-                    LaunchTime = value.launchTime;
+                    LaunchTime = (long)value.launchTime;
                 }
             }
         }
@@ -63,7 +63,7 @@ namespace SpaceAge
             {
                 Id = value.GetString("id");
                 Name = value.GetString("name");
-                LaunchTime = value.GetDouble("launchTime", Planetarium.GetUniversalTime());
+                LaunchTime = value.GetLongOrDouble("launchTime", (long)Planetarium.GetUniversalTime());
                 if (string.IsNullOrEmpty(Id))
                 {
                     Core.Log("Incorrect vessel id in node: " + value, LogLevel.Error);
@@ -80,7 +80,7 @@ namespace SpaceAge
         {
             Guid = protoVessel.vesselID;
             Name = protoVessel.vesselName;
-            LaunchTime = protoVessel.launchTime;
+            LaunchTime = (long)protoVessel.launchTime;
         }
     }
 }

@@ -57,38 +57,37 @@ namespace SpaceAge
         /// <param name="time">Time in seconds</param>
         /// <param name="showSeconds">If false, seconds will be displayed only if time is less than 1 minute; otherwise always</param>
         /// <returns></returns>
-        public static string ParseUT(double time, bool showSeconds = false)
+        public static string ParseUT(long time, bool showSeconds = false)
         {
-            if (Double.IsNaN(time))
+            if (time < 0)
                 return "—";
-            double t = time;
             int y, d, m, h;
-            y = (int)Math.Floor(t / KSPUtil.dateTimeFormatter.Year) + 1;
-            t -= (y - 1) * KSPUtil.dateTimeFormatter.Year;
-            d = (int)Math.Floor(t / KSPUtil.dateTimeFormatter.Day) + 1;
-            t -= (d - 1) * KSPUtil.dateTimeFormatter.Day;
-            h = (int)Math.Floor(t / 3600);
-            t -= h * 3600;
-            m = (int)Math.Floor(t / 60);
-            t -= m * 60;
+            y = (int)(time / KSPUtil.dateTimeFormatter.Year) + 1;
+            time -= (y - 1) * KSPUtil.dateTimeFormatter.Year;
+            d = (int)time / KSPUtil.dateTimeFormatter.Day;
+            time -= d * KSPUtil.dateTimeFormatter.Day;
+            h = (int)time / 3600;
+            time -= h * 3600;
+            m = (int)time / 60;
+            time -= m * 60;
             return showSeconds
-                ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), ((int)t).ToString("D2"))
+                ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), time.ToString("D2"))
                 : Localizer.Format("#SpaceAge_DateTime_NoSec", y, d.ToString("D3"), h, m.ToString("D2"));
         }
 
         public static string GetString(this ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;
 
-        public static double GetDouble(this ConfigNode n, string key, double defaultValue = 0)
-              => Double.TryParse(n.GetValue(key), out double val) ? val : defaultValue;
+        public static double GetDouble(this ConfigNode n, string key, double defaultValue = 0) =>
+            double.TryParse(n.GetValue(key), out double val) ? val : defaultValue;
 
-        public static int GetInt(this ConfigNode n, string key, int defaultValue = 0)
-               => Int32.TryParse(n.GetValue(key), out int val) ? val : defaultValue;
+        public static int GetInt(this ConfigNode n, string key, int defaultValue = 0) =>
+            int.TryParse(n.GetValue(key), out int val) ? val : defaultValue;
 
-        public static uint GetUInt(this ConfigNode n, string key, uint defaultValue = 0)
-            => UInt32.TryParse(n.GetValue(key), out uint val) ? val : defaultValue;
+        public static long GetLongOrDouble(this ConfigNode n, string key, long defaultValue = 0) =>
+            long.TryParse(n.GetValue(key), out long val) ? val : (long)n.GetDouble(key, defaultValue);
 
-        public static bool GetBool(this ConfigNode n, string key, bool defaultValue = false)
-               => Boolean.TryParse(n.GetValue(key), out bool val) ? val : defaultValue;
+        public static bool GetBool(this ConfigNode n, string key, bool defaultValue = false) =>
+            bool.TryParse(n.GetValue(key), out bool val) ? val : defaultValue;
 
         /// <summary>
         /// Write into output_log.txt
@@ -98,7 +97,11 @@ namespace SpaceAge
         internal static void Log(string message, LogLevel messageLevel = LogLevel.Debug)
         {
             if (messageLevel <= Level)
+            {
+                if (messageLevel == LogLevel.Error)
+                    message = $"ERROR: {message}";
                 Debug.Log("[SpaceAge] " + message);
+            }
         }
     }
 }

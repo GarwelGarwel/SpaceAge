@@ -213,7 +213,7 @@ namespace SpaceAge
 
         public void DeleteUnusedVesselRecords()
         {
-            foreach (string id in vessels.Keys.Where(id => !chronicle.Exists((ev) => ev.HasVesselId(id))))
+            foreach (string id in vessels.Keys.Where(id => !chronicle.Exists(ev => ev.HasVesselId(id))))
                 vessels.Remove(id);
         }
 
@@ -294,11 +294,11 @@ namespace SpaceAge
                 Core.Log(n.ToString());
                 a = new SpaceAge.Achievement(pa, body);
                 if (n.HasValue("completed"))
-                    a.Time = Double.Parse(n.GetValue("completed"));
+                    a.Time = (long)n.GetDouble("completed");
                 else if (n.HasValue("completedManned"))
-                    a.Time = Double.Parse(n.GetValue("completedManned"));
+                    a.Time = n.GetLongOrDouble("completedManned");
                 else if (!pa.CrewedOnly && n.HasValue("completedUnmanned"))
-                    a.Time = Double.Parse(n.GetValue("completedUnmanned"));
+                    a.Time = n.GetLongOrDouble("completedUnmanned");
                 else
                 {
                     Core.Log("Time value not found, achievement has not been completed.");
@@ -602,18 +602,18 @@ namespace SpaceAge
             {
                 if (logVessel != null)
                 {
-                    displayChronicle = chronicle.FindAll((ev) => ev.HasVesselId(logVessel.Id));
+                    displayChronicle = chronicle.FindAll(ev => ev.HasVesselId(logVessel.Id));
                     Core.Log("Found " + displayChronicle.Count + " ship log records for " + logVessel.Name);
                 }
                 else
                 {
-                    displayChronicle = chronicle.FindAll((ev) => !ev.LogOnly);
+                    displayChronicle = chronicle.FindAll(ev => !ev.LogOnly);
                     Core.Log("Found " + displayChronicle.Count + " chronicle records.");
                 }
                 if (searchTerm.Length != 0)
                 {
-                    string searchTermLowcase = searchTerm.ToLower();
-                    displayChronicle = displayChronicle.FindAll((ev) => ev.Description.ToLower().Contains(searchTermLowcase));
+                    string searchTermUppercase = searchTerm.ToUpperInvariant();
+                    displayChronicle = displayChronicle.FindAll(ev => ev.Description.ToUpperInvariant().Contains(searchTermUppercase));
                     Core.Log("Filtered " + displayChronicle.Count + " search results for '" + searchTerm + "'.");
                 }
             }

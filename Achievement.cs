@@ -7,7 +7,7 @@ namespace SpaceAge
     {
         private ProtoAchievement proto;
         private string body = null;
-        private double time = Double.NaN;
+        private long time = -1;
         private double value = 0;
         private string hero;
         private bool invalid = false;
@@ -36,7 +36,7 @@ namespace SpaceAge
 
             if (Proto.HasTime)
             {
-                Time = Planetarium.GetUniversalTime();
+                Time = (long)Planetarium.GetUniversalTime();
                 if (proto.ValueType != ValueType.TotalAssignedCrew)
                     Hero = hero ?? vessel?.vesselName;
             }
@@ -99,9 +99,9 @@ namespace SpaceAge
             set => body = value;
         }
 
-        public double Time
+        public long Time
         {
-            get => (!invalid && Proto.HasTime) ? time : Double.NaN;
+            get => (!invalid && Proto.HasTime) ? time : -1;
             set => time = value;
         }
 
@@ -203,7 +203,7 @@ namespace SpaceAge
                 if (Proto.IsBodySpecific)
                     Body = value.GetString("body", FlightGlobals.GetHomeBodyName());
                 if (Proto.HasTime)
-                    Time = value.GetDouble("time");
+                    Time = value.GetLongOrDouble("time", -1);
                 if (Proto.HasValue)
                     Value = value.GetDouble("value");
                 Hero = value.GetString("hero");

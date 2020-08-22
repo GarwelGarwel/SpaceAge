@@ -7,7 +7,7 @@ namespace SpaceAge
 {
     public class ChronicleEvent
     {
-        public double Time { get; set; }
+        public long Time { get; set; }
 
         public string Type { get; set; }
 
@@ -115,7 +115,7 @@ namespace SpaceAge
             }
             set
             {
-                Time = Double.Parse(value.GetValue("time"));
+                Time = value.GetLongOrDouble("time", -1);
                 Type = value.GetValue("type");
                 LogOnly = value.GetBool("logOnly");
                 foreach (ConfigNode.Value v in value.values)
@@ -124,7 +124,7 @@ namespace SpaceAge
             }
         }
 
-        public ChronicleEvent() => Time = Planetarium.GetUniversalTime();
+        public ChronicleEvent() => Time = (long)Planetarium.GetUniversalTime();
 
         public ChronicleEvent(string type, params object[] data)
             : this()
@@ -157,8 +157,7 @@ namespace SpaceAge
 
         public string GetString(string key) => HasData(key) ? Data[key] : null;
 
-        public int GetInt(string key) =>
-            HasData(key) ? (int.TryParse(Data[key], out int res) ? res : 0) : 0;
+        public int GetInt(string key) => HasData(key) ? (int.TryParse(Data[key], out int res) ? res : 0) : 0;
 
         public List<string> GetVesselIds()
             => new List<string>(Data
