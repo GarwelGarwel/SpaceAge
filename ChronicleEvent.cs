@@ -28,8 +28,8 @@ namespace SpaceAge
 
                     case "Takeoff":
                         return HasData("crew")
-                            ? (GetString("vessel") + " took off from " + Core.GetBodyDisplayName(GetString("body")) + " with a crew of " + GetInt("crew"))
-                            : (GetString("vessel") + " took off from " + Core.GetBodyDisplayName(GetString("body")));
+                            ? Localizer.Format("#SpaceAge_CE_Takeoff_Crew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")), GetInt("crew"))
+                            : Localizer.Format("#SpaceAge_CE_Takeoff_NoCrew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
                     case "ReachSpace":
                         return Localizer.Format("#SpaceAge_CE_ReachSpace", GetString("vessel"));
@@ -129,7 +129,7 @@ namespace SpaceAge
         public ChronicleEvent(string type, params object[] data)
             : this()
         {
-            Core.Log("Constructing " + type + " event with " + data.Length + " params.");
+            Core.Log($"Constructing {type} event with {data.Length} params.");
             Type = type;
             for (int i = 0; i < data.Length; i++)
             {

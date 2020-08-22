@@ -17,7 +17,7 @@ namespace SpaceAge
 
         public string Title
         {
-            get => title ?? (Name + (IsBodySpecific ? " @ " : ""));
+            get => title ?? $"{Name}{(IsBodySpecific ? " @ " : "")}";
             set => title = value;
         }
 
@@ -51,7 +51,7 @@ namespace SpaceAge
             {
                 try
                 {
-                    Core.Log("Loading protoachievement " + value.GetValue("name") + "...");
+                    Core.Log($"Loading protoachievement {value.GetValue("name")}...");
                     Name = value.GetValue("name");
                     Title = value.GetString("title");
                     Type = (AchievementType)Enum.Parse(typeof(AchievementType), value.GetValue("type"), true);
@@ -69,7 +69,7 @@ namespace SpaceAge
                 }
                 catch (Exception)
                 {
-                    Core.Log("Error parsing a ProtoAchievement node: " + value, LogLevel.Error);
+                    Core.Log($"Error parsing a ProtoAchievement node: {value}", LogLevel.Error);
                 }
             }
         }

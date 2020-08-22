@@ -158,7 +158,7 @@ namespace SpaceAge
             }
         }
 
-        public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? " " + Body : "");
+        public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? $" {Body}" : "");
 
         public double BodyMultiplier
         {
@@ -196,7 +196,7 @@ namespace SpaceAge
 
             set
             {
-                Core.Log("Loading '" + value.GetValue("name") + "' achievement...");
+                Core.Log($"Loading '{value.GetValue("name")}' achievement...");
                 Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
                 if (invalid)
                     return;
@@ -215,11 +215,11 @@ namespace SpaceAge
         public static string GetFullName(string name, string body = null) => name + (body != null ? "@" + body : "");
 
         public override string ToString()
-            => (!Double.IsNaN(Time) ? KSPUtil.PrintDateCompact(Time, true) : "") + "\t" + Title + ((Value != 0 ? (" (" + Value + ")") : ""));
+            => $"{(Time >= 0 ? KSPUtil.PrintDateCompact(Time, true) : "")}\t{Title}{(Value != 0 ? $" ({Value})" : "")}";
 
         public bool Register(Achievement old)
         {
-            Core.Log("Registering candidate achievement: " + this + ".");
+            Core.Log($"Registering candidate achievement: {this}.");
 
             if (invalid)
             {
@@ -228,7 +228,7 @@ namespace SpaceAge
             }
 
             if (old != null)
-                Core.Log("Old achievement: " + old + ".");
+                Core.Log($"Old achievement: {old}.");
             else Core.Log("Old achievement of this type does not exist.");
 
             if (old != null && (old.Proto != Proto || old.Body != Body))
@@ -238,7 +238,7 @@ namespace SpaceAge
             switch (Proto.Type)
             {
                 case AchievementType.Total:
-                    Core.Log("Unique: " + Proto.Unique + ". Id: " + Ids + ". Old achievement's ids: " + (old?.Ids ?? "N/A"));
+                    Core.Log($"Unique: {Proto.Unique}. Id: {Ids}. Old achievement's ids: {(old?.Ids ?? "N/A")}");
                     if (Value > 0 && (old == null || !Proto.Unique || !old.Ids.Contains(Ids)))
                     {
                         if (old != null)
@@ -270,6 +270,6 @@ namespace SpaceAge
             return doRegister;
         }
 
-        private void AddId(string id) => Ids += "[" + id + "]";
+        private void AddId(string id) => Ids += $"[{id}]";
     }
 }

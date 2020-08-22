@@ -130,19 +130,19 @@ namespace SpaceAge
             foreach (ChronicleEvent e in chronicle)
                 n.AddNode(e.ConfigNode);
             node.AddNode(n);
-            Core.Log(n.CountNodes + " events saved.");
+            Core.Log($"{n.CountNodes} events saved.");
 
             n = new ConfigNode("VESSELS");
             foreach (VesselRecord vessel in vessels.Values)
                 n.AddNode(vessel.ConfigNode);
             node.AddNode(n);
-            Core.Log(n.CountNodes + " vessels saved.");
+            Core.Log($"{n.CountNodes} vessels saved.");
 
             n = new ConfigNode("ACHIEVEMENTS");
             foreach (Achievement a in achievements.Values)
                 n.AddNode(a.ConfigNode);
             node.AddNode(n);
-            Core.Log(n.CountNodes + " achievements saved.");
+            Core.Log($"{n.CountNodes} achievements saved.");
         }
 
         public override void OnLoad(ConfigNode node)
@@ -154,7 +154,7 @@ namespace SpaceAge
             if (node.HasNode("CHRONICLE"))
             {
                 ConfigNode[] chronicleNodes = node.GetNode("CHRONICLE").GetNodes("EVENT");
-                Core.Log(chronicleNodes.Length + " nodes found in CHRONICLE.");
+                Core.Log($"{chronicleNodes.Length} nodes found in CHRONICLE.");
                 chronicle.AddRange(chronicleNodes.Select(n => new ChronicleEvent(n)));
             }
             displayChronicle = chronicle;
@@ -163,7 +163,7 @@ namespace SpaceAge
             if (node.HasNode("VESSELS"))
             {
                 ConfigNode[] vesselsNodes = node.GetNode("VESSELS").GetNodes("VESSEL");
-                Core.Log(vesselsNodes.Length + " nodes found in VESSELS.");
+                Core.Log($"{vesselsNodes.Length} nodes found in VESSELS.");
                 foreach (ConfigNode n in vesselsNodes)
                     AddVesselRecord(new VesselRecord(n));
             }
@@ -172,7 +172,7 @@ namespace SpaceAge
             if (node.HasNode("ACHIEVEMENTS"))
             {
                 ConfigNode[] achievmentsNodes = node.GetNode("ACHIEVEMENTS").GetNodes("ACHIEVEMENT");
-                Core.Log(achievmentsNodes.Length + " nodes found in ACHIEVEMENTS.");
+                Core.Log($"{achievmentsNodes.Length} nodes found in ACHIEVEMENTS.");
                 double score = 0;
                 foreach (ConfigNode n in achievmentsNodes)
                     try
@@ -180,11 +180,11 @@ namespace SpaceAge
                         Achievement a = new Achievement(n);
                         achievements.Add(a.FullName, a);
                         if (a.Proto.Score > 0)
-                            Core.Log(a.FullDisplayValue + ": " + a.Score + " points");
+                            Core.Log($"{a.FullDisplayValue}: {a.Score} points");
                         score += a.Score;
                     }
                     catch (ArgumentException e) { Core.Log(e.Message); }
-                Core.Log("Total score: " + score);
+                Core.Log($"Total score: {score}");
             }
 
             UpdateScoreAchievements();
@@ -222,7 +222,7 @@ namespace SpaceAge
             if (protoAchievements != null)
                 return;
             protoAchievements = new List<ProtoAchievement>(GameDatabase.Instance.GetConfigNodes("PROTOACHIEVEMENT").Select(n => new ProtoAchievement(n)));
-            Core.Log("protoAchievements contains " + protoAchievements.Count + " records.");
+            Core.Log($"protoAchievements contains {protoAchievements.Count} records.");
         }
 
         void RegisterAppLauncherButton()
@@ -249,7 +249,7 @@ namespace SpaceAge
             if (GameDatabase.Instance.ExistsConfigNode("SPACEAGE_CONFIG"))
             {
                 ConfigNode config = GameDatabase.Instance.GetConfigNode("SPACEAGE_CONFIG");
-                Core.Log("SPACEAGE_CONFIG: " + config, LogLevel.Important);
+                Core.Log($"SPACEAGE_CONFIG: {config}", LogLevel.Important);
                 SpaceAgeChronicleSettings.Instance.FundsPerScore = (float)config.GetDouble("fundsPerScore", SpaceAgeChronicleSettings.Instance.FundsPerScore);
                 SpaceAgeChronicleSettings.Instance.SciencePerScore = (float)config.GetDouble("sciencePerScore", SpaceAgeChronicleSettings.Instance.SciencePerScore);
                 SpaceAgeChronicleSettings.Instance.RepPerScore = (float)config.GetDouble("repPerScore", SpaceAgeChronicleSettings.Instance.RepPerScore);
@@ -284,13 +284,13 @@ namespace SpaceAge
 
         void ParseProgressNodes(ConfigNode node, CelestialBody body)
         {
-            Core.Log(node.name + " config node contains " + node.CountNodes + " sub-nodes.");
+            Core.Log($"{node.name} config node contains {node.CountNodes} sub-nodes.");
             Achievement a;
             foreach (ProtoAchievement pa in protoAchievements
                 .Where(pa => pa.StockSynonym != null && pa.StockSynonym.Length != 0 && node.HasNode(pa.StockSynonym)))
             {
                 ConfigNode n = node.GetNode(pa.StockSynonym);
-                Core.Log(pa.StockSynonym + " node found for " + pa.Name + ".");
+                Core.Log($"{pa.StockSynonym} node found for {pa.Name}.");
                 Core.Log(n.ToString());
                 a = new SpaceAge.Achievement(pa, body);
                 if (n.HasValue("completed"))
@@ -304,7 +304,7 @@ namespace SpaceAge
                     Core.Log("Time value not found, achievement has not been completed.");
                     continue;
                 }
-                Core.Log("Found candidate achievement: " + KSPUtil.PrintDateCompact(a.Time, true) + " " + a.Title);
+                Core.Log($"Found candidate achievement: {KSPUtil.PrintDateCompact(a.Time, true)} {a.Title}");
                 if (CheckAchievement(a))
                     achievementsImported++;
             }

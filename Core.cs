@@ -25,21 +25,21 @@ namespace SpaceAge
         public static double GetCost(this Vessel v)
         {
             double cost = 0;
-            Core.Log("Calculating cost of " + v.vesselName);
+            Log($"Calculating cost of {v.vesselName}");
             foreach (Part p in v.Parts)
             {
-                Core.Log("Part " + p.name + ": part cost = " + p.partInfo.cost + "; module costs = " + p.GetModuleCosts(0));
+                Log($"Part {p.name}: part cost = {p.partInfo.cost}; module costs = {p.GetModuleCosts(0)}");
                 cost += p.partInfo.cost;
                 cost += p.GetModuleCosts(0);
                 foreach (PartResource resource in p.Resources)
                 {
                     double resourceCost = resource.amount * resource.info.unitCost;
                     if (resource.amount != 0)
-                        Log(resource.amount + " of " + resource.resourceName + " costs " + resourceCost);
+                        Log($"{resource.amount} of {resource.resourceName} costs {resourceCost}.");
                     cost += resourceCost;
                 }
             }
-            Core.Log("Total cost is " + cost);
+            Log($"Total cost is {cost}.");
             return cost;
         }
 
@@ -100,7 +100,7 @@ namespace SpaceAge
             {
                 if (messageLevel == LogLevel.Error)
                     message = $"ERROR: {message}";
-                Debug.Log("[SpaceAge] " + message);
+                Debug.Log($"[SpaceAge] {message}");
             }
         }
     }

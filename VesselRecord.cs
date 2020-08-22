@@ -66,7 +66,7 @@ namespace SpaceAge
                 LaunchTime = value.GetLongOrDouble("launchTime", (long)Planetarium.GetUniversalTime());
                 if (string.IsNullOrEmpty(Id))
                 {
-                    Core.Log("Incorrect vessel id in node: " + value, LogLevel.Error);
+                    Core.Log($"Incorrect vessel id in node: {value}", LogLevel.Error);
                     return;
                 }
             }
