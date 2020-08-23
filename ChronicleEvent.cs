@@ -164,6 +164,8 @@ namespace SpaceAge
                 .Where(kvp => kvp.Key.Contains("vesselId"))
                 .Select(kvp => kvp.Value));
 
+        public bool HasVesselId() => GetVesselIds().Count > 0;
+
         public bool HasVesselId(string vesselId) => GetVesselIds().Contains(vesselId);
     }
 }
