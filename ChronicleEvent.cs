@@ -13,7 +13,7 @@ namespace SpaceAge
 
         public bool LogOnly { get; set; } = false;
 
-        public Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        protected Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         public string Description
         {
@@ -90,8 +90,8 @@ namespace SpaceAge
 
                     case "Achievement":
                         return (HasData("value") && GetString("value").Length != 0)
-                            ? Localizer.Format("#SpaceAge_CE_Achievement_Value", GetString("title"), GetString("value"))
-                            : Localizer.Format("#SpaceAge_CE_Achievement_NoValue", GetString("title"));
+                            ? (HasData("vessel") ? Localizer.Format("#SpaceAge_CE_Achievement_Vessel_Value", GetString("vessel"), GetString("title"), GetString("value")) : Localizer.Format("#SpaceAge_CE_Achievement_Value", GetString("title"), GetString("value")))
+                            : (HasData("vessel") ? Localizer.Format("#SpaceAge_CE_Achievement_Vessel_NoValue", GetString("vessel"), GetString("title")) : Localizer.Format("#SpaceAge_CE_Achievement_NoValue", GetString("title")));
 
                     case "Custom":
                         return GetString("description");
@@ -120,7 +120,7 @@ namespace SpaceAge
                 LogOnly = value.GetBool("logOnly");
                 foreach (ConfigNode.Value v in value.values)
                     if ((v.name != "time") && (v.name != "type") && (v.name != "logOnly") && (v.value.Length != 0))
-                        Data.Add(v.name, v.value);
+                        AddData(v.name, v.value);
             }
         }
 
@@ -133,25 +133,39 @@ namespace SpaceAge
             Type = type;
             for (int i = 0; i < data.Length; i++)
             {
-                if (data[i] is Vessel v)
-                {
-                    Data.Add("vessel", v.vesselName);
-                    Data.Add("vesselId", v.id.ToString());
-                }
-                if (data[i] is ProtoVessel pv)
-                {
-                    Data.Add("vessel", pv.vesselName);
-                    Data.Add("vesselId", pv.vesselID.ToString());
-                }
+                AddData(data[i]);
                 if (data[i] is string s)
                 {
-                    Data.Add(s, data[i + 1] as string ?? data[i + 1].ToString());
+                    AddData(s, data[i + 1]);
                     i++;
                 }
             }
         }
 
         public ChronicleEvent(ConfigNode node) => ConfigNode = node;
+
+        public void AddData(object data)
+        {
+            if (data == null)
+                return;
+            if (data is Vessel v)
+            {
+                AddData("vessel", v.vesselName);
+                AddData("vesselId", v.id.ToString());
+            }
+            if (data is ProtoVessel pv)
+            {
+                AddData("vessel", pv.vesselName);
+                AddData("vesselId", pv.vesselID.ToString());
+            }
+        }
+
+        public void AddData(string key, object value)
+        {
+            if (Data.ContainsKey(key))
+                Core.Log($"Key {key} already exists in ChronicleEvent {Type}.", LogLevel.Error);
+            else Data.Add(key, value.ToString());
+        }
 
         public bool HasData(string key) => Data.ContainsKey(key);
 

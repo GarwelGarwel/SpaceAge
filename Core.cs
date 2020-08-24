@@ -25,7 +25,7 @@ namespace SpaceAge
         public static double GetCost(this Vessel v)
         {
             double cost = 0;
-            Log($"Calculating cost of {v.vesselName}");
+            Log($"Calculating cost of {v.vesselName}.");
             foreach (Part p in v.Parts)
             {
                 Log($"Part {p.name}: part cost = {p.partInfo.cost}; module costs = {p.GetModuleCosts(0)}");
