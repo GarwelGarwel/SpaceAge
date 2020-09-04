@@ -34,6 +34,9 @@ namespace SpaceAge
                     case "ReachSpace":
                         return Localizer.Format("#SpaceAge_CE_ReachSpace", GetString("vessel"));
 
+                    case "Burn":
+                        return Localizer.Format("#SpaceAge_CE_Burn", GetString("vessel"), Core.PrintInterval(GetInt("duration")), GetInt("deltaV"));
+
                     case "SOIChange":
                         return Localizer.Format("#SpaceAge_CE_SOIChange", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 

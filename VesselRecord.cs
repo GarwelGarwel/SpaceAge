@@ -76,6 +76,12 @@ namespace SpaceAge
 
         public VesselRecord(Vessel vessel) => Vessel = vessel;
 
+        public VesselRecord(Guid id) => Vessel = FlightGlobals.FindVessel(id);
+
+        public VesselRecord(string id)
+            : this(new Guid(id))
+        { }
+
         public VesselRecord(ProtoVessel protoVessel)
         {
             Guid = protoVessel.vesselID;

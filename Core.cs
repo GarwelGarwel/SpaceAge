@@ -1,5 +1,6 @@
 ﻿using KSP.Localization;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace SpaceAge
@@ -43,6 +44,8 @@ namespace SpaceAge
             return cost;
         }
 
+        public static bool IsBurning(this Vessel v) => v.FindPartModulesImplementing<ModuleEngines>().Any(module => module.GetCurrentThrust() > 0);
+
         public static string GetBodyDisplayName(string bodyName) => FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName;
 
         public static void ShowNotification(string msg)
@@ -52,7 +55,7 @@ namespace SpaceAge
         }
 
         /// <summary>
-        /// Parses UT into a string (e.g. "Y23 D045"), hides zero elements
+        /// Parses UT into a string (e.g. "Y23 D045")
         /// </summary>
         /// <param name="time">Time in seconds</param>
         /// <param name="showSeconds">If false, seconds will be displayed only if time is less than 1 minute; otherwise always</param>
@@ -61,9 +64,9 @@ namespace SpaceAge
         {
             if (time < 0)
                 return "—";
-            int y, d, m, h;
-            y = (int)(time / KSPUtil.dateTimeFormatter.Year) + 1;
-            time -= (y - 1) * KSPUtil.dateTimeFormatter.Year;
+            int y, d, h, m;
+            y = (int)(time / KSPUtil.dateTimeFormatter.Year);
+            time -= y++ * KSPUtil.dateTimeFormatter.Year;
             d = (int)time / KSPUtil.dateTimeFormatter.Day;
             time -= d * KSPUtil.dateTimeFormatter.Day;
             h = (int)time / 3600;
@@ -73,6 +76,38 @@ namespace SpaceAge
             return showSeconds
                 ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), time.ToString("D2"))
                 : Localizer.Format("#SpaceAge_DateTime_NoSec", y, d.ToString("D3"), h, m.ToString("D2"));
+        }
+
+        /// <summary>
+        /// Translates number of seconds into a string showing years, days, hours (when applicable), minutes and seconds, e.g. 3 years 45 days 5:43:21
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static string PrintInterval(long time)
+        {
+            if (time < 0)
+                return Localizer.Format("#SpaceAge_Invalid");
+            int y, d, h, m;
+            y = (int)(time / KSPUtil.dateTimeFormatter.Year);
+            time -= y * KSPUtil.dateTimeFormatter.Year;
+            d = (int)time / KSPUtil.dateTimeFormatter.Day;
+            time -= d * KSPUtil.dateTimeFormatter.Day;
+            h = (int)time / 3600;
+            time -= h * 3600;
+            m = (int)time / 60;
+            time -= m * 60;
+
+            string res = "";
+            if (y > 0)
+                res = $"{Localizer.Format("#SpaceAge_Years", y)} ";
+            if (d > 0 || res.Length > 0)
+                res += $"{Localizer.Format("#SpaceAge_Days", d)} ";
+            if (h > 0 || res.Length > 0)
+                res += "{h}:";
+            if (m < 10 && res.Length > 0)
+                res += "0";
+            res += $"{m}:{time:D2}";
+            return res;
         }
 
         public static string GetString(this ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;
@@ -90,7 +125,7 @@ namespace SpaceAge
             bool.TryParse(n.GetValue(key), out bool val) ? val : defaultValue;
 
         /// <summary>
-        /// Write into output_log.txt
+        /// Write into KSP.log
         /// </summary>
         /// <param name="message">Text to log</param>
         /// <param name="messageLevel"><see cref="LogLevel"/> of the entry</param>

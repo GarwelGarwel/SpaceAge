@@ -39,6 +39,8 @@ namespace SpaceAge
 
         #region LIFE CYCLE
 
+        double lastUpdate;
+
         public void Start()
         {
             Core.Log("SpaceAgeScenario.Start", LogLevel.Important);
@@ -50,6 +52,7 @@ namespace SpaceAge
             GameEvents.OnGameSettingsApplied.Add(OnGameSettingsApplied);
             GameEvents.VesselSituation.onLaunch.Add(OnLaunch);
             GameEvents.VesselSituation.onReachSpace.Add(OnReachSpace);
+            GameEvents.onStageActivate.Add(onStageActivate);
             GameEvents.onVesselRecovered.Add(OnVesselRecovery);
             GameEvents.VesselSituation.onReturnFromOrbit.Add(OnReturnFromOrbit);
             GameEvents.VesselSituation.onReturnFromSurface.Add(OnReturnFromSurface);
@@ -101,6 +104,7 @@ namespace SpaceAge
             GameEvents.OnGameSettingsApplied.Remove(OnGameSettingsApplied);
             GameEvents.VesselSituation.onLaunch.Remove(OnLaunch);
             GameEvents.VesselSituation.onReachSpace.Remove(OnReachSpace);
+            GameEvents.onStageActivate.Remove(onStageActivate);
             GameEvents.onVesselRecovered.Remove(OnVesselRecovery);
             GameEvents.VesselSituation.onReturnFromOrbit.Remove(OnReturnFromOrbit);
             GameEvents.VesselSituation.onReturnFromSurface.Remove(OnReturnFromSurface);
@@ -233,7 +237,22 @@ namespace SpaceAge
                 UnregisterAppLauncherButton();
         }
 
-        #endregion
+        void FixedUpdate()
+        {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+            double time = Planetarium.GetUniversalTime();
+
+            // Only do checks once per 0.5 s
+            if (time - lastUpdate < 0.5)
+                return;
+
+            CheckBurn();
+
+            lastUpdate = time;
+        }
+
+        #endregion LIFE CYCLE
 
         #region LISTS & RECORDS
 
@@ -243,6 +262,8 @@ namespace SpaceAge
             if (SpaceAgeChronicleSettings.Instance.UnwarpOnEvents && (TimeWarp.CurrentRateIndex != 0))
                 TimeWarp.SetRate(0, true, !SpaceAgeChronicleSettings.Instance.ShowNotifications);
             chronicle.Add(e);
+            foreach (string id in e.GetVesselIds())
+                AddVesselRecord(new VesselRecord(id));
             Invalidate();
         }
 
@@ -252,19 +273,14 @@ namespace SpaceAge
                 vessels.Add(vesselRecord.Id, vesselRecord);
         }
 
-        public void AddVesselRecord(Vessel vessel)
-        {
-            if ((vessel != null) && !vessels.ContainsKey(vessel.id.ToString()))
-                vessels.Add(vessel.id.ToString(), new VesselRecord(vessel));
-        }
-
         public void DeleteUnusedVesselRecords()
         {
-            foreach (string id in vessels.Keys.Where(id => !chronicle.Exists(ev => ev.HasVesselId(id))))
+            List<string> recordsToDelete = vessels.Keys.Where(id => !chronicle.Exists(ev => ev.HasVesselId(id))).ToList();
+            foreach (string id in recordsToDelete)
                 vessels.Remove(id);
         }
 
-        #endregion
+        #endregion LISTS & RECORDS
 
         #region ACHIEVEMENTS METHODS
 
@@ -421,22 +437,6 @@ namespace SpaceAge
         #endregion ACHIEVEMENTS METHODS
 
         #region UI METHODS
-
-        void RegisterAppLauncherButton()
-        {
-            Core.Log("Registering AppLauncher button...");
-            Texture2D icon = new Texture2D(38, 38);
-            icon.LoadImage(File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon.png")));
-            appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
-        }
-
-        void UnregisterAppLauncherButton()
-        {
-            if ((appLauncherButton != null) && (ApplicationLauncher.Instance != null))
-                ApplicationLauncher.Instance.RemoveModApplication(appLauncherButton);
-        }
-
-        int ChronicleIndex(int i) => SpaceAgeChronicleSettings.Instance.NewestFirst ? (displayChronicle.Count - i - 1) : i;
 
         public DialogGUIBase WindowContents
         {
@@ -749,6 +749,22 @@ namespace SpaceAge
             Invalidate();
         }
 
+        void RegisterAppLauncherButton()
+        {
+            Core.Log("Registering AppLauncher button...");
+            Texture2D icon = new Texture2D(38, 38);
+            icon.LoadImage(File.ReadAllBytes(Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "icon.png")));
+            appLauncherButton = ApplicationLauncher.Instance.AddModApplication(DisplayData, UndisplayData, null, null, null, null, ApplicationLauncher.AppScenes.ALWAYS, icon);
+        }
+
+        void UnregisterAppLauncherButton()
+        {
+            if ((appLauncherButton != null) && (ApplicationLauncher.Instance != null))
+                ApplicationLauncher.Instance.RemoveModApplication(appLauncherButton);
+        }
+
+        int ChronicleIndex(int i) => SpaceAgeChronicleSettings.Instance.NewestFirst ? (displayChronicle.Count - i - 1) : i;
+
         void DisplayAchievement(Achievement a, List<DialogGUIBase> grid)
         {
             if (a == null)
@@ -815,18 +831,16 @@ namespace SpaceAge
         #region EVENT HANDLERS
 
         double lastLaunch = -1;
-
-        double lastTakeoff = 0;
+        double lastTakeoff = -1;
+        double burnStarted = double.NaN;
+        double deltaV;
 
         public void OnLaunch(Vessel v)
         {
             Core.Log($"OnLaunch({v?.vesselName})", LogLevel.Important);
 
             if (!IsVesselEligible(v, true))
-            {
-                Core.Log($"Vessel is ineligible due to being {v?.vesselType}.");
                 return;
-            }
 
             double timeSinceLastLaunch = Planetarium.GetUniversalTime() - lastLaunch;
             if (timeSinceLastLaunch < 1)
@@ -841,7 +855,6 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackLaunch)
                 return;
 
-            AddVesselRecord(v);
             ChronicleEvent e = new ChronicleEvent("Launch", v);
             if (FlightGlobals.ActiveVessel.GetCrewCount() > 0)
                 e.AddData("crew", v.GetCrewCount());
@@ -857,7 +870,6 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReachSpace)
             {
-                AddVesselRecord(v);
                 ChronicleEvent e = new ChronicleEvent("ReachSpace", v);
                 if (v.GetCrewCount() > 0)
                     e.AddData("crew", v.GetCrewCount());
@@ -865,6 +877,43 @@ namespace SpaceAge
             }
 
             CheckAchievements("ReachSpace", v);
+        }
+
+        public void CheckBurn()
+        {
+            Vessel v = FlightGlobals.ActiveVessel;
+            if (v == null)
+                return;
+            bool isBurning = v.IsBurning();
+
+            if (double.IsNaN(burnStarted) && isBurning)
+            {
+                burnStarted = Planetarium.GetUniversalTime();
+                deltaV = v.VesselDeltaV.TotalDeltaVVac;
+                Core.Log($"Burn started on {KSPUtil.PrintDateCompact(burnStarted, true, true)}. Vessel's deltaV = {deltaV:N0} m/s.");
+                return;
+            }
+
+            if (!double.IsNaN(burnStarted) && !isBurning)
+            {
+                int burnDuration = (int)Math.Round(Planetarium.GetUniversalTime() - burnStarted);
+                burnStarted = double.NaN;
+                deltaV -= v.VesselDeltaV.TotalDeltaVVac;
+                if (burnDuration > 0)
+                {
+                    Core.Log($"Finished burn that lasted {burnDuration} s, deltaV = {deltaV:N0} m/s.");
+                    AddChronicleEvent(
+                        new ChronicleEvent("Burn", v, "duration", burnDuration, "deltaV", (int)deltaV)
+                        { LogOnly = true });
+                }
+            }
+        }
+
+        public void onStageActivate(int stage)
+        {
+            Core.Log($"onStageActivate({stage})");
+            if (IsVesselEligible(FlightGlobals.ActiveVessel, false))
+                CheckBurn();
         }
 
         public void OnReturnFromOrbit(Vessel v, CelestialBody b)
@@ -876,7 +925,6 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
             {
-                AddVesselRecord(v);
                 ChronicleEvent e = new ChronicleEvent("ReturnFromOrbit", v, "body", b.bodyName);
                 if (v.GetCrewCount() > 0)
                     e.AddData("crew", v.GetCrewCount());
@@ -895,7 +943,6 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
             {
-                AddVesselRecord(v);
                 ChronicleEvent e = new ChronicleEvent("ReturnFromSurface", v, "body", b.bodyName);
                 if (v.GetCrewCount() > 0)
                     e.AddData("crew", v.GetCrewCount());
@@ -927,7 +974,6 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackRecovery)
                 return;
 
-            AddVesselRecord(new VesselRecord(v));
             ChronicleEvent e = new ChronicleEvent("Recovery", v);
             if (v.GetVesselCrew().Count > 0)
                 e.AddData("crew", v.GetVesselCrew().Count);
@@ -948,7 +994,6 @@ namespace SpaceAge
             if (!SpaceAgeChronicleSettings.Instance.TrackDestroy)
                 return;
 
-            AddVesselRecord(v);
             ChronicleEvent e = new ChronicleEvent("Destroy", v);
             if (v.terrainAltitude < 1000)
                 e.AddData("body", v.mainBody.bodyName);
@@ -1007,10 +1052,7 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackSOIChange)
-            {
-                AddVesselRecord(e.host);
                 AddChronicleEvent(new ChronicleEvent("SOIChange", e.host, "body", e.to.bodyName));
-            }
 
             if (e.from.HasParent(e.to))
             {
@@ -1028,8 +1070,7 @@ namespace SpaceAge
             if (!IsVesselEligible(a.host, true))
                 return;
 
-            ChronicleEvent e = new ChronicleEvent(null, a.host);
-            e.AddData("body", a.host.mainBody.bodyName);
+            ChronicleEvent e = new ChronicleEvent(null, a.host, "body", a.host.mainBody.bodyName);
             if (a.host.GetCrewCount() > 0)
                 e.AddData("crew", a.host.GetCrewCount());
 
@@ -1094,10 +1135,7 @@ namespace SpaceAge
             }
 
             if ((e.Type != null) && (e.Type.Length != 0))
-            {
-                AddVesselRecord(a.host);
                 AddChronicleEvent(e);
-            }
         }
 
         public void OnVesselDocking(uint a, uint b)
@@ -1113,8 +1151,6 @@ namespace SpaceAge
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
                 AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
 
-            AddVesselRecord(v1);
-            AddVesselRecord(v2);
             CheckAchievements("Docking", v1.mainBody, v1);
             CheckAchievements("Docking", v2.mainBody, v2);
         }
@@ -1129,8 +1165,6 @@ namespace SpaceAge
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
                 AddChronicleEvent(new ChronicleEvent("Undocking", "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
 
-            AddVesselRecord(v1);
-            AddVesselRecord(v2);
             CheckAchievements("Undocking", v1.mainBody, v1);
             CheckAchievements("Undocking", v2.mainBody, v2);
         }
