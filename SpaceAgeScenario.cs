@@ -3,6 +3,7 @@ using KSP.UI.Screens;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq.Expressions;
 using UniLinq;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ namespace SpaceAge
     public class SpaceAgeScenario : ScenarioModule
     {
         enum Tab { Chronicle, Achievements, Score };
+
+        enum TimeFormat { UT, MET };
 
         const float windowWidth = 600;
 
@@ -26,6 +29,7 @@ namespace SpaceAge
         double funds;
 
         VesselRecord logVessel = null;
+        TimeFormat logTimeFormat = TimeFormat.UT;
 
         IButton toolbarButton;
         ApplicationLauncherButton appLauncherButton;
@@ -131,6 +135,9 @@ namespace SpaceAge
         {
             Core.Log("SpaceAgeScenario.OnSave");
             ConfigNode n = new ConfigNode("CHRONICLE");
+
+            n.AddValue("logTimeFormat", logTimeFormat);
+
             foreach (ChronicleEvent e in chronicle)
                 n.AddNode(e.ConfigNode);
             node.AddNode(n);
@@ -153,6 +160,9 @@ namespace SpaceAge
         {
             Core.Log("SpaceAgeScenario.OnLoad");
             InitializeDatabase();
+
+            if (node.HasValue("logTimeFormat"))
+                Enum.TryParse<TimeFormat>(node.GetValue("logTimeFormat"), out logTimeFormat);
 
             chronicle.Clear();
             if (node.HasNode("CHRONICLE"))
@@ -456,18 +466,22 @@ namespace SpaceAge
                         gridContents = new List<DialogGUIBase>(LinesPerPage);
                         Core.Log($"Displaying events {startingIndex + 1} to {Math.Min(startingIndex + LinesPerPage, displayChronicle.Count)}...");
                         for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, displayChronicle.Count); i++)
+                        {
+                            ChronicleEvent ce = displayChronicle[ChronicleIndex(i)];
                             gridContents.Add(
                                 new DialogGUIHorizontalLayout(
                                     new DialogGUILabel(
-                                        $"<color=\"white\">{Core.ParseUT(displayChronicle[ChronicleIndex(i)].Time)}</color>\t{displayChronicle[ChronicleIndex(i)].Description}",
+                                        $"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? KSPUtil.PrintTimeCompact(ce.Time - logVessel.LaunchTime, true) : Core.ParseUT(ce.Time))}</color>\t{ce.Description}",
                                         true),
-                                    displayChronicle[ChronicleIndex(i)].HasVesselId() ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, displayChronicle[ChronicleIndex(i)], false) : new DialogGUIBase(),
+                                    ce.HasVesselId() ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false) : new DialogGUIBase(),
                                     new DialogGUIButton<int>(Localizer.Format("#SpaceAge_UI_Delete"), DeleteChronicleItem, ChronicleIndex(i))));
+                        }
                         return new DialogGUIVerticalLayout(
                             logVessel != null
                             ? new DialogGUIHorizontalLayout(
                                 TextAnchor.MiddleCenter,
-                                new DialogGUILabel($"<align=\"center\"><b>{Localizer.Format("#SpaceAge_UI_LogTitle", logVessel.Name)}</b></align>", true),
+                                new DialogGUIButton(logTimeFormat == TimeFormat.UT ? Localizer.Format("#SpaceAge_UI_UT") : Localizer.Format("#SpaceAge_UI_MET"), SwitchTimeFormat, false),
+                                new DialogGUILabel($"<align=\"center\"><b>{Localizer.Format("#SpaceAge_UI_LogTitle", logVessel.Name, Core.ParseUT(logVessel.LaunchTime, true))}</b></align>", true),
                                 new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Back"), HideShipLog, false))
                             : new DialogGUIBase(),
                             new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, gridContents.ToArray()),
@@ -732,6 +746,14 @@ namespace SpaceAge
                 Invalidate();
             }
             else Core.Log($"No VesselRecord found for vessel [{id}].", LogLevel.Important);
+        }
+
+        public void SwitchTimeFormat()
+        {
+            if (logTimeFormat == TimeFormat.UT)
+                logTimeFormat = TimeFormat.MET;
+            else logTimeFormat = TimeFormat.UT;
+            Invalidate();
         }
 
         public void HideShipLog()

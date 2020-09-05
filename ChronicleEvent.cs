@@ -35,7 +35,7 @@ namespace SpaceAge
                         return Localizer.Format("#SpaceAge_CE_ReachSpace", GetString("vessel"));
 
                     case "Burn":
-                        return Localizer.Format("#SpaceAge_CE_Burn", GetString("vessel"), KSPUtil.PrintTimeCompact(GetInt("duration"), false), GetInt("deltaV"));
+                        return Localizer.Format("#SpaceAge_CE_Burn", GetString("vessel"), KSPUtil.PrintDateDeltaCompact(GetInt("duration"), true, true), GetInt("deltaV"));
 
                     case "Orbit":
                         return Localizer.Format("#SpaceAge_CE_Orbit", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
