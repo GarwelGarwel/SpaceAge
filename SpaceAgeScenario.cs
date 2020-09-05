@@ -3,9 +3,9 @@ using KSP.UI.Screens;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq.Expressions;
 using UniLinq;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace SpaceAge
 {
@@ -36,6 +36,7 @@ namespace SpaceAge
 
         Tab currentTab = Tab.Chronicle;
         int[] page = new int[3] { 1, 1, 1 };
+        int chroniclePage = 0;
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
         string textInput = "";
@@ -54,7 +55,6 @@ namespace SpaceAge
             // Adding event handlers
             GameEvents.onGameNewStart.Add(ResetSettings);
             GameEvents.OnGameSettingsApplied.Add(OnGameSettingsApplied);
-            GameEvents.VesselSituation.onLaunch.Add(OnLaunch);
             GameEvents.VesselSituation.onReachSpace.Add(OnReachSpace);
             GameEvents.onStageActivate.Add(onStageActivate);
             GameEvents.onVesselRecovered.Add(OnVesselRecovery);
@@ -83,7 +83,7 @@ namespace SpaceAge
                 toolbarButton.Text = "Space Age";
                 toolbarButton.TexturePath = "SpaceAge/icon24";
                 toolbarButton.ToolTip = "Space Age";
-                toolbarButton.OnClick += (e) =>
+                toolbarButton.OnClick += e =>
                 {
                     if (window == null)
                         DisplayData();
@@ -106,7 +106,6 @@ namespace SpaceAge
             // Removing event handlers
             GameEvents.onGameNewStart.Remove(ResetSettings);
             GameEvents.OnGameSettingsApplied.Remove(OnGameSettingsApplied);
-            GameEvents.VesselSituation.onLaunch.Remove(OnLaunch);
             GameEvents.VesselSituation.onReachSpace.Remove(OnReachSpace);
             GameEvents.onStageActivate.Remove(onStageActivate);
             GameEvents.onVesselRecovered.Remove(OnVesselRecovery);
@@ -204,6 +203,20 @@ namespace SpaceAge
             UpdateScoreAchievements();
         }
 
+        public void FixedUpdate()
+        {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+            double time = Planetarium.GetUniversalTime();
+
+            // Only do checks once per 0.5 s
+            if (time - lastUpdate < 0.5)
+                return;
+            lastUpdate = time;
+
+            CheckBurn();
+        }
+
         void InitializeDatabase()
         {
             if (protoAchievements != null)
@@ -247,20 +260,6 @@ namespace SpaceAge
                 UnregisterAppLauncherButton();
             if (!SpaceAgeChronicleSettings.Instance.TrackBurns)
                 burnStarted = double.NaN;
-        }
-
-        public void FixedUpdate()
-        {
-            if (!HighLogic.LoadedSceneIsFlight)
-                return;
-            double time = Planetarium.GetUniversalTime();
-
-            // Only do checks once per 0.5 s
-            if (time - lastUpdate < 0.5)
-                return;
-            lastUpdate = time;
-
-            CheckBurn();
         }
 
         #endregion LIFE CYCLE
@@ -448,133 +447,6 @@ namespace SpaceAge
 
         #region UI METHODS
 
-        public DialogGUIBase WindowContents
-        {
-            get
-            {
-                List<DialogGUIBase> gridContents;
-
-                if (Page > PageCount)
-                    Page = PageCount;
-                if (PageCount == 0)
-                    Page = 1;
-                int startingIndex = (Page - 1) * LinesPerPage;
-
-                switch (currentTab)
-                {
-                    case Tab.Chronicle:
-                        gridContents = new List<DialogGUIBase>(LinesPerPage);
-                        Core.Log($"Displaying events {startingIndex + 1} to {Math.Min(startingIndex + LinesPerPage, displayChronicle.Count)}...");
-                        for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, displayChronicle.Count); i++)
-                        {
-                            ChronicleEvent ce = displayChronicle[ChronicleIndex(i)];
-                            gridContents.Add(
-                                new DialogGUIHorizontalLayout(
-                                    new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? KSPUtil.PrintTimeCompact(ce.Time - logVessel.LaunchTime, true) : Core.PrintUT(ce.Time))}</color>", 90),
-                                    new DialogGUILabel(ce.Description, true),
-                                    ce.HasVesselId() ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false) : new DialogGUIBase(),
-                                    new DialogGUIButton<int>(Localizer.Format("#SpaceAge_UI_Delete"), DeleteChronicleItem, ChronicleIndex(i))));
-                        }
-                        return new DialogGUIVerticalLayout(
-                            logVessel != null
-                            ? new DialogGUIHorizontalLayout(
-                                TextAnchor.MiddleCenter,
-                                new DialogGUIButton(logTimeFormat == TimeFormat.UT ? Localizer.Format("#SpaceAge_UI_UT") : Localizer.Format("#SpaceAge_UI_MET"), SwitchTimeFormat, false),
-                                new DialogGUILabel($"<align=\"center\"><b>{Localizer.Format("#SpaceAge_UI_LogTitle", logVessel.Name, Core.PrintUT(logVessel.LaunchTime, true))}</b></align>", true),
-                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Back"), HideShipLog, false))
-                            : new DialogGUIBase(),
-                            new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, gridContents.ToArray()),
-                            HighLogic.LoadedSceneIsFlight
-                            ? new DialogGUIBase()
-                            : new DialogGUIHorizontalLayout(
-                                windowWidth - 20,
-                                10,
-                                new DialogGUITextInput(textInput, false, 100, s => textInput = s),
-                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Find"), Find),
-                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Add"), AddCustomChronicleEvent),
-                                new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Export"), ExportChronicle)));
-
-                    case Tab.Achievements:
-                        gridContents = new List<DialogGUIBase>(LinesPerPage * 3);
-                        Core.Log($"Displaying achievements starting from {startingIndex} out of {achievements.Count}...");
-                        List<Achievement> achList = SortedAchievements;
-                        if ((achievements.Count == 0) || (achList.Count == 0))
-                        {
-                            Core.Log($"Can't display Achievements tabs. There are {achievements.Count} achievements and {achList.Count} protoachievements.", LogLevel.Error);
-                            return new DialogGUILabel($"<align=\"center\">{Localizer.Format("#SpaceAge_UI_NoAchievements")}</align>", true);
-                        }
-                        string body = null;
-                        foreach (Achievement a in achList.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
-                        {
-                            // Achievement for a new body => display the body's name on a new line
-                            if ((a.Body != body) && (a.Body.Length != 0))
-                            {
-                                body = a.Body;
-                                gridContents.Add(new DialogGUILabel("", true));
-                                gridContents.Add(new DialogGUILabel($"<align=\"center\"><color=\"white\"><b>{Localizer.Format("<<1>>", Core.GetBodyDisplayName(body))}</b></color></align>", true));
-                                gridContents.Add(new DialogGUILabel("", true));
-                            }
-                            DisplayAchievement(a, gridContents);
-                        }
-                        return new DialogGUIGridLayout(
-                            new RectOffset(5, 5, 0, 0),
-                            new Vector2((windowWidth - 10) / 3 - 3, 20),
-                            new Vector2(5, 5),
-                            UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft,
-                            UnityEngine.UI.GridLayoutGroup.Axis.Horizontal,
-                            TextAnchor.MiddleLeft,
-                            UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount,
-                            3,
-                            gridContents.ToArray());
-
-                    case Tab.Score:
-                        Core.Log($"Displaying score bodies from {startingIndex} out of {scoreBodies.Count}...");
-                        if (scoreAchievements.Count == 0)
-                            return new DialogGUILabel($"<align=\"center\">{Localizer.Format("#SpaceAge_UI_NoScore")}</align>", true);
-                        gridContents = new List<DialogGUIBase>((1 + Math.Min(LinesPerPage, scoreBodies.Count)) * (1 + scoreRecordNames.Count));
-                        gridContents.Add(new DialogGUILabel($"<color=\"white\">{Localizer.Format("#SpaceAge_UI_Body")}</color>"));
-                        gridContents.AddRange(scoreRecordNames.Select(srn => new DialogGUILabel($"<color=\"white\">{srn}</color>")));
-                        for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, scoreBodies.Count); i++)
-                        {
-                            gridContents.Add(new DialogGUILabel($"<color=\"white\">{Localizer.Format("<<1>>", Core.GetBodyDisplayName(scoreBodies[i]))}</color>"));
-                            foreach (string srn in scoreRecordNames)
-                            {
-                                double s = 0;
-                                bool manned = false;
-                                foreach (Achievement a in scoreAchievements.Where(a
-                                    => a.Proto.ScoreName == srn
-                                    && (a.Body == scoreBodies[i] || (!a.Proto.IsBodySpecific && scoreBodies[i] == FlightGlobals.GetHomeBodyName()))))
-                                {
-                                    s += a.Score;
-                                    if (a.Proto.CrewedOnly)
-                                        manned = true;
-                                }
-                                string scoreIndicator;
-                                if (s > 0)
-                                    if (manned)
-                                        scoreIndicator = $"<color=\"green\">{Localizer.Format("#SpaceAge_UI_ScoreManned", s)}";
-                                    else scoreIndicator = $"<color=\"yellow\">{Localizer.Format("#SpaceAge_UI_ScoreUnmanned", s)}";
-                                else scoreIndicator = $"<color=\"white\">{Localizer.Format("#SpaceAge_UI_ScoreNone")}";
-                                gridContents.Add(new DialogGUILabel($"{scoreIndicator}</color>"));
-                            }
-                        }
-                        return new DialogGUIVerticalLayout(true, true, 5, new RectOffset(5, 5, 0, 0), TextAnchor.MiddleLeft,
-                            new DialogGUIGridLayout(
-                                new RectOffset(0, 0, 0, 0),
-                                new Vector2((windowWidth - 10) / (scoreRecordNames.Count + 1) - 5, 20),
-                                new Vector2(5, 5),
-                                UnityEngine.UI.GridLayoutGroup.Corner.UpperLeft,
-                                UnityEngine.UI.GridLayoutGroup.Axis.Horizontal,
-                                TextAnchor.MiddleLeft,
-                                UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount,
-                                scoreRecordNames.Count + 1,
-                                gridContents.ToArray()),
-                            new DialogGUILabel($"<color=\"white\"><b>{Localizer.Format("#SpaceAge_UI_TotalScore", score.ToString("N0"))}</b></color>"));
-                }
-                return null;
-            }
-        }
-
         List<Achievement> SortedAchievements
         {
             get
@@ -618,7 +490,7 @@ namespace SpaceAge
                         itemsNum = scoreBodies.Count;
                         break;
                 }
-                return (int)System.Math.Ceiling((double)itemsNum / LinesPerPage);
+                return (int)Math.Ceiling((double)itemsNum / LinesPerPage);
             }
         }
 
@@ -646,6 +518,134 @@ namespace SpaceAge
                 }
             }
 
+            List<DialogGUIBase> grid;
+            DialogGUIBase windowContent = null;
+
+            if (Page > PageCount)
+                Page = PageCount;
+            if (PageCount == 0)
+                Page = 1;
+            int startingIndex = (Page - 1) * LinesPerPage;
+
+            switch (currentTab)
+            {
+                case Tab.Chronicle:
+                    grid = new List<DialogGUIBase>(LinesPerPage);
+                    Core.Log($"Displaying events {startingIndex + 1} to {Math.Min(startingIndex + LinesPerPage, displayChronicle.Count)}...");
+                    for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, displayChronicle.Count); i++)
+                    {
+                        ChronicleEvent ce = displayChronicle[ChronicleIndex(i)];
+                        grid.Add(
+                            new DialogGUIHorizontalLayout(
+                                new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? KSPUtil.PrintTimeCompact(ce.Time - logVessel.LaunchTime, true) : Core.PrintUT(ce.Time))}</color>", 90),
+                                new DialogGUILabel(ce.Description, true),
+                                ce.HasVesselId() ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false) : new DialogGUIBase(),
+                                new DialogGUIButton<int>(Localizer.Format("#SpaceAge_UI_Delete"), DeleteChronicleItem, ChronicleIndex(i))));
+                    }
+                    windowContent = new DialogGUIVerticalLayout(
+                        logVessel != null
+                        ? new DialogGUIHorizontalLayout(
+                            TextAnchor.MiddleCenter,
+                            new DialogGUIButton(logTimeFormat == TimeFormat.UT ? Localizer.Format("#SpaceAge_UI_UT") : Localizer.Format("#SpaceAge_UI_MET"), SwitchTimeFormat, false),
+                            new DialogGUILabel($"<align=\"center\"><b>{Localizer.Format("#SpaceAge_UI_LogTitle", logVessel.Name)}</b>\n{Localizer.Format("#SpaceAge_UI_ShipInfo", Core.PrintUT(logVessel.LaunchTime, true))}</align>", true),
+                            new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Back"), HideShipLog, false))
+                        : new DialogGUIBase(),
+                        new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, grid.ToArray()),
+                        HighLogic.LoadedSceneIsFlight
+                        ? new DialogGUIBase()
+                        : new DialogGUIHorizontalLayout(
+                            windowWidth - 20,
+                            10,
+                            new DialogGUITextInput(textInput, false, 100, s => textInput = s),
+                            new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Find"), Find),
+                            new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Add"), AddCustomChronicleEvent),
+                            new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Export"), ExportChronicle)));
+                    break;
+
+                case Tab.Achievements:
+                    grid = new List<DialogGUIBase>(LinesPerPage * 3);
+                    Core.Log($"Displaying achievements starting from {startingIndex} out of {achievements.Count}...");
+                    List<Achievement> achList = SortedAchievements;
+                    if ((achievements.Count == 0) || (achList.Count == 0))
+                    {
+                        Core.Log($"Can't display Achievements tabs. There are {achievements.Count} achievements and {achList.Count} protoachievements.", LogLevel.Error);
+                        windowContent = new DialogGUILabel($"<align=\"center\">{Localizer.Format("#SpaceAge_UI_NoAchievements")}</align>", true);
+                        break;
+                    }
+                    string body = null;
+                    foreach (Achievement a in achList.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
+                    {
+                        // Achievement for a new body => display the body's name on a new line
+                        if ((a.Body != body) && (a.Body.Length != 0))
+                        {
+                            body = a.Body;
+                            grid.Add(new DialogGUILabel("", true));
+                            grid.Add(new DialogGUILabel($"<align=\"center\"><color=\"white\"><b>{Localizer.Format("<<1>>", Core.GetBodyDisplayName(body))}</b></color></align>", true));
+                            grid.Add(new DialogGUILabel("", true));
+                        }
+                        DisplayAchievement(a, grid);
+                    }
+                    windowContent = new DialogGUIGridLayout(
+                        new RectOffset(5, 5, 0, 0),
+                        new Vector2((windowWidth - 10) / 3 - 3, 20),
+                        new Vector2(5, 5),
+                        GridLayoutGroup.Corner.UpperLeft,
+                        GridLayoutGroup.Axis.Horizontal,
+                        TextAnchor.MiddleLeft,
+                        GridLayoutGroup.Constraint.FixedColumnCount,
+                        3,
+                        grid.ToArray());
+                    break;
+
+                case Tab.Score:
+                    Core.Log($"Displaying score bodies from {startingIndex} out of {scoreBodies.Count}...");
+                    if (scoreAchievements.Count == 0)
+                    {
+                        windowContent = new DialogGUILabel($"<align=\"center\">{Localizer.Format("#SpaceAge_UI_NoScore")}</align>", true);
+                        break;
+                    }
+                    grid = new List<DialogGUIBase>((1 + Math.Min(LinesPerPage, scoreBodies.Count)) * (1 + scoreRecordNames.Count));
+                    grid.Add(new DialogGUILabel($"<color=\"white\">{Localizer.Format("#SpaceAge_UI_Body")}</color>"));
+                    grid.AddRange(scoreRecordNames.Select(srn => new DialogGUILabel($"<color=\"white\">{srn}</color>")));
+                    for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, scoreBodies.Count); i++)
+                    {
+                        grid.Add(new DialogGUILabel($"<color=\"white\">{Localizer.Format("<<1>>", Core.GetBodyDisplayName(scoreBodies[i]))}</color>"));
+                        foreach (string srn in scoreRecordNames)
+                        {
+                            double s = 0;
+                            bool manned = false;
+                            foreach (Achievement a in scoreAchievements.Where(a
+                                => a.Proto.ScoreName == srn
+                                && (a.Body == scoreBodies[i] || (!a.Proto.IsBodySpecific && scoreBodies[i] == FlightGlobals.GetHomeBodyName()))))
+                            {
+                                s += a.Score;
+                                if (a.Proto.CrewedOnly)
+                                    manned = true;
+                            }
+                            string scoreIndicator;
+                            if (s > 0)
+                                if (manned)
+                                    scoreIndicator = $"<color=\"green\">{Localizer.Format("#SpaceAge_UI_ScoreManned", s)}";
+                                else scoreIndicator = $"<color=\"yellow\">{Localizer.Format("#SpaceAge_UI_ScoreUnmanned", s)}";
+                            else scoreIndicator = $"<color=\"white\">{Localizer.Format("#SpaceAge_UI_ScoreNone")}";
+                            grid.Add(new DialogGUILabel($"{scoreIndicator}</color>"));
+                        }
+                    }
+                    windowContent = new DialogGUIVerticalLayout(true, true, 5, new RectOffset(5, 5, 0, 0), TextAnchor.MiddleLeft,
+                        new DialogGUIGridLayout(
+                            new RectOffset(0, 0, 0, 0),
+                            new Vector2((windowWidth - 10) / (scoreRecordNames.Count + 1) - 5, 20),
+                            new Vector2(5, 5),
+                            GridLayoutGroup.Corner.UpperLeft,
+                            GridLayoutGroup.Axis.Horizontal,
+                            TextAnchor.MiddleLeft,
+                            GridLayoutGroup.Constraint.FixedColumnCount,
+                            scoreRecordNames.Count + 1,
+                            grid.ToArray()),
+                        new DialogGUILabel($"<color=\"white\"><b>{Localizer.Format("#SpaceAge_UI_TotalScore", score.ToString("N0"))}</b></color>"));
+                    break;
+            }
+
             window = PopupDialog.SpawnPopupDialog(
                 new Vector2(1, 1),
                 new Vector2(1, 1),
@@ -671,7 +671,7 @@ namespace SpaceAge
                         new DialogGUIButton(">", PageDown, () => Page < PageCount, false),
                         new DialogGUIButton(">>", LastPage, () => Page < PageCount, false))
                     : new DialogGUIHorizontalLayout(),
-                    WindowContents),
+                    windowContent),
                 false,
                 HighLogic.UISkin,
                 false);
@@ -722,6 +722,14 @@ namespace SpaceAge
             Invalidate();
         }
 
+        public void SwitchTimeFormat()
+        {
+            if (logTimeFormat == TimeFormat.UT)
+                logTimeFormat = TimeFormat.MET;
+            else logTimeFormat = TimeFormat.UT;
+            Invalidate();
+        }
+
         public void ShowShipLog(ChronicleEvent ev)
         {
             if (ev == null)
@@ -731,33 +739,31 @@ namespace SpaceAge
             }
             Core.Log($"ShowShipLog('{ev.Type}')");
             string id = ev.GetVesselIds().FirstOrDefault(s => s != logVessel?.Id);
-            if (id == null)
+            if (id == null || !vessels.ContainsKey(id))
             {
-                Core.Log($"Could not find a vessel id for event '{ev.Description}'. It has {ev.GetVesselIds().Count} vessel ids.", LogLevel.Error);
-                logVessel = null;
-                Invalidate();
+                Core.Log($"Could not find a vessel record for event '{ev.Description}'. It has {ev.GetVesselIds().Count} vessel ids.", LogLevel.Error);
+                HideShipLog();
                 return;
             }
             if (vessels.ContainsKey(id))
             {
                 Core.Log($"Showing log for vessel id [{id}].");
+                if (chroniclePage == 0)
+                    chroniclePage = Page;
                 logVessel = vessels[id];
                 Invalidate();
             }
             else Core.Log($"No VesselRecord found for vessel [{id}].", LogLevel.Important);
         }
 
-        public void SwitchTimeFormat()
-        {
-            if (logTimeFormat == TimeFormat.UT)
-                logTimeFormat = TimeFormat.MET;
-            else logTimeFormat = TimeFormat.UT;
-            Invalidate();
-        }
-
         public void HideShipLog()
         {
             logVessel = null;
+            if (chroniclePage > 0)
+            {
+                Page = chroniclePage;
+                chroniclePage = 0;
+            }
             Invalidate();
         }
 
@@ -851,42 +857,15 @@ namespace SpaceAge
 
         #region EVENT HANDLERS
 
-        double lastLaunch = -1;
         double lastTakeoff = -1;
         double burnStarted = double.NaN;
         double deltaV;
-
-        public void OnLaunch(Vessel v)
-        {
-            Core.Log($"OnLaunch({v?.vesselName})", LogLevel.Important);
-
-            if (!IsVesselEligible(v, true))
-                return;
-
-            double timeSinceLastLaunch = Planetarium.GetUniversalTime() - lastLaunch;
-            if (timeSinceLastLaunch < 1)
-            {
-                Core.Log($"Duplicate OnLaunch call. Previous launch happened {timeSinceLastLaunch} s ago.");
-                return;
-            }
-
-            lastLaunch = Planetarium.GetUniversalTime();
-            CheckAchievements("Launch", v);
-
-            if (!SpaceAgeChronicleSettings.Instance.TrackLaunch)
-                return;
-
-            ChronicleEvent e = new ChronicleEvent("Launch", v);
-            if (FlightGlobals.ActiveVessel.GetCrewCount() > 0)
-                e.AddData("crew", v.GetCrewCount());
-            AddChronicleEvent(e);
-        }
 
         public void OnReachSpace(Vessel v)
         {
             Core.Log($"OnReachSpace({v.vesselName})");
 
-            if (!IsVesselEligible(v, false))
+            if (!v.IsTrackable(false))
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackReachSpace)
@@ -900,42 +879,10 @@ namespace SpaceAge
             CheckAchievements("ReachSpace", v);
         }
 
-        public void CheckBurn()
-        {
-            if (!SpaceAgeChronicleSettings.Instance.TrackBurns)
-                return;
-            Vessel v = FlightGlobals.ActiveVessel;
-            if (v == null)
-                return;
-            bool isBurning = v.IsBurning();
-
-            if (double.IsNaN(burnStarted) && isBurning)
-            {
-                burnStarted = Planetarium.GetUniversalTime();
-                deltaV = v.VesselDeltaV.TotalDeltaVVac;
-                Core.Log($"Burn started on {KSPUtil.PrintDateCompact(burnStarted, true, true)}. Vessel's deltaV = {deltaV:N0} m/s.");
-                return;
-            }
-
-            if (!double.IsNaN(burnStarted) && !isBurning)
-            {
-                int burnDuration = (int)Math.Round(Planetarium.GetUniversalTime() - burnStarted);
-                burnStarted = double.NaN;
-                deltaV -= v.VesselDeltaV.TotalDeltaVVac;
-                if (burnDuration >= SpaceAgeChronicleSettings.Instance.MinBurnDuration)
-                {
-                    Core.Log($"Finished burn that lasted {burnDuration} s, deltaV = {deltaV:N0} m/s.");
-                    AddChronicleEvent(
-                        new ChronicleEvent("Burn", v, "duration", burnDuration, "deltaV", (int)deltaV)
-                        { LogOnly = true });
-                }
-            }
-        }
-
         public void onStageActivate(int stage)
         {
             Core.Log($"onStageActivate({stage})");
-            if (IsVesselEligible(FlightGlobals.ActiveVessel, false))
+            if (FlightGlobals.ActiveVessel.IsTrackable(false))
                 CheckBurn();
         }
 
@@ -943,7 +890,7 @@ namespace SpaceAge
         {
             Core.Log($"OnReturnFromOrbit({v.vesselName}, {b.bodyName})");
 
-            if (!IsVesselEligible(v, true))
+            if (!v.IsTrackable(true))
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
@@ -961,7 +908,7 @@ namespace SpaceAge
         {
             Core.Log($"OnReturnFromSurface({v.vesselName}, {b.bodyName})");
 
-            if (!IsVesselEligible(v, true))
+            if (!v.IsTrackable(true))
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
@@ -980,7 +927,7 @@ namespace SpaceAge
             Core.Log($"OnVesselRecovery('{v.vesselName}', {b})", LogLevel.Important);
             Core.Log($"missionTime = {v.missionTime}; launchTime = {v.launchTime}; autoClean = {v.autoClean}");
 
-            if (!IsVesselEligible(v.vesselRef, false))
+            if (!v.vesselRef.IsTrackable(false))
             {
                 Core.Log($"{v.vesselName} is {v.vesselType}. NO adding to Chronicle.", LogLevel.Important);
                 return;
@@ -1006,7 +953,7 @@ namespace SpaceAge
         public void OnVesselDestroy(Vessel v)
         {
             Core.Log($"OnVesselDestroy('{v.vesselName}')", LogLevel.Important);
-            if (!IsVesselEligible(v, true))
+            if (!v.IsTrackable(true))
             {
                 Core.Log($"{v.name} is {v.vesselType}. NO adding to Chronicle.", LogLevel.Important);
                 return;
@@ -1071,7 +1018,7 @@ namespace SpaceAge
         public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> e)
         {
             Core.Log($"OnSOIChanged(<'{e.from.name}', '{e.to.name}', '{e.host.vesselName}'>)", LogLevel.Important);
-            if (!IsVesselEligible(e.host, false))
+            if (!e.host.IsTrackable(false))
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackSOIChange)
@@ -1090,7 +1037,7 @@ namespace SpaceAge
         {
             Core.Log($"OnSituationChanged(<'{a.host.vesselName}', '{a.from}', '{a.to}'>)");
 
-            if (!IsVesselEligible(a.host, true))
+            if (!a.host.IsTrackable(true))
                 return;
 
             ChronicleEvent e = new ChronicleEvent(null, a.host, "body", a.host.mainBody.bodyName);
@@ -1103,7 +1050,7 @@ namespace SpaceAge
                 case Vessel.Situations.SPLASHED:
                     if ((Planetarium.GetUniversalTime() - lastTakeoff < SpaceAgeChronicleSettings.Instance.MinJumpDuration) || (a.from == Vessel.Situations.PRELAUNCH))
                     {
-                        Core.Log($"Landing is not logged (last takeoff: {lastTakeoff}; current UT:{Planetarium.GetUniversalTime()}).");
+                        Core.Log($"Landing is not logged (last takeoff: {lastTakeoff}; current UT: {Planetarium.GetUniversalTime()}).");
                         return;
                     }
                     if (SpaceAgeChronicleSettings.Instance.TrackLanding)
@@ -1118,43 +1065,31 @@ namespace SpaceAge
                     break;
 
                 case Vessel.Situations.FLYING:
-                    // Fix for some launches not calling OnLaunch event
-                    //if (a.from == Vessel.Situations.PRELAUNCH)
-                    //    OnLaunch(a.host);
-                    //else
-                    if ((a.from & (Vessel.Situations.SUB_ORBITAL | Vessel.Situations.ESCAPING | Vessel.Situations.ORBITING)) != 0)
+                    // It can be either a Launch, Reentry or Takeoff (e.g. hop)
+                    if (a.from == Vessel.Situations.PRELAUNCH)
+                    {
+                        CheckAchievements("Launch", a.host);
+
+                        if (!SpaceAgeChronicleSettings.Instance.TrackLaunch)
+                            return;
+
+                        e.Type = "Launch";
+                        if (a.host.GetCrewCount() > 0)
+                            e.AddData("crew", a.host.GetCrewCount());
+                    }
+                    else if ((a.from & (Vessel.Situations.SUB_ORBITAL | Vessel.Situations.ESCAPING | Vessel.Situations.ORBITING)) != 0)
                     {
                         if (SpaceAgeChronicleSettings.Instance.TrackReentry)
                             e.Type = "Reentry";
                         CheckAchievements("Reentry", a.host);
                     }
                     else if ((a.from & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0)
-                    {
-                        if (Planetarium.GetUniversalTime() - lastTakeoff >= SpaceAgeChronicleSettings.Instance.MinJumpDuration)
-                        {
-                            lastTakeoff = Planetarium.GetUniversalTime();
-                            if (SpaceAgeChronicleSettings.Instance.TrackLanding)
-                            {
-                                e.Type = "Takeoff";
-                                e.LogOnly = true;
-                            }
-                            CheckAchievements("Takeoff", a.host);
-                        }
-                    }
+                        CheckTakeoff(e, a.host);
                     break;
 
                 case Vessel.Situations.SUB_ORBITAL:
                     if ((a.from & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0)
-                        if (Planetarium.GetUniversalTime() - lastTakeoff >= SpaceAgeChronicleSettings.Instance.MinJumpDuration)
-                        {
-                            lastTakeoff = Planetarium.GetUniversalTime();
-                            if (SpaceAgeChronicleSettings.Instance.TrackLanding)
-                            {
-                                e.Type = "Takeoff";
-                                e.LogOnly = true;
-                            }
-                            CheckAchievements("Takeoff", a.host);
-                        }
+                        CheckTakeoff(e, a.host);
                     break;
             }
 
@@ -1169,7 +1104,7 @@ namespace SpaceAge
 
             Core.Log($"OnVesselDocking('{v1?.vesselName}', '{v2?.vesselName}')");
 
-            if (!IsVesselEligible(v1, false) || !IsVesselEligible(v2, false))
+            if (!v1.IsTrackable(false) || !v2.IsTrackable(false))
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
@@ -1183,7 +1118,7 @@ namespace SpaceAge
         {
             Core.Log($"OnVesselsUndocking('{v1?.name}', '{v2?.name}')");
 
-            if (!IsVesselEligible(v1, false) || !IsVesselEligible(v2, false))
+            if (!v1.IsTrackable(false) || !v2.IsTrackable(false))
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
@@ -1225,14 +1160,51 @@ namespace SpaceAge
             }
         }
 
-        bool IsVesselEligible(Vessel v, bool mustBeActive)
-            => v != null
-            && v.vesselType != VesselType.Debris
-            && v.vesselType != VesselType.EVA
-            && v.vesselType != VesselType.Flag
-            && v.vesselType != VesselType.SpaceObject
-            && v.vesselType != VesselType.Unknown
-            && (!mustBeActive || v == FlightGlobals.ActiveVessel);
+        void CheckBurn()
+        {
+            if (!SpaceAgeChronicleSettings.Instance.TrackBurns)
+                return;
+            Vessel v = FlightGlobals.ActiveVessel;
+            if (v == null)
+                return;
+            bool isBurning = v.IsBurning();
+
+            if (double.IsNaN(burnStarted) && isBurning)
+            {
+                burnStarted = Planetarium.GetUniversalTime();
+                deltaV = v.VesselDeltaV.TotalDeltaVVac;
+                Core.Log($"Burn started on {KSPUtil.PrintDateCompact(burnStarted, true, true)}. Vessel's deltaV = {deltaV:N0} m/s.");
+                return;
+            }
+
+            if (!double.IsNaN(burnStarted) && !isBurning)
+            {
+                int burnDuration = (int)Math.Round(Planetarium.GetUniversalTime() - burnStarted);
+                burnStarted = double.NaN;
+                deltaV -= v.VesselDeltaV.TotalDeltaVVac;
+                if (burnDuration >= SpaceAgeChronicleSettings.Instance.MinBurnDuration)
+                {
+                    Core.Log($"Finished burn that lasted {burnDuration} s, deltaV = {deltaV:N0} m/s.");
+                    AddChronicleEvent(
+                        new ChronicleEvent("Burn", v, "duration", burnDuration, "deltaV", (int)deltaV)
+                        { LogOnly = true });
+                }
+            }
+        }
+
+        void CheckTakeoff(ChronicleEvent e, Vessel v)
+        {
+            if (Planetarium.GetUniversalTime() - lastTakeoff >= SpaceAgeChronicleSettings.Instance.MinJumpDuration)
+            {
+                lastTakeoff = Planetarium.GetUniversalTime();
+                if (SpaceAgeChronicleSettings.Instance.TrackTakeoffs)
+                {
+                    e.Type = "Takeoff";
+                    e.LogOnly = true;
+                }
+                CheckAchievements("Takeoff", v);
+            }
+        }
     }
 }
 

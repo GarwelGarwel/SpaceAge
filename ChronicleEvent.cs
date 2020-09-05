@@ -26,11 +26,6 @@ namespace SpaceAge
                             ? Localizer.Format("#SpaceAge_CE_Launch_Crew", GetString("vessel"), GetInt("crew"))
                             : Localizer.Format("#SpaceAge_CE_Launch_NoCrew", GetString("vessel"));
 
-                    case "Takeoff":
-                        return HasData("crew")
-                            ? Localizer.Format("#SpaceAge_CE_Takeoff_Crew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")), GetInt("crew"))
-                            : Localizer.Format("#SpaceAge_CE_Takeoff_NoCrew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
-
                     case "ReachSpace":
                         return Localizer.Format("#SpaceAge_CE_ReachSpace", GetString("vessel"));
 
@@ -56,6 +51,11 @@ namespace SpaceAge
                         return HasData("crew")
                             ? Localizer.Format("#SpaceAge_CE_Landing_Crew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")), GetInt("crew"))
                             : Localizer.Format("#SpaceAge_CE_Landing_NoCrew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
+
+                    case "Takeoff":
+                        return HasData("crew")
+                            ? Localizer.Format("#SpaceAge_CE_Takeoff_Crew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")), GetInt("crew"))
+                            : Localizer.Format("#SpaceAge_CE_Takeoff_NoCrew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
                     case "Recovery":
                         return HasData("crew")

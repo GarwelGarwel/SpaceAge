@@ -55,6 +55,9 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackLanding", toolTip = "#SpaceAge_Settings_TrackLanding_desc")]
         public bool TrackLanding = true;
 
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackTakeoffs", toolTip = "#SpaceAge_Settings_TrackTakeoffs_desc")]
+        public bool TrackTakeoffs = true;
+
         [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_MinJumpDuration", toolTip = "#SpaceAge_Settings_MinJumpDuration_desc", minValue = 0, maxValue = 120, stepCount = 21)]
         public float MinJumpDuration = 30;
 

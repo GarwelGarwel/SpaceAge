@@ -1,5 +1,4 @@
 ﻿using KSP.Localization;
-using System;
 using System.Linq;
 using UnityEngine;
 
@@ -23,26 +22,23 @@ namespace SpaceAge
         /// </summary>
         internal static LogLevel Level => SpaceAgeChronicleSettings.Instance.DebugMode ? LogLevel.Debug : LogLevel.Important;
 
-        public static double GetCost(this Vessel v)
-        {
-            double cost = 0;
-            Log($"Calculating cost of {v.vesselName}.");
-            foreach (Part p in v.Parts)
-            {
-                Log($"Part {p.name}: part cost = {p.partInfo.cost}; module costs = {p.GetModuleCosts(0)}");
-                cost += p.partInfo.cost;
-                cost += p.GetModuleCosts(0);
-                foreach (PartResource resource in p.Resources)
-                {
-                    double resourceCost = resource.amount * resource.info.unitCost;
-                    if (resource.amount != 0)
-                        Log($"{resource.amount} of {resource.resourceName} costs {resourceCost}.");
-                    cost += resourceCost;
-                }
-            }
-            Log($"Total cost is {cost}.");
-            return cost;
-        }
+        /// <summary>
+        /// Determines if events of the given vessel should be tracked
+        /// </summary>
+        /// <param name="v"></param>
+        /// <param name="mustBeActive"></param>
+        /// <returns></returns>
+        public static bool IsTrackable(this Vessel v, bool mustBeActive)
+          => v != null
+          && v.vesselType != VesselType.Debris
+          && v.vesselType != VesselType.EVA
+          && v.vesselType != VesselType.Flag
+          && v.vesselType != VesselType.SpaceObject
+          && v.vesselType != VesselType.Unknown
+          && (!mustBeActive || v == FlightGlobals.ActiveVessel);
+
+        public static double GetCost(this Vessel v) =>
+            v.Parts.Sum(p => p.partInfo.cost + p.GetModuleCosts(0) + p.Resources.Sum(pr => pr.amount * pr.info.unitCost));
 
         public static bool IsBurning(this Vessel v) => v.FindPartModulesImplementing<ModuleEngines>().Any(module => module.GetCurrentThrust() > 0);
 
