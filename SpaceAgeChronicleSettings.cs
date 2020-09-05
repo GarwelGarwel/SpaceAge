@@ -34,6 +34,12 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackReachSpace", toolTip = "#SpaceAge_Settings_TrackReachSpace_desc")]
         public bool TrackReachSpace = true;
 
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackBurns", toolTip = "#SpaceAge_Settings_TrackBurns_desc")]
+        public bool TrackBurns = true;
+
+        [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_MinBurnDuration", toolTip = "#SpaceAge_Settings_MinBurnDuration_desc", minValue = 0, maxValue = 60)]
+        public int MinBurnDuration = 5;
+
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackOrbit", toolTip = "#SpaceAge_Settings_TrackOrbit_desc")]
         public bool TrackOrbit = true;
 
@@ -79,7 +85,7 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackTechnologyResearched", toolTip = "#SpaceAge_Settings_TrackTechnologyResearched_desc")]
         public bool TrackTechnologyResearched = true;
 
-        [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_FundsPerScore", toolTip = "#SpaceAge_Settings_FundsPerScore_desc", minValue = 0, maxValue = 10000, stepCount = 100)]
+        [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_FundsPerScore", toolTip = "#SpaceAge_Settings_FundsPerScore_desc", minValue = 0, maxValue = 10000, stepCount = 101)]
         public float FundsPerScore = 0;
 
         [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_SciencePerScore", toolTip = "#SpaceAge_Settings_SciencePerScore_desc", minValue = 0, maxValue = 50)]
@@ -97,6 +103,7 @@ namespace SpaceAge
         public SpaceAgeChronicleSettings() => Reset();
 
         public static SpaceAgeChronicleSettings Instance => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>();
+
         public override string Title => Localizer.Format("#SpaceAge_Settings_Title");
 
         public override GameParameters.GameMode GameMode => GameParameters.GameMode.ANY;
@@ -124,6 +131,8 @@ namespace SpaceAge
             TrackAchievements = true;
             TrackLaunch = true;
             TrackReachSpace = true;
+            TrackBurns = true;
+            MinBurnDuration = 5;
             TrackOrbit = true;
             TrackReentry = true;
             TrackDocking = true;

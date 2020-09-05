@@ -235,9 +235,11 @@ namespace SpaceAge
                 RegisterAppLauncherButton();
             if (!SpaceAgeChronicleSettings.Instance.ShowAppLauncherButton)
                 UnregisterAppLauncherButton();
+            if (!SpaceAgeChronicleSettings.Instance.TrackBurns)
+                burnStarted = double.NaN;
         }
 
-        void FixedUpdate()
+        public void FixedUpdate()
         {
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
@@ -246,10 +248,9 @@ namespace SpaceAge
             // Only do checks once per 0.5 s
             if (time - lastUpdate < 0.5)
                 return;
+            lastUpdate = time;
 
             CheckBurn();
-
-            lastUpdate = time;
         }
 
         #endregion LIFE CYCLE
@@ -275,8 +276,7 @@ namespace SpaceAge
 
         public void DeleteUnusedVesselRecords()
         {
-            List<string> recordsToDelete = vessels.Keys.Where(id => !chronicle.Exists(ev => ev.HasVesselId(id))).ToList();
-            foreach (string id in recordsToDelete)
+            foreach (string id in vessels.Keys.Where(id => !chronicle.Exists(ev => ev.HasVesselId(id))).ToList())
                 vessels.Remove(id);
         }
 
@@ -881,6 +881,8 @@ namespace SpaceAge
 
         public void CheckBurn()
         {
+            if (!SpaceAgeChronicleSettings.Instance.TrackBurns)
+                return;
             Vessel v = FlightGlobals.ActiveVessel;
             if (v == null)
                 return;
@@ -899,7 +901,7 @@ namespace SpaceAge
                 int burnDuration = (int)Math.Round(Planetarium.GetUniversalTime() - burnStarted);
                 burnStarted = double.NaN;
                 deltaV -= v.VesselDeltaV.TotalDeltaVVac;
-                if (burnDuration > 0)
+                if (burnDuration >= SpaceAgeChronicleSettings.Instance.MinBurnDuration)
                 {
                     Core.Log($"Finished burn that lasted {burnDuration} s, deltaV = {deltaV:N0} m/s.");
                     AddChronicleEvent(
@@ -1096,9 +1098,10 @@ namespace SpaceAge
 
                 case Vessel.Situations.FLYING:
                     // Fix for some launches not calling OnLaunch event
-                    if (a.from == Vessel.Situations.PRELAUNCH)
-                        OnLaunch(a.host);
-                    else if ((a.from & (Vessel.Situations.SUB_ORBITAL | Vessel.Situations.ESCAPING | Vessel.Situations.ORBITING)) != 0)
+                    //if (a.from == Vessel.Situations.PRELAUNCH)
+                    //    OnLaunch(a.host);
+                    //else
+                    if ((a.from & (Vessel.Situations.SUB_ORBITAL | Vessel.Situations.ESCAPING | Vessel.Situations.ORBITING)) != 0)
                     {
                         if (SpaceAgeChronicleSettings.Instance.TrackReentry)
                             e.Type = "Reentry";
