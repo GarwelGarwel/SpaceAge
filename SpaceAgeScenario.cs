@@ -470,9 +470,8 @@ namespace SpaceAge
                             ChronicleEvent ce = displayChronicle[ChronicleIndex(i)];
                             gridContents.Add(
                                 new DialogGUIHorizontalLayout(
-                                    new DialogGUILabel(
-                                        $"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? KSPUtil.PrintTimeCompact(ce.Time - logVessel.LaunchTime, true) : Core.ParseUT(ce.Time))}</color>\t{ce.Description}",
-                                        true),
+                                    new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? KSPUtil.PrintTimeCompact(ce.Time - logVessel.LaunchTime, true) : Core.PrintUT(ce.Time))}</color>", 90),
+                                    new DialogGUILabel(ce.Description, true),
                                     ce.HasVesselId() ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false) : new DialogGUIBase(),
                                     new DialogGUIButton<int>(Localizer.Format("#SpaceAge_UI_Delete"), DeleteChronicleItem, ChronicleIndex(i))));
                         }
@@ -481,7 +480,7 @@ namespace SpaceAge
                             ? new DialogGUIHorizontalLayout(
                                 TextAnchor.MiddleCenter,
                                 new DialogGUIButton(logTimeFormat == TimeFormat.UT ? Localizer.Format("#SpaceAge_UI_UT") : Localizer.Format("#SpaceAge_UI_MET"), SwitchTimeFormat, false),
-                                new DialogGUILabel($"<align=\"center\"><b>{Localizer.Format("#SpaceAge_UI_LogTitle", logVessel.Name, Core.ParseUT(logVessel.LaunchTime, true))}</b></align>", true),
+                                new DialogGUILabel($"<align=\"center\"><b>{Localizer.Format("#SpaceAge_UI_LogTitle", logVessel.Name, Core.PrintUT(logVessel.LaunchTime, true))}</b></align>", true),
                                 new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Back"), HideShipLog, false))
                             : new DialogGUIBase(),
                             new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, gridContents.ToArray()),
@@ -793,7 +792,7 @@ namespace SpaceAge
                 return;
             grid.Add(new DialogGUILabel(a.Proto.Score > 0 ? Localizer.Format("#SpaceAge_UI_AchievementScore", a.Title, a.Score) : a.Title, true));
             grid.Add(new DialogGUILabel(a.FullDisplayValue, true));
-            grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.ParseUT(a.Time) : "", true));
+            grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.PrintUT(a.Time) : "", true));
         }
 
         void UpdateScoreAchievements()

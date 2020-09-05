@@ -54,27 +54,33 @@ namespace SpaceAge
                 ScreenMessages.PostScreenMessage(msg);
         }
 
+        public static void ParseTime(long time, out int y, out int d, out int h, out int m, out int s, bool interval = false)
+        {
+            y = (int)(time / KSPUtil.dateTimeFormatter.Year);
+            time -= y * KSPUtil.dateTimeFormatter.Year;
+            if (!interval)
+                y++;
+            d = (int)time / KSPUtil.dateTimeFormatter.Day;
+            time -= d * KSPUtil.dateTimeFormatter.Day;
+            h = (int)time / 3600;
+            time -= h * 3600;
+            m = (int)time / 60;
+            s = (int)time - m * 60;
+        }
+
         /// <summary>
         /// Parses UT into a string (e.g. "Y23 D045")
         /// </summary>
         /// <param name="time">Time in seconds</param>
         /// <param name="showSeconds">If false, seconds will be displayed only if time is less than 1 minute; otherwise always</param>
         /// <returns></returns>
-        public static string ParseUT(long time, bool showSeconds = false)
+        public static string PrintUT(long time, bool showSeconds = false)
         {
             if (time < 0)
                 return "—";
-            int y, d, h, m;
-            y = (int)(time / KSPUtil.dateTimeFormatter.Year);
-            time -= y++ * KSPUtil.dateTimeFormatter.Year;
-            d = (int)time / KSPUtil.dateTimeFormatter.Day;
-            time -= d * KSPUtil.dateTimeFormatter.Day;
-            h = (int)time / 3600;
-            time -= h * 3600;
-            m = (int)time / 60;
-            time -= m * 60;
+            ParseTime(time, out int y, out int d, out int h, out int m, out int s);
             return showSeconds
-                ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), time.ToString("D2"))
+                ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), s.ToString("D2"))
                 : Localizer.Format("#SpaceAge_DateTime_NoSec", y, d.ToString("D3"), h, m.ToString("D2"));
         }
 
@@ -87,16 +93,7 @@ namespace SpaceAge
         {
             if (time < 0)
                 return Localizer.Format("#SpaceAge_Invalid");
-            int y, d, h, m;
-            y = (int)(time / KSPUtil.dateTimeFormatter.Year);
-            time -= y * KSPUtil.dateTimeFormatter.Year;
-            d = (int)time / KSPUtil.dateTimeFormatter.Day;
-            time -= d * KSPUtil.dateTimeFormatter.Day;
-            h = (int)time / 3600;
-            time -= h * 3600;
-            m = (int)time / 60;
-            time -= m * 60;
-
+            ParseTime(time, out int y, out int d, out int h, out int m, out int s, true);
             string res = "";
             if (y > 0)
                 res = $"{Localizer.Format("#SpaceAge_Years", y)} ";
@@ -106,7 +103,7 @@ namespace SpaceAge
                 res += "{h}:";
             if (m < 10 && res.Length > 0)
                 res += "0";
-            res += $"{m}:{time:D2}";
+            res += $"{m}:{s:D2}";
             return res;
         }
 
