@@ -42,6 +42,8 @@ namespace SpaceAge
 
         public static bool IsBurning(this Vessel v) => v.FindPartModulesImplementing<ModuleEngines>().Any(module => module.GetCurrentThrust() > 0);
 
+        public static bool IsLandedOrSplashed(this Vessel.Situations situation) => (situation & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0;
+
         public static string GetBodyDisplayName(string bodyName) => FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName;
 
         public static void ShowNotification(string msg)

@@ -13,8 +13,6 @@ namespace SpaceAge
 
         public bool LogOnly { get; set; } = false;
 
-        protected Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-
         public string Description
         {
             get
@@ -127,6 +125,10 @@ namespace SpaceAge
             }
         }
 
+        public IEnumerable<string> VesselIds => Data.Where(kvp => kvp.Key.Contains("vesselId")).Select(kvp => kvp.Value);
+        public IEnumerable<Vessel> Vessels => VesselIds.Select(id => FlightGlobals.FindVessel(new Guid(id)));
+        protected Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
         public ChronicleEvent() => Time = (long)Planetarium.GetUniversalTime();
 
         public ChronicleEvent(string type, params object[] data)
@@ -176,13 +178,8 @@ namespace SpaceAge
 
         public int GetInt(string key) => HasData(key) ? (int.TryParse(Data[key], out int res) ? res : 0) : 0;
 
-        public List<string> GetVesselIds()
-            => new List<string>(Data
-                .Where(kvp => kvp.Key.Contains("vesselId"))
-                .Select(kvp => kvp.Value));
+        public bool HasVesselId() => Data.Any(kvp => kvp.Key.Contains("vesselId"));
 
-        public bool HasVesselId() => GetVesselIds().Count > 0;
-
-        public bool HasVesselId(string vesselId) => GetVesselIds().Contains(vesselId);
+        public bool HasVesselId(string vesselId) => VesselIds.Contains(vesselId);
     }
 }

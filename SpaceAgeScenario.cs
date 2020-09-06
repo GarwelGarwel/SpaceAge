@@ -44,7 +44,7 @@ namespace SpaceAge
 
         #region LIFE CYCLE
 
-        double lastUpdate;
+        double nextUpdate = 0;
 
         public void Start()
         {
@@ -210,10 +210,11 @@ namespace SpaceAge
             double time = Planetarium.GetUniversalTime();
 
             // Only do checks once per 0.5 s
-            if (time - lastUpdate < 0.5)
+            if (time < nextUpdate)
                 return;
-            lastUpdate = time;
+            nextUpdate = time + 0.5;
 
+            CheckTakeoff(false);
             CheckBurn();
         }
 
@@ -272,7 +273,7 @@ namespace SpaceAge
             if (SpaceAgeChronicleSettings.Instance.UnwarpOnEvents && (TimeWarp.CurrentRateIndex != 0))
                 TimeWarp.SetRate(0, true, !SpaceAgeChronicleSettings.Instance.ShowNotifications);
             chronicle.Add(e);
-            foreach (string id in e.GetVesselIds())
+            foreach (string id in e.VesselIds)
                 AddVesselRecord(new VesselRecord(id));
             Invalidate();
         }
@@ -497,6 +498,7 @@ namespace SpaceAge
         public void DisplayData()
         {
             Core.Log("DisplayData", LogLevel.Important);
+            CheckTakeoff(false);
 
             if (currentTab == Tab.Chronicle)
             {
@@ -540,7 +542,7 @@ namespace SpaceAge
                                 new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? KSPUtil.PrintTimeCompact(ce.Time - logVessel.LaunchTime, true) : Core.PrintUT(ce.Time))}</color>", 90),
                                 new DialogGUILabel(ce.Description, true),
                                 ce.HasVesselId() ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false) : new DialogGUIBase(),
-                                new DialogGUIButton<int>(Localizer.Format("#SpaceAge_UI_Delete"), DeleteChronicleItem, ChronicleIndex(i))));
+                                new DialogGUIButton<int>("x", DeleteChronicleItem, ChronicleIndex(i))));
                     }
                     windowContent = new DialogGUIVerticalLayout(
                         logVessel != null
@@ -738,10 +740,10 @@ namespace SpaceAge
                 return;
             }
             Core.Log($"ShowShipLog('{ev.Type}')");
-            string id = ev.GetVesselIds().FirstOrDefault(s => s != logVessel?.Id);
+            string id = ev.VesselIds.FirstOrDefault(s => s != logVessel?.Id);
             if (id == null || !vessels.ContainsKey(id))
             {
-                Core.Log($"Could not find a vessel record for event '{ev.Description}'. It has {ev.GetVesselIds().Count} vessel ids.", LogLevel.Error);
+                Core.Log($"Could not find a vessel record for event '{ev.Description}'. It has {ev.VesselIds.Count()} vessel ids.", LogLevel.Error);
                 HideShipLog();
                 return;
             }
@@ -857,7 +859,7 @@ namespace SpaceAge
 
         #region EVENT HANDLERS
 
-        double lastTakeoff = -1;
+        ChronicleEvent takeoff;
         double burnStarted = double.NaN;
         double deltaV;
 
@@ -868,6 +870,7 @@ namespace SpaceAge
             if (!v.IsTrackable(false))
                 return;
 
+            CheckTakeoff(true);
             if (SpaceAgeChronicleSettings.Instance.TrackReachSpace)
             {
                 ChronicleEvent e = new ChronicleEvent("ReachSpace", v);
@@ -1021,6 +1024,8 @@ namespace SpaceAge
             if (!e.host.IsTrackable(false))
                 return;
 
+            CheckTakeoff(true);
+
             if (SpaceAgeChronicleSettings.Instance.TrackSOIChange)
                 AddChronicleEvent(new ChronicleEvent("SOIChange", e.host, "body", e.to.bodyName));
 
@@ -1048,9 +1053,9 @@ namespace SpaceAge
             {
                 case Vessel.Situations.LANDED:
                 case Vessel.Situations.SPLASHED:
-                    if ((Planetarium.GetUniversalTime() - lastTakeoff < SpaceAgeChronicleSettings.Instance.MinJumpDuration) || (a.from == Vessel.Situations.PRELAUNCH))
+                    if ((takeoff != null && (takeoff.VesselIds.FirstOrDefault() != a.host.id.ToString() || Planetarium.GetUniversalTime() - takeoff.Time < SpaceAgeChronicleSettings.Instance.MinJumpDuration)) || (a.from == Vessel.Situations.PRELAUNCH))
                     {
-                        Core.Log($"Landing is not logged (last takeoff: {lastTakeoff}; current UT: {Planetarium.GetUniversalTime()}).");
+                        Core.Log($"Landing is not logged.");
                         return;
                     }
                     if (SpaceAgeChronicleSettings.Instance.TrackLanding)
@@ -1059,6 +1064,7 @@ namespace SpaceAge
                     break;
 
                 case Vessel.Situations.ORBITING:
+                    CheckTakeoff(true);
                     if (SpaceAgeChronicleSettings.Instance.TrackOrbit)
                         e.Type = "Orbit";
                     CheckAchievements("Orbit", a.host);
@@ -1083,17 +1089,23 @@ namespace SpaceAge
                             e.Type = "Reentry";
                         CheckAchievements("Reentry", a.host);
                     }
-                    else if ((a.from & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0)
-                        CheckTakeoff(e, a.host);
+                    else if (a.from.IsLandedOrSplashed() && SpaceAgeChronicleSettings.Instance.TrackTakeoffs)
+                    {
+                        takeoff = new ChronicleEvent("Takeoff", a.host, "body", a.host.mainBody.bodyName);
+                        takeoff.LogOnly = true;
+                    }
                     break;
 
                 case Vessel.Situations.SUB_ORBITAL:
-                    if ((a.from & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0)
-                        CheckTakeoff(e, a.host);
+                    if (a.from.IsLandedOrSplashed() && SpaceAgeChronicleSettings.Instance.TrackTakeoffs)
+                    {
+                        takeoff = new ChronicleEvent("Takeoff", a.host, "body", a.host.mainBody.bodyName);
+                        takeoff.LogOnly = true;
+                    }
                     break;
             }
 
-            if ((e.Type != null) && (e.Type.Length != 0))
+            if (!string.IsNullOrEmpty(e.Type))
                 AddChronicleEvent(e);
         }
 
@@ -1160,6 +1172,27 @@ namespace SpaceAge
             }
         }
 
+        /// <summary>
+        /// Checks if a takeoff event should be recorded and adds the event
+        /// </summary>
+        /// <param name="ignoreTimer"></param>
+        void CheckTakeoff(bool ignoreTimer)
+        {
+            if (takeoff != null && (ignoreTimer || (Planetarium.GetUniversalTime() - takeoff.Time) >= SpaceAgeChronicleSettings.Instance.MinJumpDuration))
+            {
+                Core.Log($"CheckTakeoff({ignoreTimer})");
+                Vessel v = takeoff.Vessels.FirstOrDefault();
+                if (v != null && !v.situation.IsLandedOrSplashed())
+                {
+                    Core.Log($"Registering takeoff event for {takeoff.Vessels.FirstOrDefault()}.");
+                    AddChronicleEvent(takeoff);
+                    CheckAchievements("Takeoff", takeoff.Vessels.FirstOrDefault());
+                }
+                else Core.Log($"Takeoff of {v?.vesselName} is not logged.");
+                takeoff = null;
+            }
+        }
+
         void CheckBurn()
         {
             if (!SpaceAgeChronicleSettings.Instance.TrackBurns)
@@ -1189,20 +1222,6 @@ namespace SpaceAge
                         new ChronicleEvent("Burn", v, "duration", burnDuration, "deltaV", (int)deltaV)
                         { LogOnly = true });
                 }
-            }
-        }
-
-        void CheckTakeoff(ChronicleEvent e, Vessel v)
-        {
-            if (Planetarium.GetUniversalTime() - lastTakeoff >= SpaceAgeChronicleSettings.Instance.MinJumpDuration)
-            {
-                lastTakeoff = Planetarium.GetUniversalTime();
-                if (SpaceAgeChronicleSettings.Instance.TrackTakeoffs)
-                {
-                    e.Type = "Takeoff";
-                    e.LogOnly = true;
-                }
-                CheckAchievements("Takeoff", v);
             }
         }
     }
