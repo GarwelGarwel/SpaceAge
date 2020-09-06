@@ -1,13 +1,113 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using KSP.Localization;
 
 namespace SpaceAge
 {
-    class SpaceAgeChronicleSettings : GameParameters.CustomParameterNode
+    internal class SpaceAgeChronicleSettings : GameParameters.CustomParameterNode
     {
-        public override string Title => "Chronicle Settings";
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_ShowAppLauncherButton", toolTip = "#SpaceAge_Settings_ShowAppLauncherButton_desc")]
+        public bool ShowAppLauncherButton = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_ShowNotifications", toolTip = "#SpaceAge_Settings_ShowNotifications_desc")]
+        public bool ShowNotifications = false;
+
+        [GameParameters.CustomIntParameterUI("#SpaceAge_Settings_ChronicleLinesPerPage", toolTip = "#SpaceAge_Settings_ChronicleLinesPerPage_desc", minValue = 5, maxValue = 25, stepSize = 5)]
+        public int ChronicleLinesPerPage = 10;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_NewestFirst", toolTip = "#SpaceAge_Settings_NewestFirst_desc")]
+        public bool NewestFirst = true;
+
+        [GameParameters.CustomIntParameterUI("#SpaceAge_Settings_AchievementsPerPage", toolTip = "#SpaceAge_Settings_AchievementsPerPage_desc", minValue = 5, maxValue = 25, stepSize = 5)]
+        public int AchievementsPerPage = 10;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_ImportStockAchievements", toolTip = "#SpaceAge_Settings_ImportStockAchievements_desc")]
+        public bool ImportStockAchievements = false;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_UnwarpOnEvents", toolTip = "#SpaceAge_Settings_UnwarpOnEvents_desc")]
+        public bool UnwarpOnEvents = false;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackAchievements", toolTip = "#SpaceAge_Settings_TrackAchievements_desc")]
+        public bool TrackAchievements = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackLaunch", toolTip = "#SpaceAge_Settings_TrackLaunch_desc")]
+        public bool TrackLaunch = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackReachSpace", toolTip = "#SpaceAge_Settings_TrackReachSpace_desc")]
+        public bool TrackReachSpace = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackBurns", toolTip = "#SpaceAge_Settings_TrackBurns_desc")]
+        public bool TrackBurns = true;
+
+        [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_MinBurnDuration", toolTip = "#SpaceAge_Settings_MinBurnDuration_desc", minValue = 0, maxValue = 60)]
+        public int MinBurnDuration = 5;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackOrbit", toolTip = "#SpaceAge_Settings_TrackOrbit_desc")]
+        public bool TrackOrbit = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackReentry", toolTip = "#SpaceAge_Settings_TrackReentry_desc")]
+        public bool TrackReentry = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackDocking", toolTip = "#SpaceAge_Settings_TrackDocking_desc")]
+        public bool TrackDocking = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackSOIChange", toolTip = "#SpaceAge_Settings_TrackSOIChange_desc")]
+        public bool TrackSOIChange = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackLanding", toolTip = "#SpaceAge_Settings_TrackLanding_desc")]
+        public bool TrackLanding = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackTakeoffs", toolTip = "#SpaceAge_Settings_TrackTakeoffs_desc")]
+        public bool TrackTakeoffs = true;
+
+        [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_MinHopDuration", toolTip = "#SpaceAge_Settings_MinHopDuration_desc", minValue = 0, maxValue = 120, stepCount = 21)]
+        public float MinJumpDuration = 30;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackRecovery", toolTip = "#SpaceAge_Settings_TrackRecovery_desc")]
+        public bool TrackRecovery = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackReturnFrom", toolTip = "#SpaceAge_Settings_TrackReturnFrom_desc")]
+        public bool TrackReturnFrom = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackDestroy", toolTip = "#SpaceAge_Settings_TrackDestroy_desc")]
+        public bool TrackDestroy = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackDeath", toolTip = "#SpaceAge_Settings_TrackDeath_desc")]
+        public bool TrackDeath = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackFlagPlant", toolTip = "#SpaceAge_Settings_TrackFlagPlant_desc")]
+        public bool TrackFlagPlant = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackAnomalyDiscovery", toolTip = "#SpaceAge_Settings_TrackAnomalyDiscovery_desc")]
+        public bool TrackAnomalyDiscovery = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackFacilityUpgraded", toolTip = "#SpaceAge_Settings_TrackFacilityUpgraded_desc")]
+        public bool TrackFacilityUpgraded = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackStructureCollapsed", toolTip = "#SpaceAge_Settings_TrackStructureCollapsed_desc")]
+        public bool TrackStructureCollapsed = true;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackTechnologyResearched", toolTip = "#SpaceAge_Settings_TrackTechnologyResearched_desc")]
+        public bool TrackTechnologyResearched = true;
+
+        [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_FundsPerScore", toolTip = "#SpaceAge_Settings_FundsPerScore_desc", minValue = 0, maxValue = 10000, stepCount = 101)]
+        public float FundsPerScore = 0;
+
+        [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_SciencePerScore", toolTip = "#SpaceAge_Settings_SciencePerScore_desc", minValue = 0, maxValue = 50)]
+        public float SciencePerScore = 0;
+
+        [GameParameters.CustomFloatParameterUI("#SpaceAge_Settings_RepPerScore", toolTip = "#SpaceAge_Settings_RepPerScore_desc", minValue = 0, maxValue = 50)]
+        public float RepPerScore = 0;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_DebugMode", toolTip = "#SpaceAge_Settings_DebugMode_desc")]
+        public bool DebugMode = false;
+
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_ResetSettings", toolTip = "#SpaceAge_Settings_ResetSettings_desc")]
+        public bool ResetSettings = false;
+
+        public SpaceAgeChronicleSettings() => Reset();
+
+        public static SpaceAgeChronicleSettings Instance => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>();
+
+        public override string Title => Localizer.Format("#SpaceAge_Settings_Title");
 
         public override GameParameters.GameMode GameMode => GameParameters.GameMode.ANY;
 
@@ -18,98 +118,6 @@ namespace SpaceAge
         public override int SectionOrder => 1;
 
         public override bool HasPresets => false;
-
-        public static SpaceAgeChronicleSettings Instance => HighLogic.CurrentGame.Parameters.CustomParams<SpaceAgeChronicleSettings>();
-
-        [GameParameters.CustomParameterUI("Show AppLauncher Button", toolTip = "Show button in the stock AppLauncher bar")]
-        public bool ShowAppLauncherButton = true;
-
-        [GameParameters.CustomParameterUI("Show Notifications", toolTip = "Show on-screen notifications when new items are added to the Chronicle")]
-        public bool ShowNotifications = false;
-
-        [GameParameters.CustomIntParameterUI("Chronicle Records per Page", toolTip = "How many Chronicle entries to show in one page", minValue = 5, maxValue = 25, stepSize = 5)]
-        public int ChronicleLinesPerPage = 10;
-
-        [GameParameters.CustomParameterUI("Newest First", toolTip = "Show most recent events first in the Chronicle")]
-        public bool NewestFirst = true;
-
-        [GameParameters.CustomIntParameterUI("Achievements per Page", toolTip = "How many Chronicle entries to show in one page", minValue = 5, maxValue = 25, stepSize = 5)]
-        public int AchievementsPerPage = 10;
-
-        [GameParameters.CustomParameterUI("Import Stock Achievements", toolTip = "Try to import applicable achievements saved by stock ProgressTracking system. Use when the mod is installed/changed mid-game")]
-        public bool ImportStockAchievements = false;
-
-        [GameParameters.CustomParameterUI("Unwarp on Chronicle Events", toolTip = "End time warp when tracked Chronicle events occur")]
-        public bool UnwarpOnEvents = false;
-
-        [GameParameters.CustomParameterUI("Display Achievements in the Chronicle", toolTip = "Track and save Space Age achievements (except \"totals\") in the Chronicle")]
-        public bool TrackAchievements = true;
-
-        [GameParameters.CustomParameterUI("Track Launch Events", toolTip = "Track and save Launch events in the Chronicle")]
-        public bool TrackLaunch = true;
-
-        [GameParameters.CustomParameterUI("Track Reach Space Events", toolTip = "Track and save Reach Space events in the Chronicle")]
-        public bool TrackReachSpace = true;
-
-        [GameParameters.CustomParameterUI("Track Orbit Events", toolTip = "Track and save Orbit events in the Chronicle")]
-        public bool TrackOrbit = true;
-
-        [GameParameters.CustomParameterUI("Track Reentry Events", toolTip = "Track and save atrmospheric (re)entry events in the Chronicle")]
-        public bool TrackReentry = true;
-
-        [GameParameters.CustomParameterUI("Track Docking Events", toolTip = "Track and save Docking events in the Chronicle")]
-        public bool TrackDocking = true;
-
-        [GameParameters.CustomParameterUI("Track SOI Change Events", toolTip = "Track and save SOI Change events in the Chronicle")]
-        public bool TrackSOIChange = true;
-
-        [GameParameters.CustomParameterUI("Track Landing Events", toolTip = "Track and save Landing events in the Chronicle")]
-        public bool TrackLanding = true;
-
-        [GameParameters.CustomFloatParameterUI("Min Jump Duration to Track", toolTip = "Landings after jumps shorter than this will be ignored, in seconds", minValue = 0, maxValue = 120, stepCount = 21)]
-        public float MinJumpDuration = 30;
-
-        [GameParameters.CustomParameterUI("Track Recovery Events", toolTip = "Track and save Recovery events in the Chronicle")]
-        public bool TrackRecovery = true;
-
-        [GameParameters.CustomParameterUI("Track \"Return From\" Events", toolTip = "Track and save Return From Orbit/Surface events in the Chronicle")]
-        public bool TrackReturnFrom = true;
-
-        [GameParameters.CustomParameterUI("Track Destroy Events", toolTip = "Track and save Destroy events in the Chronicle")]
-        public bool TrackDestroy = true;
-
-        [GameParameters.CustomParameterUI("Track Death Events", toolTip = "Track and save Death events in the Chronicle")]
-        public bool TrackDeath = true;
-
-        [GameParameters.CustomParameterUI("Track Flag Plant Events", toolTip = "Track and save Flag Plant events in the Chronicle")]
-        public bool TrackFlagPlant = true;
-
-        [GameParameters.CustomParameterUI("Track Anomaly Discovery Events", toolTip = "Track and save anomaly discovery events in the Chronicle")]
-        public bool TrackAnomalyDiscovery = true;
-
-        [GameParameters.CustomParameterUI("Track Facility Upgraded Events", toolTip = "Track and save Facility Upgraded events in the Chronicle")]
-        public bool TrackFacilityUpgraded = true;
-
-        [GameParameters.CustomParameterUI("Track Structure Collapsed Events", toolTip = "Track and save Structure Collapsed events in the Chronicle")]
-        public bool TrackStructureCollapsed = true;
-
-        [GameParameters.CustomParameterUI("Track Tech Researched Events", toolTip = "Track and save Technology Researched events in the Chronicle")]
-        public bool TrackTechnologyResearched = true;
-
-        [GameParameters.CustomFloatParameterUI("Funds per Score Point", toolTip = "How much funds (money) are paid for every point of game score", minValue = 0, maxValue = 10000, stepCount = 100)]
-        public float FundsPerScore = 0;
-
-        [GameParameters.CustomFloatParameterUI("Science per Score Point", toolTip = "How much science is gained for every point of game score", minValue = 0, maxValue = 50)]
-        public float SciencePerScore = 0;
-
-        [GameParameters.CustomFloatParameterUI("Reputation per Score Point", toolTip = "How many reputation points are gained for every point of game score", minValue = 0, maxValue = 50)]
-        public float RepPerScore = 0;
-
-        [GameParameters.CustomParameterUI("Debug Mode", toolTip = "Verbose logging, obligatory for bug submissions")]
-        public bool DebugMode = false;
-
-        [GameParameters.CustomParameterUI("Reset Settings", toolTip = "Check and quit to game if you want Space Age settings to be reverted to their default values")]
-        public bool ResetSettings = false;
 
         /// <summary>
         /// Resets settings to default values (ignores config)
@@ -126,6 +134,8 @@ namespace SpaceAge
             TrackAchievements = true;
             TrackLaunch = true;
             TrackReachSpace = true;
+            TrackBurns = true;
+            MinBurnDuration = 5;
             TrackOrbit = true;
             TrackReentry = true;
             TrackDocking = true;
@@ -146,7 +156,5 @@ namespace SpaceAge
             RepPerScore = 0;
             ResetSettings = false;
         }
-
-        public SpaceAgeChronicleSettings() => Reset();
     }
 }
