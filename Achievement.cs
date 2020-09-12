@@ -158,7 +158,7 @@ namespace SpaceAge
             }
         }
 
-        public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? $" {Body}" : "");
+        public string Title => invalid ? Localizer.Format("#SpaceAge_Invalid") : Localizer.Format(Proto.Title, Core.GetBodyDisplayName(Body));
 
         public double BodyMultiplier
         {
