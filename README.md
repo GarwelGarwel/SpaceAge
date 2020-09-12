@@ -24,6 +24,10 @@ The Chronicle shows a history of notable events in the playthrough (adjustable v
 
 You can find (filter) specific events and manually add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
 
+**Ship Log**
+
+Ship Log is a part of Chronicle that shows all events that involved a particular vessel. It also displays some events that are not normally listed in the Chronicle, e.g. burns and takeoffs (hops). To open a ship log, simply click the Log button next to an event related to that vessel. You can switch between displaying normal Universal Time (UT) and the Mission Elapsed Time (MET) of the event. You can also search or export events similarly to the Chronicle. Click Back to return to normal Chronicle view.
+
 **Achievements**
 
 Achievements tab shows your playthrough's statistics, records, and firsts. Unlike the stock progress tracking, it allows you to see this data any time you want and you can even easily adjust it by changing or even adding new achievements.
@@ -122,7 +126,7 @@ To define your own score categories or change base score values, you may edit th
 - [KSP-AVC](https://forum.kerbalspaceprogram.com/index.php?/topic/72169-12-ksp-avc-add-on-version-checker-plugin-1162-miniavc-ksp-avc-online-2016-10-13/)
 - [Blizzy's Toolbar](https://forum.kerbalspaceprogram.com/index.php?/topic/55420-120-toolbar-1713-common-api-for-draggableresizable-buttons-toolbar/)
 
-Space Age doesn't change anything in the universe, so it shouldn't affect playability of save games.
+Space Age changes almost nothing in the universe, so it shouldn't affect playability of save games.
 
 Tracking of returns from orbit/surface is far from perfect (it uses the stock system, which was intended for internal purposes) and can sometimes generate too many events. Delete unnecessary ones or disable tracking it in the Settings.
 

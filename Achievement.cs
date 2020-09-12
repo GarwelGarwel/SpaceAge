@@ -1,16 +1,145 @@
 ﻿using KSP.Localization;
-using System;
 
 namespace SpaceAge
 {
     public class Achievement
     {
-        private ProtoAchievement proto;
-        private string body = null;
-        private long time = -1;
-        private double value = 0;
-        private string hero;
-        private bool invalid = false;
+        ProtoAchievement proto;
+        string body = null;
+        long time = -1;
+        double value = 0;
+        string hero;
+        bool invalid = false;
+
+        public ProtoAchievement Proto
+        {
+            get => proto;
+            set
+            {
+                proto = value;
+                if (value == null)
+                    invalid = true;
+            }
+        }
+
+        public string Body
+        {
+            get => invalid ? Localizer.Format("#SpaceAge_Invalid") : (Proto.IsBodySpecific ? body : null);
+            set => body = value;
+        }
+
+        public long Time
+        {
+            get => (!invalid && Proto.HasTime) ? time : -1;
+            set => time = value;
+        }
+
+        public double Value
+        {
+            get => (!invalid && Proto.HasValue) ? value : 0;
+            set => this.value = value;
+        }
+
+        public string Hero
+        {
+            get => invalid ? null : hero;
+            set => hero = value;
+        }
+
+        public string Ids { get; set; } = "";
+
+        public string ShortDisplayValue
+        {
+            get
+            {
+                if (invalid)
+                    return Localizer.Format("#SpaceAge_Invalid");
+                if (!Proto.HasValue)
+                    return "";
+                switch (Proto.ValueType)
+                {
+                    case ValueType.Funds:
+                    case ValueType.Cost:
+                        return Localizer.Format("#SpaceAge_Unit_Funds", Value.ToString("N0"));
+
+                    case ValueType.Mass:
+                        return Localizer.Format("#SpaceAge_Unit_Mass", Value.ToString("N2"));
+
+                    case ValueType.PartsCount:
+                        return Localizer.Format("#SpaceAge_Unit_Parts", Value.ToString("N0"));
+                }
+                return Value.ToString("N0");
+            }
+        }
+
+        public string FullDisplayValue
+        {
+            get
+            {
+                if (invalid)
+                    return Localizer.Format("#SpaceAge_Invalid");
+                string shortValue = ShortDisplayValue;
+                if (shortValue.Length == 0)
+                    return Hero ?? "";
+                if (Hero == null)
+                    return shortValue;
+                return $"{shortValue} ({Hero})";
+            }
+        }
+
+        public string Title => invalid ? Localizer.Format("#SpaceAge_Invalid") : Localizer.Format(Proto.Title, Core.GetBodyDisplayName(Body));
+
+        public double BodyMultiplier
+        {
+            get
+            {
+                CelestialBody celestialBody = Body != null ? FlightGlobals.GetBodyByName(Body) : null;
+                return (celestialBody != null) ? celestialBody.scienceValues.RecoveryValue : 1;
+            }
+        }
+
+        public double Score => Proto.Score * BodyMultiplier * (Proto.HasValue ? Value : 1);
+
+        public string FullName => invalid ? Localizer.Format("#SpaceAge_Invalid") : GetFullName(Proto.Name, Body);
+
+        public ConfigNode ConfigNode
+        {
+            get
+            {
+                ConfigNode node = new ConfigNode("ACHIEVEMENT");
+                if (invalid)
+                    return node;
+                node.AddValue("name", Proto.Name);
+                if (Proto.IsBodySpecific)
+                    node.AddValue("body", Body);
+                if (Proto.HasTime)
+                    node.AddValue("time", Time);
+                if (Proto.HasValue)
+                    node.AddValue("value", Value);
+                if (Hero != null)
+                    node.AddValue("hero", Hero);
+                if (Proto.Unique)
+                    node.AddValue("ids", Ids);
+                return node;
+            }
+
+            set
+            {
+                Core.Log($"Loading '{value.GetValue("name")}' achievement...");
+                Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
+                if (invalid)
+                    return;
+                if (Proto.IsBodySpecific)
+                    Body = value.GetString("body", FlightGlobals.GetHomeBodyName());
+                if (Proto.HasTime)
+                    Time = value.GetLongOrDouble("time", -1);
+                if (Proto.HasValue)
+                    Value = value.GetDouble("value");
+                Hero = value.GetString("hero");
+                if (Proto.Unique)
+                    Ids = value.GetString("ids", "");
+            }
+        }
 
         public Achievement(ConfigNode node) => ConfigNode = node;
 
@@ -82,140 +211,10 @@ namespace SpaceAge
                 invalid = true;
         }
 
-        public ProtoAchievement Proto
-        {
-            get => proto;
-            set
-            {
-                proto = value;
-                if (value == null)
-                    invalid = true;
-            }
-        }
+        public static string GetFullName(string name, string body = null) => name + (body != null ? $"@{body}" : "");
 
-        public string Body
-        {
-            get => invalid ? "N/A" : (Proto.IsBodySpecific ? body : null);
-            set => body = value;
-        }
-
-        public long Time
-        {
-            get => (!invalid && Proto.HasTime) ? time : -1;
-            set => time = value;
-        }
-
-        public double Value
-        {
-            get => (!invalid && Proto.HasValue) ? value : 0;
-            set => this.value = value;
-        }
-
-        public string Hero
-        {
-            get => invalid ? null : hero;
-            set => hero = value;
-        }
-
-        public string Ids { get; set; } = "";
-
-        public string ShortDisplayValue
-        {
-            get
-            {
-                if (invalid)
-                    return Localizer.Format("#SpaceAge_Invalid");
-                if (!Proto.HasValue)
-                    return "";
-                switch (Proto.ValueType)
-                {
-                    case ValueType.Funds:
-                    case ValueType.Cost:
-                        return Localizer.Format("#SpaceAge_Unit_Funds", Value.ToString("N0"));
-
-                    case ValueType.Mass:
-                        return Localizer.Format("#SpaceAge_Unit_Mass", Value.ToString("N2"));
-
-                    case ValueType.PartsCount:
-                        return Localizer.Format("#SpaceAge_Unit_Parts", Value.ToString("N0"));
-                }
-                return Value.ToString("N0");
-            }
-        }
-
-        public string FullDisplayValue
-        {
-            get
-            {
-                if (invalid)
-                    return Localizer.Format("#SpaceAge_Invalid");
-                string shortValue = ShortDisplayValue;
-                if (shortValue.Length == 0)
-                    return Hero ?? "";
-                if (Hero == null)
-                    return shortValue;
-                return shortValue + " (" + Hero + ")";
-            }
-        }
-
-        public string Title => invalid ? "N/A" : Proto.Title + (Proto.IsBodySpecific ? $" {Body}" : "");
-
-        public double BodyMultiplier
-        {
-            get
-            {
-                CelestialBody celestialBody = Body != null ? FlightGlobals.GetBodyByName(Body) : null;
-                return (celestialBody != null) ? celestialBody.scienceValues.RecoveryValue : 1;
-            }
-        }
-
-        public double Score => Proto.Score * BodyMultiplier * (Proto.HasValue ? Value : 1);
-
-        public string FullName => invalid ? "N/A" : GetFullName(Proto.Name, Body);
-
-        public ConfigNode ConfigNode
-        {
-            get
-            {
-                ConfigNode node = new ConfigNode("ACHIEVEMENT");
-                if (invalid)
-                    return node;
-                node.AddValue("name", Proto.Name);
-                if (Proto.IsBodySpecific)
-                    node.AddValue("body", Body);
-                if (Proto.HasTime)
-                    node.AddValue("time", Time);
-                if (Proto.HasValue)
-                    node.AddValue("value", Value);
-                if (Hero != null)
-                    node.AddValue("hero", Hero);
-                if (Proto.Unique)
-                    node.AddValue("ids", Ids);
-                return node;
-            }
-
-            set
-            {
-                Core.Log($"Loading '{value.GetValue("name")}' achievement...");
-                Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
-                if (invalid)
-                    return;
-                if (Proto.IsBodySpecific)
-                    Body = value.GetString("body", FlightGlobals.GetHomeBodyName());
-                if (Proto.HasTime)
-                    Time = value.GetLongOrDouble("time", -1);
-                if (Proto.HasValue)
-                    Value = value.GetDouble("value");
-                Hero = value.GetString("hero");
-                if (Proto.Unique)
-                    Ids = value.GetString("ids", "");
-            }
-        }
-
-        public static string GetFullName(string name, string body = null) => name + (body != null ? "@" + body : "");
-
-        public override string ToString()
-            => $"{(Time >= 0 ? KSPUtil.PrintDateCompact(Time, true) : "")}\t{Title}{(Value != 0 ? $" ({Value})" : "")}";
+        public override string ToString() =>
+            $"{(Time >= 0 ? KSPUtil.PrintDateCompact(Time, true) : "")}\t{Title}{(Value != 0 ? $" ({Value})" : "")}";
 
         public bool Register(Achievement old)
         {
@@ -270,6 +269,6 @@ namespace SpaceAge
             return doRegister;
         }
 
-        private void AddId(string id) => Ids += $"[{id}]";
+        void AddId(string id) => Ids += $"[{id}]";
     }
 }

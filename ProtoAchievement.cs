@@ -11,7 +11,7 @@ namespace SpaceAge
 
     public class ProtoAchievement
     {
-        private string title = null;
+        string title = null;
 
         public string Name { get; set; }
 
@@ -64,7 +64,7 @@ namespace SpaceAge
                     CrewedOnly = value.GetBool("crewedOnly");
                     Unique = value.GetBool("unique");
                     StockSynonym = value.GetString("stockSynonym");
-                    ScoreName = value.GetString("scoreName", OnEvents.Count > 0 ? OnEvents[0] : null);
+                    ScoreName = value.GetString("scoreName");
                     Score = value.GetDouble("score");
                 }
                 catch (Exception)

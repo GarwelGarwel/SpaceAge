@@ -28,23 +28,25 @@ namespace SpaceAge
         /// <param name="v"></param>
         /// <param name="mustBeActive"></param>
         /// <returns></returns>
-        public static bool IsTrackable(this Vessel v, bool mustBeActive)
-          => v != null
-          && v.vesselType != VesselType.Debris
-          && v.vesselType != VesselType.EVA
-          && v.vesselType != VesselType.Flag
-          && v.vesselType != VesselType.SpaceObject
-          && v.vesselType != VesselType.Unknown
-          && (!mustBeActive || v == FlightGlobals.ActiveVessel);
+        public static bool IsTrackable(this Vessel v, bool mustBeActive) =>
+            v != null
+            && v.vesselType != VesselType.Debris
+            && v.vesselType != VesselType.EVA
+            && v.vesselType != VesselType.Flag
+            && v.vesselType != VesselType.SpaceObject
+            && v.vesselType != VesselType.Unknown
+            && (!mustBeActive || v == FlightGlobals.ActiveVessel);
 
         public static double GetCost(this Vessel v) =>
             v.Parts.Sum(p => p.partInfo.cost + p.GetModuleCosts(0) + p.Resources.Sum(pr => pr.amount * pr.info.unitCost));
 
         public static bool IsBurning(this Vessel v) => v.FindPartModulesImplementing<ModuleEngines>().Any(module => module.GetCurrentThrust() > 0);
 
-        public static bool IsLandedOrSplashed(this Vessel.Situations situation) => (situation & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0;
+        public static bool IsLandedOrSplashed(this Vessel.Situations situation) =>
+            (situation & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0;
 
-        public static string GetBodyDisplayName(string bodyName) => FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName;
+        public static string GetBodyDisplayName(string bodyName) =>
+            bodyName != null ? (FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName) : bodyName;
 
         public static void ShowNotification(string msg)
         {
@@ -52,12 +54,16 @@ namespace SpaceAge
                 ScreenMessages.PostScreenMessage(msg);
         }
 
-        public static void ParseTime(long time, out int y, out int d, out int h, out int m, out int s, bool interval = false)
+        public static void ParseTime(long time, out int y, out int d, out int h, out int m, out int s, bool interval = false, bool parseYears = true)
         {
-            y = (int)(time / KSPUtil.dateTimeFormatter.Year);
-            time -= y * KSPUtil.dateTimeFormatter.Year;
-            if (!interval)
-                y++;
+            if (parseYears)
+            {
+                y = (int)(time / KSPUtil.dateTimeFormatter.Year);
+                time -= y * KSPUtil.dateTimeFormatter.Year;
+                if (!interval)
+                    y++;
+            }
+            else y = 0;
             d = (int)time / KSPUtil.dateTimeFormatter.Day;
             time -= d * KSPUtil.dateTimeFormatter.Day;
             h = (int)time / 3600;
@@ -83,23 +89,29 @@ namespace SpaceAge
         }
 
         /// <summary>
-        /// Translates number of seconds into a string showing years, days, hours (when applicable), minutes and seconds, e.g. 3 years 45 days 5:43:21
+        /// Translates number of seconds into a string of T+[[ddd:]hh:]mm:ss
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        public static string PrintInterval(long time)
+        public static string PrintMET(long time)
         {
+            string res;
             if (time < 0)
-                return Localizer.Format("#SpaceAge_Invalid");
-            ParseTime(time, out int y, out int d, out int h, out int m, out int s, true);
-            string res = "";
-            if (y > 0)
-                res = $"{Localizer.Format("#SpaceAge_Years", y)} ";
-            if (d > 0 || res.Length > 0)
-                res += $"{Localizer.Format("#SpaceAge_Days", d)} ";
-            if (h > 0 || res.Length > 0)
-                res += "{h}:";
-            if (m < 10 && res.Length > 0)
+            {
+                res = "T-";
+                time = -time;
+            }
+            else res = "T+";
+            ParseTime(time, out int y, out int d, out int h, out int m, out int s, true, false);
+            if (d > 0)
+                res += $"{d:D3}:";
+            if (h > 0 || d > 0)
+            {
+                if (h < 10 && KSPUtil.dateTimeFormatter.Day > KSPUtil.dateTimeFormatter.Hour * 10)
+                    res += "0";
+                res += $"{h}:";
+            }
+            if (m < 10)
                 res += "0";
             res += $"{m}:{s:D2}";
             return res;
