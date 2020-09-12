@@ -539,7 +539,7 @@ namespace SpaceAge
                         ChronicleEvent ce = displayChronicle[ChronicleIndex(i)];
                         grid.Add(
                             new DialogGUIHorizontalLayout(
-                                new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? KSPUtil.PrintTimeCompact(ce.Time - logVessel.LaunchTime, true) : Core.PrintUT(ce.Time))}</color>", 90),
+                                new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? Core.PrintMET(ce.Time - logVessel.LaunchTime) : Core.PrintUT(ce.Time))}</color>", 90),
                                 new DialogGUILabel(ce.Description, true),
                                 ce.HasVesselId() ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false) : new DialogGUIBase(),
                                 new DialogGUIButton<int>("x", DeleteChronicleItem, ChronicleIndex(i))));
@@ -1011,7 +1011,7 @@ namespace SpaceAge
 
         public void OnTechnologyResearched(GameEvents.HostTargetAction<RDTech, RDTech.OperationResult> a)
         {
-            Core.Log($"OnTechnologyResearched(<'{a.host.title}', '{a.target.ToString()}'>)", LogLevel.Important);
+            Core.Log($"OnTechnologyResearched(<'{a.host.title}', '{a.target}'>)", LogLevel.Important);
             CheckAchievements("TechnologyResearched", a.host.title);
             if (!SpaceAgeChronicleSettings.Instance.TrackTechnologyResearched)
                 return;
@@ -1055,7 +1055,7 @@ namespace SpaceAge
                 case Vessel.Situations.SPLASHED:
                     if ((takeoff != null && (takeoff.VesselIds.FirstOrDefault() != a.host.id.ToString() || Planetarium.GetUniversalTime() - takeoff.Time < SpaceAgeChronicleSettings.Instance.MinJumpDuration)) || (a.from == Vessel.Situations.PRELAUNCH))
                     {
-                        Core.Log($"Landing is not logged.");
+                        Core.Log("Landing is not logged.");
                         return;
                     }
                     if (SpaceAgeChronicleSettings.Instance.TrackLanding)
