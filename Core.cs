@@ -28,23 +28,25 @@ namespace SpaceAge
         /// <param name="v"></param>
         /// <param name="mustBeActive"></param>
         /// <returns></returns>
-        public static bool IsTrackable(this Vessel v, bool mustBeActive)
-          => v != null
-          && v.vesselType != VesselType.Debris
-          && v.vesselType != VesselType.EVA
-          && v.vesselType != VesselType.Flag
-          && v.vesselType != VesselType.SpaceObject
-          && v.vesselType != VesselType.Unknown
-          && (!mustBeActive || v == FlightGlobals.ActiveVessel);
+        public static bool IsTrackable(this Vessel v, bool mustBeActive) =>
+            v != null
+            && v.vesselType != VesselType.Debris
+            && v.vesselType != VesselType.EVA
+            && v.vesselType != VesselType.Flag
+            && v.vesselType != VesselType.SpaceObject
+            && v.vesselType != VesselType.Unknown
+            && (!mustBeActive || v == FlightGlobals.ActiveVessel);
 
         public static double GetCost(this Vessel v) =>
             v.Parts.Sum(p => p.partInfo.cost + p.GetModuleCosts(0) + p.Resources.Sum(pr => pr.amount * pr.info.unitCost));
 
         public static bool IsBurning(this Vessel v) => v.FindPartModulesImplementing<ModuleEngines>().Any(module => module.GetCurrentThrust() > 0);
 
-        public static bool IsLandedOrSplashed(this Vessel.Situations situation) => (situation & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0;
+        public static bool IsLandedOrSplashed(this Vessel.Situations situation) =>
+            (situation & (Vessel.Situations.LANDED | Vessel.Situations.SPLASHED)) != 0;
 
-        public static string GetBodyDisplayName(string bodyName) => bodyName != null ? (FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName) : bodyName;
+        public static string GetBodyDisplayName(string bodyName) =>
+            bodyName != null ? (FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName) : bodyName;
 
         public static void ShowNotification(string msg)
         {

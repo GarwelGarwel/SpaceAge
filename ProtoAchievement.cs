@@ -11,7 +11,7 @@ namespace SpaceAge
 
     public class ProtoAchievement
     {
-        private string title = null;
+        string title = null;
 
         public string Name { get; set; }
 
