@@ -27,6 +27,9 @@ namespace SpaceAge
                     case "ReachSpace":
                         return Localizer.Format("#SpaceAge_CE_ReachSpace", GetString("vessel"));
 
+                    case "Staging":
+                        return Localizer.Format("#SpaceAge_CE_Staging", GetString("vessel"), GetInt("stage"));
+
                     case "Burn":
                         return Localizer.Format("#SpaceAge_CE_Burn", GetString("vessel"), KSPUtil.PrintDateDeltaCompact(GetInt("duration"), true, true), GetInt("deltaV"));
 

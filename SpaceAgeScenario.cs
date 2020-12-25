@@ -886,7 +886,11 @@ namespace SpaceAge
         {
             Core.Log($"onStageActivate({stage})");
             if (FlightGlobals.ActiveVessel.IsTrackable(false))
+            {
+                AddChronicleEvent(new ChronicleEvent("Staging", FlightGlobals.ActiveVessel, "stage", stage)
+                { LogOnly = true });
                 CheckBurn();
+            }
         }
 
         public void OnReturnFromOrbit(Vessel v, CelestialBody b)

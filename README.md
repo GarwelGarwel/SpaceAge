@@ -26,7 +26,7 @@ You can find (filter) specific events and manually add your own events (like *"C
 
 **Ship Log**
 
-Ship Log is a part of Chronicle that shows all events that involved a particular vessel. It also displays some events that are not normally listed in the Chronicle, e.g. burns and takeoffs (hops). To open a ship log, simply click the Log button next to an event related to that vessel. You can switch between displaying normal Universal Time (UT) and the Mission Elapsed Time (MET) of the event. You can also search or export events similarly to the Chronicle. Click Back to return to normal Chronicle view.
+Ship Log is a part of Chronicle that shows all events that involved a particular vessel. It also displays some events that are not normally listed in the Chronicle, e.g. burns, staging and takeoffs (hops). To open a ship log, simply click the Log button next to an event related to that vessel. You can switch between displaying normal Universal Time (UT) and the Mission Elapsed Time (MET) of the event. You can also search or export events similarly to the Chronicle. Click Back to return to normal Chronicle view.
 
 **Achievements**
 
