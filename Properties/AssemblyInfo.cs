@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("Garwel, 2017-2020")]
+[assembly: AssemblyCopyright("Garwel, 2017-2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -29,6 +29,6 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.3.1")]
+[assembly: AssemblyVersion("1.3.2")]
 [assembly: AssemblyFileVersion("1.3.1")]
 [assembly: NeutralResourcesLanguage("en")]
