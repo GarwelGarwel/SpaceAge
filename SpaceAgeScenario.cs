@@ -16,8 +16,6 @@ namespace SpaceAge
 
         enum TimeFormat { UT, MET };
 
-        const float windowWidth = 600;
-
         static List<ProtoAchievement> protoAchievements;
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>(), displayChronicle;
         Dictionary<string, VesselRecord> vessels = new Dictionary<string, VesselRecord>();
@@ -31,20 +29,11 @@ namespace SpaceAge
         VesselRecord logVessel = null;
         TimeFormat logTimeFormat = TimeFormat.UT;
 
-        IButton toolbarButton;
-        ApplicationLauncherButton appLauncherButton;
-
-        Tab currentTab = Tab.Chronicle;
-        int[] page = new int[3] { 1, 1, 1 };
-        int chroniclePage = 0;
-        Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
-        PopupDialog window;
-        string textInput = "";
-        string searchTerm = "";
-
         #region LIFE CYCLE
 
         double nextUpdate = 0;
+        IButton toolbarButton;
+        ApplicationLauncherButton appLauncherButton;
 
         public void Start()
         {
@@ -447,6 +436,16 @@ namespace SpaceAge
         #endregion ACHIEVEMENTS METHODS
 
         #region UI METHODS
+
+        const float windowWidth = 600;
+
+        Tab currentTab = Tab.Chronicle;
+        int[] page = new int[3] { 1, 1, 1 };
+        int chroniclePage = 0;
+        Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
+        PopupDialog window;
+        string textInput = "";
+        string searchTerm = "";
 
         List<Achievement> SortedAchievements
         {
@@ -1124,7 +1123,7 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
-                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Docking, "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
+                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Docking, "vessel1", v1.vesselName, "vesselId1", v1.id, "vessel2", v2.vesselName, "vesselId2", v2.id));
 
             CheckAchievements(ChronicleEvent.Docking, v1.mainBody, v1);
             CheckAchievements(ChronicleEvent.Docking, v2.mainBody, v2);
@@ -1138,7 +1137,7 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
-                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Undocking, "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
+                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Undocking, "vessel1", v1.vesselName, "vesselId1", v1.id, "vessel2", v2.vesselName, "vesselId2", v2.id));
 
             CheckAchievements(ChronicleEvent.Undocking, v1.mainBody, v1);
             CheckAchievements(ChronicleEvent.Undocking, v2.mainBody, v2);
