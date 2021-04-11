@@ -7,6 +7,34 @@ namespace SpaceAge
 {
     public class ChronicleEvent
     {
+        #region EVENT NAMES
+
+        public const string Launch = "Launch";
+        public const string ReachSpace = "ReachSpace";
+        public const string Staging = "Staging";
+        public const string Burn = "Burn";
+        public const string Orbit = "Orbit";
+        public const string SOIChange = "SOIChange";
+        public const string Reentry = "Reentry";
+        public const string Docking = "Docking";
+        public const string Undocking = "Undocking";
+        public const string Landing = "Landing";
+        public const string Takeoff = "Takeoff";
+        public const string Recovery = "Recovery";
+        public const string ReturnFromOrbit = "ReturnFromOrbit";
+        public const string ReturnFromSurface = "ReturnFromSurface";
+        public const string Destroy = "Destroy";
+        public const string Death = "Death";
+        public const string FlagPlant = "FlagPlant";
+        public const string FacilityUpgraded = "FacilityUpgraded";
+        public const string StructureCollapsed = "StructureCollapsed";
+        public const string TechnologyResearched = "TechnologyResearched";
+        public const string AnomalyDiscovery = "AnomalyDiscovery";
+        public const string Achievement = "Achievement";
+        public const string Custom = "Custom";
+
+        #endregion EVENT NAMES
+
         public long Time { get; set; }
 
         public string Type { get; set; }
@@ -19,85 +47,85 @@ namespace SpaceAge
             {
                 switch (Type)
                 {
-                    case "Launch":
+                    case Launch:
                         return HasData("crew")
                             ? Localizer.Format("#SpaceAge_CE_Launch_Crew", GetString("vessel"), GetInt("crew"))
                             : Localizer.Format("#SpaceAge_CE_Launch_NoCrew", GetString("vessel"));
 
-                    case "ReachSpace":
+                    case ReachSpace:
                         return Localizer.Format("#SpaceAge_CE_ReachSpace", GetString("vessel"));
 
-                    case "Staging":
+                    case Staging:
                         return Localizer.Format("#SpaceAge_CE_Staging", GetString("vessel"), GetInt("stage"));
 
-                    case "Burn":
+                    case Burn:
                         return Localizer.Format("#SpaceAge_CE_Burn", GetString("vessel"), KSPUtil.PrintDateDeltaCompact(GetInt("duration"), true, true), GetInt("deltaV"));
 
-                    case "Orbit":
+                    case Orbit:
                         return Localizer.Format("#SpaceAge_CE_Orbit", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
-                    case "SOIChange":
+                    case SOIChange:
                         return Localizer.Format("#SpaceAge_CE_SOIChange", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
-                    case "Reentry":
+                    case Reentry:
                         return Localizer.Format("#SpaceAge_CE_Reentry", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
-                    case "Docking":
+                    case Docking:
                         return Localizer.Format("#SpaceAge_CE_Docking", GetString("vessel1"), GetString("vessel2"));
 
-                    case "Undocking":
+                    case Undocking:
                         return Localizer.Format("#SpaceAge_CE_Undocking", GetString("vessel1"), GetString("vessel2"));
 
-                    case "Landing":
+                    case Landing:
                         return HasData("crew")
                             ? Localizer.Format("#SpaceAge_CE_Landing_Crew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")), GetInt("crew"))
                             : Localizer.Format("#SpaceAge_CE_Landing_NoCrew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
-                    case "Takeoff":
+                    case Takeoff:
                         return HasData("crew")
                             ? Localizer.Format("#SpaceAge_CE_Takeoff_Crew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")), GetInt("crew"))
                             : Localizer.Format("#SpaceAge_CE_Takeoff_NoCrew", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
-                    case "Recovery":
+                    case Recovery:
                         return HasData("crew")
                             ? Localizer.Format("#SpaceAge_CE_Recovery_Crew", GetString("vessel"), GetInt("crew"))
                             : Localizer.Format("#SpaceAge_CE_Recovery_NoCrew", GetString("vessel"));
 
-                    case "ReturnFromOrbit":
+                    case ReturnFromOrbit:
                         return Localizer.Format("#SpaceAge_CE_ReturnFromOrbit", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
-                    case "ReturnFromSurface":
+                    case ReturnFromSurface:
                         return Localizer.Format("#SpaceAge_CE_ReturnFromSurface", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")));
 
-                    case "Destroy":
+                    case Destroy:
                         return HasData("body")
                             ? Localizer.Format("#SpaceAge_CE_Destroy_Body", GetString("vessel"), Core.GetBodyDisplayName(GetString("body")))
                             : Localizer.Format("#SpaceAge_CE_Destroy_NoBody", GetString("vessel"));
 
-                    case "Death":
+                    case Death:
                         return Localizer.Format("#SpaceAge_CE_Death", GetString("kerbal"));
 
-                    case "FlagPlant":
+                    case FlagPlant:
                         return Localizer.Format("#SpaceAge_CE_FlagPlant", Core.GetBodyDisplayName(GetString("body")));
 
-                    case "FacilityUpgraded":
+                    case FacilityUpgraded:
                         return Localizer.Format("#SpaceAge_CE_FacilityUpgraded", GetString("facility"), GetString("level"));
 
-                    case "StructureCollapsed":
+                    case StructureCollapsed:
                         return Localizer.Format("#SpaceAge_CE_StructureCollapsed", GetString("facility"));
 
-                    case "TechnologyResearched":
+                    case TechnologyResearched:
                         return Localizer.Format("#SpaceAge_CE_TechnologyResearched", GetString("tech"));
 
-                    case "AnomalyDiscovery":
+                    case AnomalyDiscovery:
                         return Localizer.Format("#SpaceAge_CE_AnomalyDiscovery", GetString("id"), Core.GetBodyDisplayName(GetString("body")));
 
-                    case "Achievement":
+                    case Achievement:
                         return (HasData("value") && GetString("value").Length != 0)
                             ? (HasData("vessel") ? Localizer.Format("#SpaceAge_CE_Achievement_Vessel_Value", GetString("vessel"), GetString("title"), GetString("value")) : Localizer.Format("#SpaceAge_CE_Achievement_Value", GetString("title"), GetString("value")))
                             : (HasData("vessel") ? Localizer.Format("#SpaceAge_CE_Achievement_Vessel_NoValue", GetString("vessel"), GetString("title")) : Localizer.Format("#SpaceAge_CE_Achievement_NoValue", GetString("title")));
 
-                    case "Custom":
+                    case Custom:
                         return GetString("description");
                 }
                 return Localizer.Format("#SpaceAge_CE_Unknown", Type);
@@ -129,7 +157,9 @@ namespace SpaceAge
         }
 
         public IEnumerable<string> VesselIds => Data.Where(kvp => kvp.Key.Contains("vesselId")).Select(kvp => kvp.Value);
+
         public IEnumerable<Vessel> Vessels => VesselIds.Select(id => FlightGlobals.FindVessel(new Guid(id)));
+
         protected Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         public ChronicleEvent() => Time = (long)Planetarium.GetUniversalTime();

@@ -16,8 +16,6 @@ namespace SpaceAge
 
         enum TimeFormat { UT, MET };
 
-        const float windowWidth = 600;
-
         static List<ProtoAchievement> protoAchievements;
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>(), displayChronicle;
         Dictionary<string, VesselRecord> vessels = new Dictionary<string, VesselRecord>();
@@ -31,20 +29,11 @@ namespace SpaceAge
         VesselRecord logVessel = null;
         TimeFormat logTimeFormat = TimeFormat.UT;
 
-        IButton toolbarButton;
-        ApplicationLauncherButton appLauncherButton;
-
-        Tab currentTab = Tab.Chronicle;
-        int[] page = new int[3] { 1, 1, 1 };
-        int chroniclePage = 0;
-        Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
-        PopupDialog window;
-        string textInput = "";
-        string searchTerm = "";
-
         #region LIFE CYCLE
 
         double nextUpdate = 0;
+        IButton toolbarButton;
+        ApplicationLauncherButton appLauncherButton;
 
         public void Start()
         {
@@ -425,7 +414,7 @@ namespace SpaceAge
                     {
                         Core.Log($"{ach.FullName} completed.");
                         if (SpaceAgeChronicleSettings.Instance.TrackAchievements)
-                            AddChronicleEvent(new ChronicleEvent("Achievement", "title", ach.Title, "value", ach.ShortDisplayValue, vessel));
+                            AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Achievement, "title", ach.Title, "value", ach.ShortDisplayValue, vessel));
                         MessageSystem.Instance.AddMessage(new MessageSystem.Message(
                             Localizer.Format("#SpaceAge_PS_Title"),
                             Localizer.Format("#SpaceAge_PS_AchievementCompleted", ach.Title) + msg,
@@ -447,6 +436,16 @@ namespace SpaceAge
         #endregion ACHIEVEMENTS METHODS
 
         #region UI METHODS
+
+        const float windowWidth = 600;
+
+        Tab currentTab = Tab.Chronicle;
+        int[] page = new int[3] { 1, 1, 1 };
+        int chroniclePage = 0;
+        Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
+        PopupDialog window;
+        string textInput = "";
+        string searchTerm = "";
 
         List<Achievement> SortedAchievements
         {
@@ -616,8 +615,8 @@ namespace SpaceAge
                         {
                             double s = 0;
                             bool manned = false;
-                            foreach (Achievement a in scoreAchievements.Where(a
-                                => a.Proto.ScoreName == srn
+                            foreach (Achievement a in scoreAchievements.Where(a =>
+                                a.Proto.ScoreName == srn
                                 && (a.Body == scoreBodies[i] || (!a.Proto.IsBodySpecific && scoreBodies[i] == FlightGlobals.GetHomeBodyName()))))
                             {
                                 s += a.Score;
@@ -661,7 +660,7 @@ namespace SpaceAge
                         true,
                         false,
                         new DialogGUIButton<Tab>(Localizer.Format("#SpaceAge_UI_Chronicle"), SelectTab, Tab.Chronicle, () => currentTab != Tab.Chronicle, true),
-                        new DialogGUIButton<Tab>(Localizer.Format("#SpaceAge_UI_Achievements"), SelectTab, Tab.Achievements, () => (currentTab != Tab.Achievements) && (achievements.Count > 0), true),
+                        new DialogGUIButton<Tab>(Localizer.Format("#SpaceAge_UI_Achievements"), SelectTab, Tab.Achievements, () => currentTab != Tab.Achievements && achievements.Count > 0, true),
                         new DialogGUIButton<Tab>(Localizer.Format("#SpaceAge_UI_Score"), SelectTab, Tab.Score, () => currentTab != Tab.Score, true)),
                     PageCount > 1
                     ? new DialogGUIHorizontalLayout(
@@ -839,7 +838,7 @@ namespace SpaceAge
         {
             Core.Log($"AddItem(textInput = '{textInput}')", LogLevel.Important);
             if (textInput.Trim(' ').Length != 0)
-                AddChronicleEvent(new SpaceAge.ChronicleEvent("Custom", "description", textInput));
+                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Custom, "description", textInput));
         }
 
         void ExportChronicle()
@@ -873,13 +872,13 @@ namespace SpaceAge
             CheckTakeoff(true);
             if (SpaceAgeChronicleSettings.Instance.TrackReachSpace)
             {
-                ChronicleEvent e = new ChronicleEvent("ReachSpace", v);
+                ChronicleEvent e = new ChronicleEvent(ChronicleEvent.ReachSpace, v);
                 if (v.GetCrewCount() > 0)
                     e.AddData("crew", v.GetCrewCount());
                 AddChronicleEvent(e);
             }
 
-            CheckAchievements("ReachSpace", v);
+            CheckAchievements(ChronicleEvent.ReachSpace, v);
         }
 
         public void onStageActivate(int stage)
@@ -887,7 +886,7 @@ namespace SpaceAge
             Core.Log($"onStageActivate({stage})");
             if (FlightGlobals.ActiveVessel.IsTrackable(false))
             {
-                AddChronicleEvent(new ChronicleEvent("Staging", FlightGlobals.ActiveVessel, "stage", stage)
+                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Staging, FlightGlobals.ActiveVessel, "stage", stage)
                 { LogOnly = true });
                 CheckBurn();
             }
@@ -902,13 +901,13 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
             {
-                ChronicleEvent e = new ChronicleEvent("ReturnFromOrbit", v, "body", b.bodyName);
+                ChronicleEvent e = new ChronicleEvent(ChronicleEvent.ReturnFromOrbit, v, "body", b.bodyName);
                 if (v.GetCrewCount() > 0)
                     e.AddData("crew", v.GetCrewCount());
                 AddChronicleEvent(e);
             }
 
-            CheckAchievements("ReturnFromOrbit", b, v);
+            CheckAchievements(ChronicleEvent.ReturnFromOrbit, b, v);
         }
 
         public void OnReturnFromSurface(Vessel v, CelestialBody b)
@@ -920,13 +919,13 @@ namespace SpaceAge
 
             if (SpaceAgeChronicleSettings.Instance.TrackReturnFrom)
             {
-                ChronicleEvent e = new ChronicleEvent("ReturnFromSurface", v, "body", b.bodyName);
+                ChronicleEvent e = new ChronicleEvent(ChronicleEvent.ReturnFromSurface, v, "body", b.bodyName);
                 if (v.GetCrewCount() > 0)
                     e.AddData("crew", v.GetCrewCount());
                 AddChronicleEvent(e);
             }
 
-            CheckAchievements("ReturnFromSurface", b, v);
+            CheckAchievements(ChronicleEvent.ReturnFromSurface, b, v);
         }
 
         public void OnVesselRecovery(ProtoVessel v, bool b)
@@ -946,12 +945,12 @@ namespace SpaceAge
                 return;
             }
 
-            CheckAchievements("Recovery", v.vesselRef);
+            CheckAchievements(ChronicleEvent.Recovery, v.vesselRef);
 
             if (!SpaceAgeChronicleSettings.Instance.TrackRecovery)
                 return;
 
-            ChronicleEvent e = new ChronicleEvent("Recovery", v);
+            ChronicleEvent e = new ChronicleEvent(ChronicleEvent.Recovery, v);
             if (v.GetVesselCrew().Count > 0)
                 e.AddData("crew", v.GetVesselCrew().Count);
             AddChronicleEvent(e);
@@ -966,12 +965,12 @@ namespace SpaceAge
                 return;
             }
 
-            CheckAchievements("Destroy", v);
+            CheckAchievements(ChronicleEvent.Destroy, v);
 
             if (!SpaceAgeChronicleSettings.Instance.TrackDestroy)
                 return;
 
-            ChronicleEvent e = new ChronicleEvent("Destroy", v);
+            ChronicleEvent e = new ChronicleEvent(ChronicleEvent.Destroy, v);
             if (v.terrainAltitude < 1000)
                 e.AddData("body", v.mainBody.bodyName);
             AddChronicleEvent(e);
@@ -980,46 +979,46 @@ namespace SpaceAge
         public void OnCrewKilled(EventReport report)
         {
             Core.Log($"OnCrewKilled(<sender: '{report?.sender}'>)", LogLevel.Important);
-            CheckAchievements("Death", report?.origin?.vessel?.mainBody, null, 0, report?.sender);
+            CheckAchievements(ChronicleEvent.Death, report?.origin?.vessel?.mainBody, null, 0, report?.sender);
             if (!SpaceAgeChronicleSettings.Instance.TrackDeath)
                 return;
-            AddChronicleEvent(new ChronicleEvent("Death", "kerbal", report?.sender));
+            AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Death, "kerbal", report?.sender));
         }
 
         public void OnFlagPlanted(Vessel v)
         {
             Core.Log($"OnFlagPlanted('{v.vesselName}')", LogLevel.Important);
-            CheckAchievements("FlagPlant", v);
+            CheckAchievements(ChronicleEvent.FlagPlant, v);
             if (!SpaceAgeChronicleSettings.Instance.TrackFlagPlant)
                 return;
-            AddChronicleEvent(new ChronicleEvent("FlagPlant", "kerbal", v.GetVesselCrew()[0].nameWithGender, "body", v.mainBody.bodyName));
+            AddChronicleEvent(new ChronicleEvent(ChronicleEvent.FlagPlant, "kerbal", v.GetVesselCrew()[0].nameWithGender, "body", v.mainBody.bodyName));
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)
         {
             Core.Log($"OnFacilityUpgraded('{facility.name}', {level})", LogLevel.Important);
-            CheckAchievements("FacilityUpgraded", facility.name);
+            CheckAchievements(ChronicleEvent.FacilityUpgraded, facility.name);
             if (!SpaceAgeChronicleSettings.Instance.TrackFacilityUpgraded)
                 return;
-            AddChronicleEvent(new ChronicleEvent("FacilityUpgraded", "facility", facility.name, "level", level + 1));
+            AddChronicleEvent(new ChronicleEvent(ChronicleEvent.FacilityUpgraded, "facility", facility.name, "level", level + 1));
         }
 
         public void OnStructureCollapsed(DestructibleBuilding structure)
         {
             Core.Log($"OnStructureCollapsed('{structure.name}')", LogLevel.Important);
-            CheckAchievements("StructureCollapsed", structure.name);
+            CheckAchievements(ChronicleEvent.StructureCollapsed, structure.name);
             if (!SpaceAgeChronicleSettings.Instance.TrackStructureCollapsed)
                 return;
-            AddChronicleEvent(new ChronicleEvent("StructureCollapsed", "facility", structure.name));
+            AddChronicleEvent(new ChronicleEvent(ChronicleEvent.StructureCollapsed, "facility", structure.name));
         }
 
         public void OnTechnologyResearched(GameEvents.HostTargetAction<RDTech, RDTech.OperationResult> a)
         {
             Core.Log($"OnTechnologyResearched(<'{a.host.title}', '{a.target}'>)", LogLevel.Important);
-            CheckAchievements("TechnologyResearched", a.host.title);
+            CheckAchievements(ChronicleEvent.TechnologyResearched, a.host.title);
             if (!SpaceAgeChronicleSettings.Instance.TrackTechnologyResearched)
                 return;
-            AddChronicleEvent(new ChronicleEvent("TechnologyResearched", "tech", a.host.title));
+            AddChronicleEvent(new ChronicleEvent(ChronicleEvent.TechnologyResearched, "tech", a.host.title));
         }
 
         public void OnSOIChanged(GameEvents.HostedFromToAction<Vessel, CelestialBody> e)
@@ -1031,7 +1030,7 @@ namespace SpaceAge
             CheckTakeoff(true);
 
             if (SpaceAgeChronicleSettings.Instance.TrackSOIChange)
-                AddChronicleEvent(new ChronicleEvent("SOIChange", e.host, "body", e.to.bodyName));
+                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.SOIChange, e.host, "body", e.to.bodyName));
 
             if (e.from.HasParent(e.to))
             {
@@ -1039,7 +1038,7 @@ namespace SpaceAge
                 return;
             }
 
-            CheckAchievements("SOIChange", e.to, e.host);
+            CheckAchievements(ChronicleEvent.SOIChange, e.to, e.host);
         }
 
         public void OnSituationChanged(GameEvents.HostedFromToAction<Vessel, Vessel.Situations> a)
@@ -1063,39 +1062,39 @@ namespace SpaceAge
                         return;
                     }
                     if (SpaceAgeChronicleSettings.Instance.TrackLanding)
-                        e.Type = "Landing";
-                    CheckAchievements("Landing", a.host);
+                        e.Type = ChronicleEvent.Landing;
+                    CheckAchievements(ChronicleEvent.Landing, a.host);
                     break;
 
                 case Vessel.Situations.ORBITING:
                     CheckTakeoff(true);
                     if (SpaceAgeChronicleSettings.Instance.TrackOrbit)
-                        e.Type = "Orbit";
-                    CheckAchievements("Orbit", a.host);
+                        e.Type = ChronicleEvent.Orbit;
+                    CheckAchievements(ChronicleEvent.Orbit, a.host);
                     break;
 
                 case Vessel.Situations.FLYING:
                     // It can be either a Launch, Reentry or Takeoff (e.g. hop)
                     if (a.from == Vessel.Situations.PRELAUNCH)
                     {
-                        CheckAchievements("Launch", a.host);
+                        CheckAchievements(ChronicleEvent.Launch, a.host);
 
                         if (!SpaceAgeChronicleSettings.Instance.TrackLaunch)
                             return;
 
-                        e.Type = "Launch";
+                        e.Type = ChronicleEvent.Launch;
                         if (a.host.GetCrewCount() > 0)
                             e.AddData("crew", a.host.GetCrewCount());
                     }
                     else if ((a.from & (Vessel.Situations.SUB_ORBITAL | Vessel.Situations.ESCAPING | Vessel.Situations.ORBITING)) != 0)
                     {
                         if (SpaceAgeChronicleSettings.Instance.TrackReentry)
-                            e.Type = "Reentry";
-                        CheckAchievements("Reentry", a.host);
+                            e.Type = ChronicleEvent.Reentry;
+                        CheckAchievements(ChronicleEvent.Reentry, a.host);
                     }
                     else if (a.from.IsLandedOrSplashed() && SpaceAgeChronicleSettings.Instance.TrackTakeoffs)
                     {
-                        takeoff = new ChronicleEvent("Takeoff", a.host, "body", a.host.mainBody.bodyName);
+                        takeoff = new ChronicleEvent(ChronicleEvent.Takeoff, a.host, "body", a.host.mainBody.bodyName);
                         takeoff.LogOnly = true;
                     }
                     break;
@@ -1103,7 +1102,7 @@ namespace SpaceAge
                 case Vessel.Situations.SUB_ORBITAL:
                     if (a.from.IsLandedOrSplashed() && SpaceAgeChronicleSettings.Instance.TrackTakeoffs)
                     {
-                        takeoff = new ChronicleEvent("Takeoff", a.host, "body", a.host.mainBody.bodyName);
+                        takeoff = new ChronicleEvent(ChronicleEvent.Takeoff, a.host, "body", a.host.mainBody.bodyName);
                         takeoff.LogOnly = true;
                     }
                     break;
@@ -1124,10 +1123,10 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
-                AddChronicleEvent(new ChronicleEvent("Docking", "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
+                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Docking, "vessel1", v1.vesselName, "vesselId1", v1.id, "vessel2", v2.vesselName, "vesselId2", v2.id));
 
-            CheckAchievements("Docking", v1.mainBody, v1);
-            CheckAchievements("Docking", v2.mainBody, v2);
+            CheckAchievements(ChronicleEvent.Docking, v1.mainBody, v1);
+            CheckAchievements(ChronicleEvent.Docking, v2.mainBody, v2);
         }
 
         public void OnVesselsUndocking(Vessel v1, Vessel v2)
@@ -1138,10 +1137,10 @@ namespace SpaceAge
                 return;
 
             if (SpaceAgeChronicleSettings.Instance.TrackDocking)
-                AddChronicleEvent(new ChronicleEvent("Undocking", "vessel1", v1.vesselName, "vesselId1", v1.persistentId, "vessel2", v2.vesselName, "vesselId2", v2.persistentId));
+                AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Undocking, "vessel1", v1.vesselName, "vesselId1", v1.id, "vessel2", v2.vesselName, "vesselId2", v2.id));
 
-            CheckAchievements("Undocking", v1.mainBody, v1);
-            CheckAchievements("Undocking", v2.mainBody, v2);
+            CheckAchievements(ChronicleEvent.Undocking, v1.mainBody, v1);
+            CheckAchievements(ChronicleEvent.Undocking, v2.mainBody, v2);
         }
 
         public void OnFundsChanged(double v, TransactionReasons tr)
@@ -1169,10 +1168,10 @@ namespace SpaceAge
             {
                 Core.Log($"Reached a point of interest: {poi.Id} on {poi.body}.");
                 if (SpaceAgeChronicleSettings.Instance.TrackAnomalyDiscovery)
-                    AddChronicleEvent(new ChronicleEvent("AnomalyDiscovery", FlightGlobals.ActiveVessel, "body", poi.body, "id", poi.Id));
+                    AddChronicleEvent(new ChronicleEvent(ChronicleEvent.AnomalyDiscovery, FlightGlobals.ActiveVessel, "body", poi.body, "id", poi.Id));
                 List<ProtoCrewMember> crew = FlightGlobals.ActiveVessel.GetVesselCrew();
                 Core.Log($"Active Vessel: {FlightGlobals.ActiveVessel.vesselName}; crew: {crew.Count}");
-                CheckAchievements("AnomalyDiscovery", FlightGlobals.GetBodyByName(poi.body), null, 0, (crew.Count > 0) ? crew[0].name : null);
+                CheckAchievements(ChronicleEvent.AnomalyDiscovery, FlightGlobals.GetBodyByName(poi.body), null, 0, (crew.Count > 0) ? crew[0].name : null);
             }
         }
 
@@ -1190,7 +1189,7 @@ namespace SpaceAge
                 {
                     Core.Log($"Registering takeoff event for {takeoff.Vessels.FirstOrDefault()}.");
                     AddChronicleEvent(takeoff);
-                    CheckAchievements("Takeoff", takeoff.Vessels.FirstOrDefault());
+                    CheckAchievements(ChronicleEvent.Takeoff, takeoff.Vessels.FirstOrDefault());
                 }
                 else Core.Log($"Takeoff of {v?.vesselName} is not logged.");
                 takeoff = null;
@@ -1223,7 +1222,7 @@ namespace SpaceAge
                 {
                     Core.Log($"Finished burn that lasted {burnDuration} s, deltaV = {deltaV:N0} m/s.");
                     AddChronicleEvent(
-                        new ChronicleEvent("Burn", v, "duration", burnDuration, "deltaV", (int)deltaV)
+                        new ChronicleEvent(ChronicleEvent.Burn, v, "duration", burnDuration, "deltaV", (int)deltaV)
                         { LogOnly = true });
                 }
             }
