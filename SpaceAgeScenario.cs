@@ -12,9 +12,18 @@ namespace SpaceAge
     [KSPScenario(ScenarioCreationOptions.AddToAllGames, GameScenes.FLIGHT, GameScenes.SPACECENTER, GameScenes.TRACKSTATION)]
     public class SpaceAgeScenario : ScenarioModule
     {
-        enum Tab { Chronicle, Achievements, Score };
+        enum Tab
+        {
+            Chronicle,
+            Achievements,
+            Score
+        };
 
-        enum TimeFormat { UT, MET };
+        enum TimeFormat
+        {
+            UT,
+            MET
+        };
 
         static List<ProtoAchievement> protoAchievements;
         List<ChronicleEvent> chronicle = new List<ChronicleEvent>(), displayChronicle;
@@ -89,7 +98,7 @@ namespace SpaceAge
 
         public void OnDisable()
         {
-            Core.Log("SpaceAgeScenario.OnDisable");
+            Core.Log("SpaceAgeScenario.OnDisable", LogLevel.Important);
             UndisplayData();
 
             // Removing event handlers
@@ -121,7 +130,7 @@ namespace SpaceAge
 
         public override void OnSave(ConfigNode node)
         {
-            Core.Log("SpaceAgeScenario.OnSave");
+            Core.Log("SpaceAgeScenario.OnSave", LogLevel.Important);
             ConfigNode n = new ConfigNode("CHRONICLE");
 
             n.AddValue("logTimeFormat", logTimeFormat);
@@ -146,7 +155,7 @@ namespace SpaceAge
 
         public override void OnLoad(ConfigNode node)
         {
-            Core.Log("SpaceAgeScenario.OnLoad");
+            Core.Log("SpaceAgeScenario.OnLoad", LogLevel.Important);
             InitializeDatabase();
 
             if (node.HasValue("logTimeFormat"))
@@ -540,7 +549,9 @@ namespace SpaceAge
                             new DialogGUIHorizontalLayout(
                                 new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? Core.PrintMET(ce.Time - logVessel.LaunchTime) : Core.PrintUT(ce.Time))}</color>", 90),
                                 new DialogGUILabel(ce.Description, true),
-                                ce.HasVesselId() ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false) : new DialogGUIBase(),
+                                ce.HasVesselId() && (logVessel == null || ce.VesselIds.Count() > 1)
+                                    ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false)
+                                    : new DialogGUIBase(),
                                 new DialogGUIButton<int>("x", DeleteChronicleItem, ChronicleIndex(i))));
                     }
                     windowContent = new DialogGUIVerticalLayout(
@@ -746,15 +757,12 @@ namespace SpaceAge
                 HideShipLog();
                 return;
             }
-            if (vessels.ContainsKey(id))
-            {
-                Core.Log($"Showing log for vessel id [{id}].");
-                if (chroniclePage == 0)
-                    chroniclePage = Page;
-                logVessel = vessels[id];
-                Invalidate();
-            }
-            else Core.Log($"No VesselRecord found for vessel [{id}].", LogLevel.Important);
+            Core.Log($"Showing log for vessel id [{id}].");
+            if (chroniclePage == 0)
+                chroniclePage = Page;
+            logVessel = vessels[id];
+            Page = 1;
+            Invalidate();
         }
 
         public void HideShipLog()

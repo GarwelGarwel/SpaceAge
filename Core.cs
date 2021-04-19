@@ -13,7 +13,13 @@ namespace SpaceAge
     /// <item><definition>Debug: log all information</definition></item>
     /// </list>
     /// </summary>
-    internal enum LogLevel { None = 0, Error, Important, Debug };
+    internal enum LogLevel
+    {
+        None = 0,
+        Error,
+        Important,
+        Debug
+    };
 
     internal static class Core
     {

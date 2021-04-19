@@ -3,11 +3,30 @@ using System.Collections.Generic;
 
 namespace SpaceAge
 {
-    public enum AchievementType { Max, Total, First };
+    public enum AchievementType
+    {
+        Max,
+        Total,
+        First
+    };
 
-    public enum ValueType { None = 0, Cost, Mass, PartsCount, CrewCount, TotalAssignedCrew, Funds };
+    public enum ValueType
+    {
+        None = 0,
+        Cost, 
+        Mass, 
+        PartsCount, 
+        CrewCount, 
+        TotalAssignedCrew, 
+        Funds 
+    };
 
-    public enum HomeConditionType { Default = 0, Only, Exclude };
+    public enum HomeConditionType
+    { 
+        Default = 0, 
+        Only, 
+        Exclude 
+    };
 
     public class ProtoAchievement
     {
