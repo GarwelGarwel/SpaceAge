@@ -189,6 +189,11 @@ namespace SpaceAge
                     try
                     {
                         Achievement a = new Achievement(n);
+                        if (!a.Valid)
+                        {
+                            Core.Log($"Invalid achievement detected:\n{n}");
+                            continue;
+                        }
                         achievements.Add(a.FullName, a);
                         if (a.Proto.Score > 0)
                             Core.Log($"{a.FullDisplayValue}: {a.Score} points");
@@ -449,7 +454,7 @@ namespace SpaceAge
         const float windowWidth = 600;
 
         Tab currentTab = Tab.Chronicle;
-        int[] page = new int[3] { 1, 1, 1 };
+        int[] pages = new int[3] { 1, 1, 1 };
         int chroniclePage = 0;
         Rect windowPosition = new Rect(0.5f, 0.5f, windowWidth, 50);
         PopupDialog window;
@@ -471,10 +476,10 @@ namespace SpaceAge
             }
         }
 
-        int Page
+        int CurrentPage
         {
-            get => page[(int)currentTab];
-            set => page[(int)currentTab] = value;
+            get => pages[(int)currentTab];
+            set => pages[(int)currentTab] = value;
         }
 
         int LinesPerPage =>
@@ -531,11 +536,11 @@ namespace SpaceAge
             List<DialogGUIBase> grid;
             DialogGUIBase windowContent = null;
 
-            if (Page > PageCount)
-                Page = PageCount;
+            if (CurrentPage > PageCount)
+                CurrentPage = PageCount;
             if (PageCount == 0)
-                Page = 1;
-            int startingIndex = (Page - 1) * LinesPerPage;
+                CurrentPage = 1;
+            int startingIndex = (CurrentPage - 1) * LinesPerPage;
 
             switch (currentTab)
             {
@@ -677,11 +682,11 @@ namespace SpaceAge
                     ? new DialogGUIHorizontalLayout(
                         true,
                         false,
-                        new DialogGUIButton("<<", FirstPage, () => Page > 1, false),
-                        new DialogGUIButton("<", PageUp, () => Page > 1, false),
-                        new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel($"{Page}/{PageCount}")),
-                        new DialogGUIButton(">", PageDown, () => Page < PageCount, false),
-                        new DialogGUIButton(">>", LastPage, () => Page < PageCount, false))
+                        new DialogGUIButton("<<", FirstPage, () => CurrentPage > 1, false),
+                        new DialogGUIButton("<", PageUp, () => CurrentPage > 1, false),
+                        new DialogGUIHorizontalLayout(TextAnchor.LowerCenter, new DialogGUILabel($"{CurrentPage}/{PageCount}")),
+                        new DialogGUIButton(">", PageDown, () => CurrentPage < PageCount, false),
+                        new DialogGUIButton(">>", LastPage, () => CurrentPage < PageCount, false))
                     : new DialogGUIHorizontalLayout(),
                     windowContent),
                 false,
@@ -710,27 +715,27 @@ namespace SpaceAge
 
         public void PageUp()
         {
-            if (Page > 1)
-                Page--;
+            if (CurrentPage > 1)
+                CurrentPage--;
             Invalidate();
         }
 
         public void FirstPage()
         {
-            Page = 1;
+            CurrentPage = 1;
             Invalidate();
         }
 
         public void PageDown()
         {
-            if (Page < PageCount)
-                Page++;
+            if (CurrentPage < PageCount)
+                CurrentPage++;
             Invalidate();
         }
 
         public void LastPage()
         {
-            Page = PageCount;
+            CurrentPage = PageCount;
             Invalidate();
         }
 
@@ -759,9 +764,9 @@ namespace SpaceAge
             }
             Core.Log($"Showing log for vessel id [{id}].");
             if (chroniclePage == 0)
-                chroniclePage = Page;
+                chroniclePage = CurrentPage;
             logVessel = vessels[id];
-            Page = 1;
+            CurrentPage = 1;
             Invalidate();
         }
 
@@ -770,7 +775,7 @@ namespace SpaceAge
             logVessel = null;
             if (chroniclePage > 0)
             {
-                Page = chroniclePage;
+                CurrentPage = chroniclePage;
                 chroniclePage = 0;
             }
             Invalidate();
@@ -838,7 +843,7 @@ namespace SpaceAge
         {
             Core.Log($"Find(textInput = '{textInput}')", LogLevel.Important);
             searchTerm = textInput.Trim(' ');
-            Page = 1;
+            CurrentPage = 1;
             Invalidate();
         }
 

@@ -9,7 +9,6 @@ namespace SpaceAge
         long time = -1;
         double value = 0;
         string hero;
-        bool invalid = false;
 
         public ProtoAchievement Proto
         {
@@ -18,31 +17,31 @@ namespace SpaceAge
             {
                 proto = value;
                 if (value == null)
-                    invalid = true;
+                    Valid = false;
             }
         }
 
         public string Body
         {
-            get => invalid ? Localizer.Format("#SpaceAge_Invalid") : (Proto.IsBodySpecific ? body : null);
+            get => Valid ? (Proto.IsBodySpecific ? body : null) : Localizer.Format("#SpaceAge_Invalid");
             set => body = value;
         }
 
         public long Time
         {
-            get => (!invalid && Proto.HasTime) ? time : -1;
+            get => (Valid && Proto.HasTime) ? time : -1;
             set => time = value;
         }
 
         public double Value
         {
-            get => (!invalid && Proto.HasValue) ? value : 0;
+            get => (Valid && Proto.HasValue) ? value : 0;
             set => this.value = value;
         }
 
         public string Hero
         {
-            get => invalid ? null : hero;
+            get => Valid ? hero : null;
             set => hero = value;
         }
 
@@ -52,7 +51,7 @@ namespace SpaceAge
         {
             get
             {
-                if (invalid)
+                if (!Valid)
                     return Localizer.Format("#SpaceAge_Invalid");
                 if (!Proto.HasValue)
                     return "";
@@ -76,7 +75,7 @@ namespace SpaceAge
         {
             get
             {
-                if (invalid)
+                if (!Valid)
                     return Localizer.Format("#SpaceAge_Invalid");
                 string shortValue = ShortDisplayValue;
                 if (shortValue.Length == 0)
@@ -87,7 +86,7 @@ namespace SpaceAge
             }
         }
 
-        public string Title => invalid ? Localizer.Format("#SpaceAge_Invalid") : Localizer.Format(Proto.Title, Core.GetBodyDisplayName(Body));
+        public string Title => Valid ? Localizer.Format(Proto.Title, Core.GetBodyDisplayName(Body)) : Localizer.Format("#SpaceAge_Invalid");
 
         public double BodyMultiplier
         {
@@ -100,14 +99,14 @@ namespace SpaceAge
 
         public double Score => Proto.Score * BodyMultiplier * (Proto.HasValue ? Value : 1);
 
-        public string FullName => invalid ? Localizer.Format("#SpaceAge_Invalid") : GetFullName(Proto.Name, Body);
+        public string FullName => Valid ? GetFullName(Proto.Name, Body) : Localizer.Format("#SpaceAge_Invalid");
 
         public ConfigNode ConfigNode
         {
             get
             {
                 ConfigNode node = new ConfigNode("ACHIEVEMENT");
-                if (invalid)
+                if (!Valid)
                     return node;
                 node.AddValue("name", Proto.Name);
                 if (Proto.IsBodySpecific)
@@ -127,7 +126,7 @@ namespace SpaceAge
             {
                 Core.Log($"Loading '{value.GetValue("name")}' achievement...");
                 Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
-                if (invalid)
+                if (!Valid)
                     return;
                 if (Proto.IsBodySpecific)
                     Body = value.GetString("body", FlightGlobals.GetHomeBodyName());
@@ -141,12 +140,14 @@ namespace SpaceAge
             }
         }
 
+        public bool Valid { get; protected set; } = true;
+
         public Achievement(ConfigNode node) => ConfigNode = node;
 
         public Achievement(ProtoAchievement proto, CelestialBody body = null, Vessel vessel = null, double value = 0, string hero = null)
         {
             Proto = proto;
-            if (invalid)
+            if (!Valid)
                 return;
 
             if (body != null)
@@ -155,11 +156,11 @@ namespace SpaceAge
             switch (Proto.Home)
             {
                 case HomeConditionType.Only:
-                    invalid = FlightGlobals.GetHomeBody() != body;
+                    Valid = FlightGlobals.GetHomeBody() == body;
                     break;
 
                 case HomeConditionType.Exclude:
-                    invalid = FlightGlobals.GetHomeBody() == body;
+                    Valid = FlightGlobals.GetHomeBody() != body;
                     break;
             }
 
@@ -208,7 +209,7 @@ namespace SpaceAge
                 }
 
             if (Proto.CrewedOnly && (vessel == null || vessel.GetCrewCount() == 0))
-                invalid = true;
+                Valid = false;
         }
 
         public static string GetFullName(string name, string body = null) => name + (body != null ? $"@{body}" : "");
@@ -220,7 +221,7 @@ namespace SpaceAge
         {
             Core.Log($"Registering candidate achievement: {this}.");
 
-            if (invalid)
+            if (!Valid)
             {
                 Core.Log("This candidate achievement is invalid. Terminating.");
                 return false;
