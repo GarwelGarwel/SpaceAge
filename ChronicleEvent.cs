@@ -171,12 +171,12 @@ namespace SpaceAge
             Type = type;
             for (int i = 0; i < data.Length; i++)
             {
-                AddData(data[i]);
                 if (data[i] is string s)
                 {
                     AddData(s, data[i + 1]);
                     i++;
                 }
+                else AddData(data[i]);
             }
         }
 
@@ -191,11 +191,12 @@ namespace SpaceAge
                 AddData("vessel", v.vesselName);
                 AddData("vesselId", v.id.ToString());
             }
-            if (data is ProtoVessel pv)
+            else if (data is ProtoVessel pv)
             {
                 AddData("vessel", pv.vesselName);
                 AddData("vesselId", pv.vesselID.ToString());
             }
+            else Core.Log($"Unrecognized argument for chronicle event {Type}: {data} (type: {data.GetType()})", LogLevel.Error);
         }
 
         public void AddData(string key, object value)
