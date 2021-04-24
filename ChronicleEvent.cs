@@ -5,7 +5,7 @@ using UniLinq;
 
 namespace SpaceAge
 {
-    public class ChronicleEvent
+    public class ChronicleEvent : IConfigNode
     {
         #region EVENT NAMES
 
@@ -132,35 +132,33 @@ namespace SpaceAge
             }
         }
 
-        public ConfigNode ConfigNode
+        public void Save(ConfigNode node)
         {
-            get
-            {
-                ConfigNode node = new ConfigNode("EVENT");
-                node.AddValue("time", Time);
-                node.AddValue("type", Type);
-                if (LogOnly)
-                    node.AddValue("logOnly", true);
-                foreach (KeyValuePair<string, string> kvp in Data)
-                    node.AddValue(kvp.Key, kvp.Value);
-                return node;
-            }
-            set
-            {
-                Time = value.GetLongOrDouble("time", -1);
-                Type = value.GetValue("type");
-                LogOnly = value.GetBool("logOnly");
-                foreach (ConfigNode.Value v in value.values)
-                    if ((v.name != "time") && (v.name != "type") && (v.name != "logOnly") && (v.value.Length != 0))
-                        AddData(v.name, v.value);
-            }
+            node.AddValue("time", Time);
+            node.AddValue("type", Type);
+            if (LogOnly)
+                node.AddValue("logOnly", true);
+            foreach (KeyValuePair<string, string> kvp in Data)
+                node.AddValue(kvp.Key, kvp.Value);
+        }
+
+        public void Load(ConfigNode node)
+        {
+            Time = node.GetLongOrDouble("time", -1);
+            Type = node.GetValue("type");
+            LogOnly = node.GetBool("logOnly");
+            foreach (ConfigNode.Value v in node.values)
+                if ((v.name != "time") && (v.name != "type") && (v.name != "logOnly") && (v.value.Length != 0))
+                    AddData(v.name, v.value);
         }
 
         public IEnumerable<string> VesselIds => Data.Where(kvp => kvp.Key.Contains("vesselId")).Select(kvp => kvp.Value);
 
         public IEnumerable<Vessel> Vessels => VesselIds.Select(id => FlightGlobals.FindVessel(new Guid(id)));
 
-        protected Dictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        public Vessel Vessel => Vessels.FirstOrDefault();
+
+        protected IDictionary<string, string> Data { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
         public ChronicleEvent() => Time = (long)Planetarium.GetUniversalTime();
 
@@ -170,34 +168,34 @@ namespace SpaceAge
             Core.Log($"Constructing {type} event with {data.Length} params.");
             Type = type;
             for (int i = 0; i < data.Length; i++)
-            {
-                if (data[i] is string s)
+                switch (data[i])
                 {
-                    AddData(s, data[i + 1]);
-                    i++;
+                    case null:
+                        Core.Log($"Parameter #{i + 1} for chronicle event {Type} is unexpectedly null.", LogLevel.Important);
+                        continue;
+
+                    case string s:
+                        AddData(s, data[i + 1]);
+                        i++;
+                        break;
+
+                    case Vessel v:
+                        AddData("vessel", v.vesselName);
+                        AddData("vesselId", v.id.ToString());
+                        break;
+
+                    case ProtoVessel pv:
+                        AddData("vessel", pv.vesselName);
+                        AddData("vesselId", pv.vesselID.ToString());
+                        break;
+
+                    default:
+                        Core.Log($"Unrecognized parameter #{i + 1} for chronicle event {Type}: {data} (type: {data.GetType()})", LogLevel.Error);
+                        break;
                 }
-                else AddData(data[i]);
-            }
         }
 
-        public ChronicleEvent(ConfigNode node) => ConfigNode = node;
-
-        public void AddData(object data)
-        {
-            if (data == null)
-                return;
-            if (data is Vessel v)
-            {
-                AddData("vessel", v.vesselName);
-                AddData("vesselId", v.id.ToString());
-            }
-            else if (data is ProtoVessel pv)
-            {
-                AddData("vessel", pv.vesselName);
-                AddData("vesselId", pv.vesselID.ToString());
-            }
-            else Core.Log($"Unrecognized argument for chronicle event {Type}: {data} (type: {data.GetType()})", LogLevel.Error);
-        }
+        public ChronicleEvent(ConfigNode node) => Load(node);
 
         public void AddData(string key, object value)
         {

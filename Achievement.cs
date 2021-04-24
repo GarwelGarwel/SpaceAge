@@ -2,7 +2,7 @@
 
 namespace SpaceAge
 {
-    public class Achievement
+    public class Achievement : IConfigNode
     {
         ProtoAchievement proto;
         string body = null;
@@ -13,7 +13,7 @@ namespace SpaceAge
         public ProtoAchievement Proto
         {
             get => proto;
-            set
+            protected set
             {
                 proto = value;
                 if (value == null)
@@ -36,16 +36,16 @@ namespace SpaceAge
         public double Value
         {
             get => (Valid && Proto.HasValue) ? value : 0;
-            set => this.value = value;
+            protected set => this.value = value;
         }
 
         public string Hero
         {
             get => Valid ? hero : null;
-            set => hero = value;
+            protected set => hero = value;
         }
 
-        public string Ids { get; set; } = "";
+        public string Ids { get; protected set; } = "";
 
         public string ShortDisplayValue
         {
@@ -101,48 +101,43 @@ namespace SpaceAge
 
         public string FullName => Valid ? GetFullName(Proto.Name, Body) : Localizer.Format("#SpaceAge_Invalid");
 
-        public ConfigNode ConfigNode
+        public void Save(ConfigNode node)
         {
-            get
-            {
-                ConfigNode node = new ConfigNode("ACHIEVEMENT");
-                if (!Valid)
-                    return node;
-                node.AddValue("name", Proto.Name);
-                if (Proto.IsBodySpecific)
-                    node.AddValue("body", Body);
-                if (Proto.HasTime)
-                    node.AddValue("time", Time);
-                if (Proto.HasValue)
-                    node.AddValue("value", Value);
-                if (Hero != null)
-                    node.AddValue("hero", Hero);
-                if (Proto.Unique)
-                    node.AddValue("ids", Ids);
-                return node;
-            }
+            if (!Valid)
+                return;
+            node.AddValue("name", Proto.Name);
+            if (Proto.IsBodySpecific)
+                node.AddValue("body", Body);
+            if (Proto.HasTime)
+                node.AddValue("time", Time);
+            if (Proto.HasValue)
+                node.AddValue("value", Value);
+            if (Hero != null)
+                node.AddValue("hero", Hero);
+            if (Proto.Unique)
+                node.AddValue("ids", Ids);
+        }
 
-            set
-            {
-                Core.Log($"Loading '{value.GetValue("name")}' achievement...");
-                Proto = SpaceAgeScenario.FindProtoAchievement(value.GetValue("name"));
-                if (!Valid)
-                    return;
-                if (Proto.IsBodySpecific)
-                    Body = value.GetString("body", FlightGlobals.GetHomeBodyName());
-                if (Proto.HasTime)
-                    Time = value.GetLongOrDouble("time", -1);
-                if (Proto.HasValue)
-                    Value = value.GetDouble("value");
-                Hero = value.GetString("hero");
-                if (Proto.Unique)
-                    Ids = value.GetString("ids", "");
-            }
+        public void Load(ConfigNode node)
+        {
+            Core.Log($"Loading '{node.GetValue("name")}' achievement...");
+            Proto = SpaceAgeScenario.FindProtoAchievement(node.GetValue("name"));
+            if (!Valid)
+                return;
+            if (Proto.IsBodySpecific)
+                Body = node.GetString("body", FlightGlobals.GetHomeBodyName());
+            if (Proto.HasTime)
+                Time = node.GetLongOrDouble("time", -1);
+            if (Proto.HasValue)
+                Value = node.GetDouble("value");
+            Hero = node.GetString("hero");
+            if (Proto.Unique)
+                Ids = node.GetString("ids", "");
         }
 
         public bool Valid { get; protected set; } = true;
 
-        public Achievement(ConfigNode node) => ConfigNode = node;
+        public Achievement(ConfigNode node) => Load(node);
 
         public Achievement(ProtoAchievement proto, CelestialBody body = null, Vessel vessel = null, double value = 0, string hero = null)
         {
@@ -184,7 +179,7 @@ namespace SpaceAge
                         break;
 
                     case ValueType.Mass:
-                        Value = vessel.totalMass;
+                        Value = vessel.GetMass();
                         break;
 
                     case ValueType.PartsCount:
@@ -217,7 +212,7 @@ namespace SpaceAge
         public override string ToString() =>
             $"{(Time >= 0 ? KSPUtil.PrintDateCompact(Time, true) : "")}\t{Title}{(Value != 0 ? $" ({Value})" : "")}";
 
-        public bool Register(Achievement old)
+        public bool Register()
         {
             Core.Log($"Registering candidate achievement: {this}.");
 
@@ -227,12 +222,17 @@ namespace SpaceAge
                 return false;
             }
 
+            SpaceAgeScenario scenario = SpaceAgeScenario.Instance;
+            if (scenario == null)
+            {
+                Core.Log($"SpaceAgeScenario instance not found.", LogLevel.Error);
+                return false;
+            }
+
+            Achievement old = scenario.FindAchievement(FullName);
             if (old != null)
                 Core.Log($"Old achievement: {old}.");
-            else Core.Log("Old achievement of this type does not exist.");
-
-            if (old != null && (old.Proto != Proto || old.Body != Body))
-                return false;
+            else Core.Log("No old achievement of this type for the same body.");
 
             bool doRegister = false;
             switch (Proto.Type)
@@ -264,7 +264,10 @@ namespace SpaceAge
             }
 
             if (doRegister)
+            {
+                scenario.SetAchievement(FullName, this);
                 Core.Log("Registration successful: achievement completed!");
+            }
             else Core.Log("Registration failed: this doesn't qualify as an achievement.");
 
             return doRegister;
