@@ -106,7 +106,7 @@ namespace SpaceAge
                         return Localizer.Format("#SpaceAge_CE_Death", GetString("kerbal"));
 
                     case FlagPlant:
-                        return Localizer.Format("#SpaceAge_CE_FlagPlant", Core.GetBodyDisplayName(GetString("body")));
+                        return Localizer.Format("#SpaceAge_CE_FlagPlant", GetString("kerbal") ?? Localizer.Format("#SpaceAge_Kerbal"), Core.GetBodyDisplayName(GetString("body")));
 
                     case FacilityUpgraded:
                         return Localizer.Format("#SpaceAge_CE_FacilityUpgraded", GetString("facility"), GetString("level"));
@@ -130,26 +130,6 @@ namespace SpaceAge
                 }
                 return Localizer.Format("#SpaceAge_CE_Unknown", Type);
             }
-        }
-
-        public void Save(ConfigNode node)
-        {
-            node.AddValue("time", Time);
-            node.AddValue("type", Type);
-            if (LogOnly)
-                node.AddValue("logOnly", true);
-            foreach (KeyValuePair<string, string> kvp in Data)
-                node.AddValue(kvp.Key, kvp.Value);
-        }
-
-        public void Load(ConfigNode node)
-        {
-            Time = node.GetLongOrDouble("time", -1);
-            Type = node.GetValue("type");
-            LogOnly = node.GetBool("logOnly");
-            foreach (ConfigNode.Value v in node.values)
-                if ((v.name != "time") && (v.name != "type") && (v.name != "logOnly") && (v.value.Length != 0))
-                    AddData(v.name, v.value);
         }
 
         public IEnumerable<string> VesselIds => Data.Where(kvp => kvp.Key.Contains("vesselId")).Select(kvp => kvp.Value);
@@ -196,6 +176,26 @@ namespace SpaceAge
         }
 
         public ChronicleEvent(ConfigNode node) => Load(node);
+
+        public void Save(ConfigNode node)
+        {
+            node.AddValue("time", Time);
+            node.AddValue("type", Type);
+            if (LogOnly)
+                node.AddValue("logOnly", true);
+            foreach (KeyValuePair<string, string> kvp in Data)
+                node.AddValue(kvp.Key, kvp.Value);
+        }
+
+        public void Load(ConfigNode node)
+        {
+            Time = node.GetLongOrDouble("time", -1);
+            Type = node.GetValue("type");
+            LogOnly = node.GetBool("logOnly");
+            foreach (ConfigNode.Value v in node.values)
+                if ((v.name != "time") && (v.name != "type") && (v.name != "logOnly") && (v.value.Length != 0))
+                    AddData(v.name, v.value);
+        }
 
         public void AddData(string key, object value)
         {

@@ -42,6 +42,23 @@ namespace SpaceAge
             }
         }
 
+        public VesselRecord(ConfigNode node) => Load(node);
+
+        public VesselRecord(Vessel vessel) => Vessel = vessel;
+
+        public VesselRecord(Guid id) => Vessel = FlightGlobals.FindVessel(id);
+
+        public VesselRecord(string id)
+            : this(new Guid(id))
+        { }
+
+        public VesselRecord(ProtoVessel protoVessel)
+        {
+            Guid = protoVessel.vesselID;
+            Name = protoVessel.vesselName;
+            LaunchTime = (long)protoVessel.launchTime;
+        }
+
         public void Save(ConfigNode node)
         {
             if (Id == null)
@@ -58,23 +75,6 @@ namespace SpaceAge
             LaunchTime = node.GetLongOrDouble("launchTime", (long)Planetarium.GetUniversalTime());
             if (string.IsNullOrEmpty(Id))
                 Core.Log($"Incorrect vessel id in node: {node}", LogLevel.Error);
-        }
-
-        public VesselRecord(ConfigNode node) => Load(node);
-
-        public VesselRecord(Vessel vessel) => Vessel = vessel;
-
-        public VesselRecord(Guid id) => Vessel = FlightGlobals.FindVessel(id);
-
-        public VesselRecord(string id)
-            : this(new Guid(id))
-        { }
-
-        public VesselRecord(ProtoVessel protoVessel)
-        {
-            Guid = protoVessel.vesselID;
-            Name = protoVessel.vesselName;
-            LaunchTime = (long)protoVessel.launchTime;
         }
     }
 }

@@ -13,19 +13,19 @@ namespace SpaceAge
     public enum ValueType
     {
         None = 0,
-        Cost, 
-        Mass, 
-        PartsCount, 
-        CrewCount, 
-        TotalAssignedCrew, 
-        Funds 
+        Cost,
+        Mass,
+        PartsCount,
+        CrewCount,
+        TotalAssignedCrew,
+        Funds
     };
 
     public enum HomeConditionType
-    { 
-        Default = 0, 
-        Only, 
-        Exclude 
+    {
+        Default = 0,
+        Only,
+        Exclude
     };
 
     public class ProtoAchievement
@@ -64,6 +64,10 @@ namespace SpaceAge
 
         public double Score { get; set; }
 
+        public ProtoAchievement(string name) => Name = name;
+
+        public ProtoAchievement(ConfigNode node) => Load(node);
+
         public void Load(ConfigNode node)
         {
             try
@@ -89,9 +93,5 @@ namespace SpaceAge
                 Core.Log($"Error parsing a ProtoAchievement node: {node}", LogLevel.Error);
             }
         }
-
-        public ProtoAchievement(string name) => Name = name;
-
-        public ProtoAchievement(ConfigNode node) => Load(node);
     }
 }

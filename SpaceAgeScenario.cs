@@ -1010,10 +1010,11 @@ namespace SpaceAge
         public void OnFlagPlanted(Vessel v)
         {
             Core.Log($"OnFlagPlanted('{v.vesselName}')", LogLevel.Important);
-            CheckAchievements(ChronicleEvent.FlagPlant, v);
+            string kerbal = FlightGlobals.ActiveVessel.GetVesselCrew().FirstOrDefault()?.nameWithGender;
+            CheckAchievements(ChronicleEvent.FlagPlant, body: v.mainBody, hero: kerbal);
             if (!SpaceAgeChronicleSettings.Instance.TrackFlagPlant)
                 return;
-            AddChronicleEvent(new ChronicleEvent(ChronicleEvent.FlagPlant, "kerbal", v.GetVesselCrew()[0].nameWithGender, "body", v.mainBody.bodyName));
+            AddChronicleEvent(new ChronicleEvent(ChronicleEvent.FlagPlant, "kerbal", kerbal, "body", v.mainBody.bodyName));
         }
 
         public void OnFacilityUpgraded(Upgradeables.UpgradeableFacility facility, int level)

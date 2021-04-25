@@ -101,40 +101,6 @@ namespace SpaceAge
 
         public string FullName => Valid ? GetFullName(Proto.Name, Body) : Localizer.Format("#SpaceAge_Invalid");
 
-        public void Save(ConfigNode node)
-        {
-            if (!Valid)
-                return;
-            node.AddValue("name", Proto.Name);
-            if (Proto.IsBodySpecific)
-                node.AddValue("body", Body);
-            if (Proto.HasTime)
-                node.AddValue("time", Time);
-            if (Proto.HasValue)
-                node.AddValue("value", Value);
-            if (Hero != null)
-                node.AddValue("hero", Hero);
-            if (Proto.Unique)
-                node.AddValue("ids", Ids);
-        }
-
-        public void Load(ConfigNode node)
-        {
-            Core.Log($"Loading '{node.GetValue("name")}' achievement...");
-            Proto = SpaceAgeScenario.FindProtoAchievement(node.GetValue("name"));
-            if (!Valid)
-                return;
-            if (Proto.IsBodySpecific)
-                Body = node.GetString("body", FlightGlobals.GetHomeBodyName());
-            if (Proto.HasTime)
-                Time = node.GetLongOrDouble("time", -1);
-            if (Proto.HasValue)
-                Value = node.GetDouble("value");
-            Hero = node.GetString("hero");
-            if (Proto.Unique)
-                Ids = node.GetString("ids", "");
-        }
-
         public bool Valid { get; protected set; } = true;
 
         public Achievement(ConfigNode node) => Load(node);
@@ -208,6 +174,40 @@ namespace SpaceAge
         }
 
         public static string GetFullName(string name, string body = null) => name + (body != null ? $"@{body}" : "");
+
+        public void Save(ConfigNode node)
+        {
+            if (!Valid)
+                return;
+            node.AddValue("name", Proto.Name);
+            if (Proto.IsBodySpecific)
+                node.AddValue("body", Body);
+            if (Proto.HasTime)
+                node.AddValue("time", Time);
+            if (Proto.HasValue)
+                node.AddValue("value", Value);
+            if (Hero != null)
+                node.AddValue("hero", Hero);
+            if (Proto.Unique)
+                node.AddValue("ids", Ids);
+        }
+
+        public void Load(ConfigNode node)
+        {
+            Core.Log($"Loading '{node.GetValue("name")}' achievement...");
+            Proto = SpaceAgeScenario.FindProtoAchievement(node.GetValue("name"));
+            if (!Valid)
+                return;
+            if (Proto.IsBodySpecific)
+                Body = node.GetString("body", FlightGlobals.GetHomeBodyName());
+            if (Proto.HasTime)
+                Time = node.GetLongOrDouble("time", -1);
+            if (Proto.HasValue)
+                Value = node.GetDouble("value");
+            Hero = node.GetString("hero");
+            if (Proto.Unique)
+                Ids = node.GetString("ids", "");
+        }
 
         public override string ToString() =>
             $"{(Time >= 0 ? KSPUtil.PrintDateCompact(Time, true) : "")}\t{Title}{(Value != 0 ? $" ({Value})" : "")}";
