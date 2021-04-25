@@ -2,7 +2,7 @@
 
 namespace SpaceAge
 {
-    public class VesselRecord
+    public class VesselRecord : IConfigNode
     {
         /// <summary>
         /// Vessel's Guid as a string
@@ -42,37 +42,7 @@ namespace SpaceAge
             }
         }
 
-        /// <summary>
-        /// Time since vessel's launch (may or may not be equal to MissionTime)
-        /// </summary>
-        public double Age => Planetarium.GetUniversalTime() - LaunchTime;
-
-        public ConfigNode ConfigNode
-        {
-            get
-            {
-                if (Id == null)
-                    return null;
-                ConfigNode node = new ConfigNode("VESSEL");
-                node.AddValue("id", Id);
-                node.AddValue("name", Name);
-                node.AddValue("launchTime", LaunchTime);
-                return node;
-            }
-            set
-            {
-                Id = value.GetString("id");
-                Name = value.GetString("name");
-                LaunchTime = value.GetLongOrDouble("launchTime", (long)Planetarium.GetUniversalTime());
-                if (string.IsNullOrEmpty(Id))
-                {
-                    Core.Log($"Incorrect vessel id in node: {value}", LogLevel.Error);
-                    return;
-                }
-            }
-        }
-
-        public VesselRecord(ConfigNode node) => ConfigNode = node;
+        public VesselRecord(ConfigNode node) => Load(node);
 
         public VesselRecord(Vessel vessel) => Vessel = vessel;
 
@@ -87,6 +57,24 @@ namespace SpaceAge
             Guid = protoVessel.vesselID;
             Name = protoVessel.vesselName;
             LaunchTime = (long)protoVessel.launchTime;
+        }
+
+        public void Save(ConfigNode node)
+        {
+            if (Id == null)
+                return;
+            node.AddValue("id", Id);
+            node.AddValue("name", Name);
+            node.AddValue("launchTime", LaunchTime);
+        }
+
+        public void Load(ConfigNode node)
+        {
+            Id = node.GetString("id");
+            Name = node.GetString("name");
+            LaunchTime = node.GetLongOrDouble("launchTime", (long)Planetarium.GetUniversalTime());
+            if (string.IsNullOrEmpty(Id))
+                Core.Log($"Incorrect vessel id in node: {node}", LogLevel.Error);
         }
     }
 }

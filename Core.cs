@@ -13,7 +13,13 @@ namespace SpaceAge
     /// <item><definition>Debug: log all information</definition></item>
     /// </list>
     /// </summary>
-    internal enum LogLevel { None = 0, Error, Important, Debug };
+    internal enum LogLevel
+    {
+        None = 0,
+        Error,
+        Important,
+        Debug
+    };
 
     internal static class Core
     {
@@ -39,6 +45,9 @@ namespace SpaceAge
 
         public static double GetCost(this Vessel v) =>
             v.Parts.Sum(p => p.partInfo.cost + p.GetModuleCosts(0) + p.Resources.Sum(pr => pr.amount * pr.info.unitCost));
+
+        public static double GetMass(this Vessel v) =>
+            v.totalMass - v.Parts.Where(part => part.partName == "PotatoRoid" || part.partName == "PotatoComet").Sum(part => part.mass);
 
         public static bool IsBurning(this Vessel v) => v.FindPartModulesImplementing<ModuleEngines>().Any(module => module.GetCurrentThrust() > 0);
 

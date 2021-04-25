@@ -3,11 +3,30 @@ using System.Collections.Generic;
 
 namespace SpaceAge
 {
-    public enum AchievementType { Max, Total, First };
+    public enum AchievementType
+    {
+        Max,
+        Total,
+        First
+    };
 
-    public enum ValueType { None = 0, Cost, Mass, PartsCount, CrewCount, TotalAssignedCrew, Funds };
+    public enum ValueType
+    {
+        None = 0,
+        Cost,
+        Mass,
+        PartsCount,
+        CrewCount,
+        TotalAssignedCrew,
+        Funds
+    };
 
-    public enum HomeConditionType { Default = 0, Only, Exclude };
+    public enum HomeConditionType
+    {
+        Default = 0,
+        Only,
+        Exclude
+    };
 
     public class ProtoAchievement
     {
@@ -23,13 +42,13 @@ namespace SpaceAge
 
         public AchievementType Type { get; set; }
 
-        public bool HasValue => (Type == AchievementType.Max) || (Type == AchievementType.Total);
+        public bool HasValue => Type == AchievementType.Max || Type == AchievementType.Total;
 
-        public bool HasTime => (Type == AchievementType.First) || (Type == AchievementType.Max);
+        public bool HasTime => Type == AchievementType.First || Type == AchievementType.Max;
 
         public ValueType ValueType { get; set; } = ValueType.None;
 
-        public List<string> OnEvents { get; set; } = new List<string>();
+        public IEnumerable<string> OnEvents { get; set; } = new List<string>();
 
         public bool IsBodySpecific { get; set; }
 
@@ -45,37 +64,34 @@ namespace SpaceAge
 
         public double Score { get; set; }
 
-        public ConfigNode ConfigNode
-        {
-            set
-            {
-                try
-                {
-                    Core.Log($"Loading protoachievement {value.GetValue("name")}...");
-                    Name = value.GetValue("name");
-                    Title = value.GetString("title");
-                    Type = (AchievementType)Enum.Parse(typeof(AchievementType), value.GetValue("type"), true);
-                    if (value.HasValue("valueType"))
-                        ValueType = (ValueType)Enum.Parse(typeof(ValueType), value.GetValue("valueType"), true);
-                    OnEvents = value.GetValuesList("onEvent");
-                    IsBodySpecific = value.GetBool("bodySpecific");
-                    if (value.HasValue("home"))
-                        Home = (HomeConditionType)Enum.Parse(typeof(HomeConditionType), value.GetValue("home"), true);
-                    CrewedOnly = value.GetBool("crewedOnly");
-                    Unique = value.GetBool("unique");
-                    StockSynonym = value.GetString("stockSynonym");
-                    ScoreName = value.GetString("scoreName");
-                    Score = value.GetDouble("score");
-                }
-                catch (Exception)
-                {
-                    Core.Log($"Error parsing a ProtoAchievement node: {value}", LogLevel.Error);
-                }
-            }
-        }
-
         public ProtoAchievement(string name) => Name = name;
 
-        public ProtoAchievement(ConfigNode node) => ConfigNode = node;
+        public ProtoAchievement(ConfigNode node) => Load(node);
+
+        public void Load(ConfigNode node)
+        {
+            try
+            {
+                Core.Log($"Loading protoachievement {node.GetValue("name")}...");
+                Name = node.GetValue("name");
+                Title = node.GetString("title");
+                Type = (AchievementType)Enum.Parse(typeof(AchievementType), node.GetValue("type"), true);
+                if (node.HasValue("valueType"))
+                    ValueType = (ValueType)Enum.Parse(typeof(ValueType), node.GetValue("valueType"), true);
+                OnEvents = node.GetValuesList("onEvent");
+                IsBodySpecific = node.GetBool("bodySpecific");
+                if (node.HasValue("home"))
+                    Home = (HomeConditionType)Enum.Parse(typeof(HomeConditionType), node.GetValue("home"), true);
+                CrewedOnly = node.GetBool("crewedOnly");
+                Unique = node.GetBool("unique");
+                StockSynonym = node.GetString("stockSynonym");
+                ScoreName = node.GetString("scoreName");
+                Score = node.GetDouble("score");
+            }
+            catch (Exception)
+            {
+                Core.Log($"Error parsing a ProtoAchievement node: {node}", LogLevel.Error);
+            }
+        }
     }
 }
