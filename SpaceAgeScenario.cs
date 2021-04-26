@@ -993,7 +993,7 @@ namespace SpaceAge
                 return;
 
             ChronicleEvent e = new ChronicleEvent(ChronicleEvent.Destroy, v);
-            if (v.terrainAltitude < 1000)
+            if (v.terrainAltitude < 1000 || (v.situation & Vessel.Situations.FLYING) != 0)
                 e.AddData("body", v.mainBody.bodyName);
             AddChronicleEvent(e);
         }
