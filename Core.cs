@@ -28,6 +28,9 @@ namespace SpaceAge
         /// </summary>
         internal static LogLevel Level => SpaceAgeChronicleSettings.Instance.DebugMode ? LogLevel.Debug : LogLevel.Important;
 
+        public static IDateTimeFormatter DateTimeFormatter =>
+            SpaceAgeChronicleSettings.Instance.UseStockDateTimeFormat ? KSPUtil.dateTimeFormatter : GarwelDateTimeFormatter.Instance;
+
         /// <summary>
         /// Determines if events of the given vessel should be tracked
         /// </summary>
@@ -61,69 +64,6 @@ namespace SpaceAge
         {
             if (SpaceAgeChronicleSettings.Instance.ShowNotifications)
                 ScreenMessages.PostScreenMessage(msg);
-        }
-
-        public static void ParseTime(long time, out int y, out int d, out int h, out int m, out int s, bool interval = false, bool parseYears = true)
-        {
-            if (parseYears)
-            {
-                y = (int)(time / KSPUtil.dateTimeFormatter.Year);
-                time -= y * KSPUtil.dateTimeFormatter.Year;
-                if (!interval)
-                    y++;
-            }
-            else y = 0;
-            d = (int)time / KSPUtil.dateTimeFormatter.Day;
-            time -= d * KSPUtil.dateTimeFormatter.Day;
-            h = (int)time / 3600;
-            time -= h * 3600;
-            m = (int)time / 60;
-            s = (int)time - m * 60;
-        }
-
-        /// <summary>
-        /// Parses UT into a string (e.g. "Y23 D045")
-        /// </summary>
-        /// <param name="time">Time in seconds</param>
-        /// <param name="showSeconds">If false, seconds will be displayed only if time is less than 1 minute; otherwise always</param>
-        /// <returns></returns>
-        public static string PrintUT(long time, bool showSeconds = false)
-        {
-            if (time < 0)
-                return "—";
-            ParseTime(time, out int y, out int d, out int h, out int m, out int s);
-            return showSeconds
-                ? Localizer.Format("#SpaceAge_DateTime_Sec", y, d.ToString("D3"), h, m.ToString("D2"), s.ToString("D2"))
-                : Localizer.Format("#SpaceAge_DateTime_NoSec", y, d.ToString("D3"), h, m.ToString("D2"));
-        }
-
-        /// <summary>
-        /// Translates number of seconds into a string of T+[[ddd:]hh:]mm:ss
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static string PrintMET(long time)
-        {
-            string res;
-            if (time < 0)
-            {
-                res = "T-";
-                time = -time;
-            }
-            else res = "T+";
-            ParseTime(time, out int y, out int d, out int h, out int m, out int s, true, false);
-            if (d > 0)
-                res += $"{d:D3}:";
-            if (h > 0 || d > 0)
-            {
-                if (h < 10 && KSPUtil.dateTimeFormatter.Day > KSPUtil.dateTimeFormatter.Hour * 10)
-                    res += "0";
-                res += $"{h}:";
-            }
-            if (m < 10)
-                res += "0";
-            res += $"{m}:{s:D2}";
-            return res;
         }
 
         public static string GetString(this ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;

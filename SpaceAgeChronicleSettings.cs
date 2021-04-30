@@ -19,6 +19,9 @@ namespace SpaceAge
         [GameParameters.CustomIntParameterUI("#SpaceAge_Settings_AchievementsPerPage", toolTip = "#SpaceAge_Settings_AchievementsPerPage_desc", minValue = 5, maxValue = 25, stepSize = 5)]
         public int AchievementsPerPage = 10;
 
+        [GameParameters.CustomParameterUI("#SpaceAge_Settings_UseStockDateTimeFormat", toolTip = "#SpaceAge_Settings_UseStockDateTimeFormat_desc")]
+        public bool UseStockDateTimeFormat = false;
+
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_ImportStockAchievements", toolTip = "#SpaceAge_Settings_ImportStockAchievements_desc")]
         public bool ImportStockAchievements = false;
 
@@ -129,6 +132,7 @@ namespace SpaceAge
             ChronicleLinesPerPage = 10;
             NewestFirst = true;
             AchievementsPerPage = 10;
+            UseStockDateTimeFormat = false;
             ImportStockAchievements = false;
             UnwarpOnEvents = false;
             TrackAchievements = true;

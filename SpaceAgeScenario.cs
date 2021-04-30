@@ -264,6 +264,7 @@ namespace SpaceAge
             {
                 ConfigNode config = GameDatabase.Instance.GetConfigNode("SPACEAGE_CONFIG");
                 Core.Log($"SPACEAGE_CONFIG: {config}", LogLevel.Important);
+                SpaceAgeChronicleSettings.Instance.UseStockDateTimeFormat = config.GetBool("stockDateTimeFormat", SpaceAgeChronicleSettings.Instance.UseStockDateTimeFormat);
                 SpaceAgeChronicleSettings.Instance.FundsPerScore = (float)config.GetDouble("fundsPerScore", SpaceAgeChronicleSettings.Instance.FundsPerScore);
                 SpaceAgeChronicleSettings.Instance.SciencePerScore = (float)config.GetDouble("sciencePerScore", SpaceAgeChronicleSettings.Instance.SciencePerScore);
                 SpaceAgeChronicleSettings.Instance.RepPerScore = (float)config.GetDouble("repPerScore", SpaceAgeChronicleSettings.Instance.RepPerScore);
@@ -541,8 +542,7 @@ namespace SpaceAge
                 }
                 if (searchTerm.Length != 0)
                 {
-                    string searchTermUppercase = searchTerm.ToUpperInvariant();
-                    displayChronicle = displayChronicle.FindAll(ev => ev.Description.ToUpperInvariant().Contains(searchTermUppercase));
+                    displayChronicle = displayChronicle.FindAll(ev => ev.Description.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0);
                     Core.Log($"Filtered {displayChronicle.Count} search results for '{searchTerm}'.");
                 }
             }
@@ -566,7 +566,7 @@ namespace SpaceAge
                         ChronicleEvent ce = displayChronicle[ChronicleIndex(i)];
                         grid.Add(
                             new DialogGUIHorizontalLayout(
-                                new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? Core.PrintMET(ce.Time - logVessel.LaunchTime) : Core.PrintUT(ce.Time))}</color>", 90),
+                                new DialogGUILabel($"<color=\"white\">{((logTimeFormat == TimeFormat.MET && logVessel != null) ? Core.DateTimeFormatter.PrintTimeCompact(ce.Time - logVessel.LaunchTime, true) : Core.DateTimeFormatter.PrintDateCompact(ce.Time, true))}</color>", 90),
                                 new DialogGUILabel(ce.Description, true),
                                 ce.HasVesselId() && (logVessel == null || ce.VesselIds.Count() > 1)
                                     ? new DialogGUIButton<ChronicleEvent>(Localizer.Format("#SpaceAge_UI_LogBtn"), ShowShipLog, ce, false)
@@ -578,7 +578,7 @@ namespace SpaceAge
                         ? new DialogGUIHorizontalLayout(
                             TextAnchor.MiddleCenter,
                             new DialogGUIButton(logTimeFormat == TimeFormat.UT ? Localizer.Format("#SpaceAge_UI_UT") : Localizer.Format("#SpaceAge_UI_MET"), SwitchTimeFormat, false),
-                            new DialogGUILabel($"<align=\"center\"><b>{Localizer.Format("#SpaceAge_UI_LogTitle", logVessel.Name)}</b>\n{Localizer.Format("#SpaceAge_UI_ShipInfo", Core.PrintUT(logVessel.LaunchTime, true))}</align>", true),
+                            new DialogGUILabel($"<align=\"center\"><b>{Localizer.Format("#SpaceAge_UI_LogTitle", logVessel.Name)}</b>\n{Localizer.Format("#SpaceAge_UI_ShipInfo", Core.DateTimeFormatter.PrintDateCompact(logVessel.LaunchTime, true, true))}</align>", true),
                             new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Back"), HideShipLog, false))
                         : new DialogGUIBase(),
                         new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, grid.ToArray()),
@@ -616,7 +616,7 @@ namespace SpaceAge
                         }
                         grid.Add(new DialogGUILabel(a.Proto.Score > 0 ? Localizer.Format("#SpaceAge_UI_AchievementScore", a.Title, a.Score) : a.Title, true));
                         grid.Add(new DialogGUILabel(a.FullDisplayValue, true));
-                        grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.PrintUT(a.Time) : "", true));
+                        grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.DateTimeFormatter.PrintDateCompact(a.Time, false) : "", true));
                     }
                     windowContent = new DialogGUIGridLayout(
                         new RectOffset(5, 5, 0, 0),
