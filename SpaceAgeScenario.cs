@@ -138,6 +138,8 @@ namespace SpaceAge
             if (toolbarButton != null)
                 toolbarButton.Destroy();
             UnregisterAppLauncherButton();
+
+            Instance = null;
         }
 
         public override void OnSave(ConfigNode node)
@@ -297,12 +299,14 @@ namespace SpaceAge
 
         public void AddChronicleEvent(ChronicleEvent e)
         {
-            Core.ShowNotification(Localizer.Format("#SpaceAge_UI_EventDetected", e.Type));
-            if (SpaceAgeChronicleSettings.Instance.UnwarpOnEvents && (TimeWarp.CurrentRateIndex != 0))
-                TimeWarp.SetRate(0, true, !SpaceAgeChronicleSettings.Instance.ShowNotifications);
             chronicle.Add(e);
             foreach (string id in e.VesselIds)
                 AddVesselRecord(new VesselRecord(id));
+            if (SpaceAgeChronicleSettings.Instance.ShowNotifications && !e.LogOnly)
+            {
+                TimeWarp.SetRate(0, true, false);
+                ScreenMessages.PostScreenMessage(e.Description);
+            }
             Invalidate();
         }
 

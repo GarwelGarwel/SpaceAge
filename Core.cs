@@ -60,12 +60,6 @@ namespace SpaceAge
         public static string GetBodyDisplayName(string bodyName) =>
             bodyName != null ? (FlightGlobals.GetBodyByName(bodyName)?.displayName ?? bodyName) : bodyName;
 
-        public static void ShowNotification(string msg)
-        {
-            if (SpaceAgeChronicleSettings.Instance.ShowNotifications)
-                ScreenMessages.PostScreenMessage(msg);
-        }
-
         public static string GetString(this ConfigNode n, string key, string defaultValue = null) => n.HasValue(key) ? n.GetValue(key) : defaultValue;
 
         public static double GetDouble(this ConfigNode n, string key, double defaultValue = 0) =>

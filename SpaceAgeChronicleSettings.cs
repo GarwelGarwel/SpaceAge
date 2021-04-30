@@ -25,9 +25,6 @@ namespace SpaceAge
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_ImportStockAchievements", toolTip = "#SpaceAge_Settings_ImportStockAchievements_desc")]
         public bool ImportStockAchievements = false;
 
-        [GameParameters.CustomParameterUI("#SpaceAge_Settings_UnwarpOnEvents", toolTip = "#SpaceAge_Settings_UnwarpOnEvents_desc")]
-        public bool UnwarpOnEvents = false;
-
         [GameParameters.CustomParameterUI("#SpaceAge_Settings_TrackAchievements", toolTip = "#SpaceAge_Settings_TrackAchievements_desc")]
         public bool TrackAchievements = true;
 
@@ -134,7 +131,6 @@ namespace SpaceAge
             AchievementsPerPage = 10;
             UseStockDateTimeFormat = false;
             ImportStockAchievements = false;
-            UnwarpOnEvents = false;
             TrackAchievements = true;
             TrackLaunch = true;
             TrackReachSpace = true;
