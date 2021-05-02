@@ -35,6 +35,7 @@ namespace SpaceAge
         List<string> scoreBodies = new List<string>();
         double score;
         double funds;
+        float science;
 
         VesselRecord logVessel = null;
         TimeFormat logTimeFormat = TimeFormat.UT;
@@ -81,6 +82,7 @@ namespace SpaceAge
             GameEvents.onVesselDocking.Add(OnVesselDocking);
             GameEvents.onVesselsUndocking.Add(OnVesselsUndocking);
             GameEvents.OnFundsChanged.Add(OnFundsChanged);
+            GameEvents.OnScienceChanged.Add(OnScienceChanged);
             GameEvents.OnProgressComplete.Add(OnProgressCompleted);
 
             // Adding buttons to AppLauncher and Toolbar
@@ -132,6 +134,7 @@ namespace SpaceAge
             GameEvents.onVesselDocking.Remove(OnVesselDocking);
             GameEvents.onVesselsUndocking.Remove(OnVesselsUndocking);
             GameEvents.OnFundsChanged.Remove(OnFundsChanged);
+            GameEvents.OnScienceChanged.Add(OnScienceChanged);
             GameEvents.OnProgressComplete.Remove(OnProgressCompleted);
 
             // Removing Toolbar & AppLauncher buttons
@@ -852,7 +855,7 @@ namespace SpaceAge
 
         void Find()
         {
-            Core.Log($"Find(textInput = '{textInput}')", LogLevel.Important);
+            Core.Log($"Find(), textInput = '{textInput}'", LogLevel.Important);
             searchTerm = textInput.Trim(' ');
             CurrentPage = 1;
             Invalidate();
@@ -957,7 +960,6 @@ namespace SpaceAge
         public void OnVesselRecovery(ProtoVessel v, bool b)
         {
             Core.Log($"OnVesselRecovery('{v.vesselName}', {b})", LogLevel.Important);
-            Core.Log($"missionTime = {v.missionTime}; launchTime = {v.launchTime}; autoClean = {v.autoClean}");
 
             if (!v.vesselRef.IsTrackable(false))
             {
@@ -1176,7 +1178,7 @@ namespace SpaceAge
 
             if (Funding.Instance == null)
             {
-                Core.Log("Funding is not instantiated (perhaps because it is not a Career game). Terminating.");
+                Core.Log("Funding is not instantiated (perhaps because it is not a Career game). Terminating.", LogLevel.Error);
                 return;
             }
 
@@ -1185,6 +1187,22 @@ namespace SpaceAge
                 CheckAchievements("Income", v - funds);
             else CheckAchievements("Expense", funds - v);
             funds = v;
+        }
+
+        public void OnScienceChanged(float v, TransactionReasons tr)
+        {
+            Core.Log($"OnScienceChanged({v}, {tr})");
+
+            if (ResearchAndDevelopment.Instance == null || !ResearchAndDevelopment.Instance.enabled)
+            {
+                Core.Log("R&D is not active (perhaps because it is not a Career or Science game). Terminating.", LogLevel.Error);
+                return;
+            }
+
+            Core.Log($"Current science: {ResearchAndDevelopment.Instance.Science}; last cached science = {science}");
+            if (v > science)
+                CheckAchievements("ScienceAdded", v - science);
+            science = v;
         }
 
         public void OnProgressCompleted(ProgressNode n)

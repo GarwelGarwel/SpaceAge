@@ -18,7 +18,8 @@ namespace SpaceAge
         PartsCount,
         CrewCount,
         TotalAssignedCrew,
-        Funds
+        Funds,
+        Science
     };
 
     public enum HomeConditionType
