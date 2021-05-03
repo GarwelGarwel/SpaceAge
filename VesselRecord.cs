@@ -42,6 +42,8 @@ namespace SpaceAge
             }
         }
 
+        public bool Valid => !string.IsNullOrEmpty(Id);
+
         public VesselRecord(ConfigNode node) => Load(node);
 
         public VesselRecord(Vessel vessel) => Vessel = vessel;
@@ -73,7 +75,7 @@ namespace SpaceAge
             Id = node.GetString("id");
             Name = node.GetString("name");
             LaunchTime = node.GetLongOrDouble("launchTime", (long)Planetarium.GetUniversalTime());
-            if (string.IsNullOrEmpty(Id))
+            if (!Valid)
                 Core.Log($"Incorrect vessel id in node: {node}", LogLevel.Error);
         }
     }
