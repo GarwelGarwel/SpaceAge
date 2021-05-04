@@ -457,7 +457,7 @@ namespace SpaceAge
                             MessageSystemButton.ButtonIcons.ACHIEVE));
                     }
 
-                    if (window != null && (pa.HasTime || currentTab == Tab.Achievements))
+                    if (pa.HasTime || currentTab == Tab.Achievements)
                         Invalidate();
                 }
             }
@@ -477,15 +477,13 @@ namespace SpaceAge
             scoreRecordNames.AddRange(protoAchievements
                 .Where(pa => pa.Score > 0 && !scoreRecordNames.Contains(pa.ScoreName))
                 .Select(pa => pa.ScoreName));
-
             scoreAchievements = new List<Achievement>(achievements.Values.Where(a => a.Proto.Score > 0));
             score = scoreAchievements.Sum(a => a.Score);
             scoreBodies = new List<string>(FlightGlobals.Bodies
                 .Where(b => scoreAchievements.Exists(a => a.Body == b.name || (!a.Proto.IsBodySpecific && b == FlightGlobals.GetHomeBody())))
                 .Select(b => b.name));
-
             Core.Log($"{scoreAchievements.Count} score achievements of {scoreRecordNames.Count} types for {scoreBodies.Count} bodies found. Total score: {score}");
-            if (window != null && currentTab == Tab.Score)
+            if (currentTab == Tab.Score)
                 Invalidate();
         }
 
@@ -510,10 +508,10 @@ namespace SpaceAge
                 List<Achievement> res = new List<Achievement>(protoAchievements
                     .Where(pa => !pa.IsBodySpecific && achievements.ContainsKey(pa.Name))
                     .Select(pa => FindAchievement(pa.Name)));
-                foreach (CelestialBody b in FlightGlobals.Bodies)
-                    res.AddRange(protoAchievements
-                        .Where(pa => pa.IsBodySpecific && achievements.ContainsKey(Achievement.GetFullName(pa.Name, b.name)))
-                        .Select(pa => FindAchievement(Achievement.GetFullName(pa.Name, b.name))));
+                res.AddRange(FlightGlobals.Bodies
+                    .SelectMany(b => protoAchievements
+                    .Where(pa => pa.IsBodySpecific && achievements.ContainsKey(Achievement.GetFullName(pa.Name, b.name)))
+                    .Select(pa => FindAchievement(Achievement.GetFullName(pa.Name, b.name)))));
                 return res;
             }
         }
@@ -572,9 +570,8 @@ namespace SpaceAge
                 {
                     // Filtering search results
                     List<string> searchTerms = searchQuery.SplitIntoTerms().ToList();
-                    Core.Log($"{searchTerms.Count} terms found.");
                     displayChronicle = displayChronicle.FindAll(ev => searchTerms.All(term => ev.Description.ContainsTerm(term)));
-                    Core.Log($"Filtered {displayChronicle.Count} search results for '{searchQuery}'.");
+                    Core.Log($"Filtered {displayChronicle.Count} search results for '{searchQuery}' ({searchTerms.Count} search terms).");
                 }
             }
 
@@ -618,6 +615,7 @@ namespace SpaceAge
                             windowWidth - 20,
                             10,
                             new DialogGUITextInput(textInput, false, 100, s => textInput = s),
+                            (searchQuery.Length != 0) ? new DialogGUIButton(Localizer.Format("#SpaceAge_UI_ClearBtn"), ClearInput) : new DialogGUIBase(),
                             new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Find"), Find),
                             new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Add"), AddCustomChronicleEvent),
                             new DialogGUIButton(Localizer.Format("#SpaceAge_UI_Export"), ExportChronicle)));
@@ -626,15 +624,8 @@ namespace SpaceAge
                 case Tab.Achievements:
                     grid = new List<DialogGUIBase>(LinesPerPage * 3);
                     Core.Log($"Displaying achievements starting from {startingIndex} out of {achievements.Count}...");
-                    List<Achievement> achList = SortedAchievements;
-                    if (achievements.Count == 0 || achList.Count == 0)
-                    {
-                        Core.Log($"Can't display Achievements tabs. There are {achievements.Count} achievements and {achList.Count} protoachievements.", LogLevel.Error);
-                        windowContent = new DialogGUILabel($"<align=\"center\">{Localizer.Format("#SpaceAge_UI_NoAchievements")}</align>", true);
-                        break;
-                    }
                     string body = null;
-                    foreach (Achievement a in achList.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
+                    foreach (Achievement a in SortedAchievements.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
                     {
                         // Achievement for a new body => display the body's name on a new line
                         if (a.Body != body && a.Body.Length != 0)
@@ -662,12 +653,7 @@ namespace SpaceAge
 
                 case Tab.Score:
                     Core.Log($"Displaying score bodies from {startingIndex} out of {scoreBodies.Count}...");
-                    if (scoreAchievements.Count == 0)
-                    {
-                        windowContent = new DialogGUILabel($"<align=\"center\">{Localizer.Format("#SpaceAge_UI_NoScore")}</align>", true);
-                        break;
-                    }
-                    grid = new List<DialogGUIBase>((1 + Math.Min(LinesPerPage, scoreBodies.Count)) * (1 + scoreRecordNames.Count));
+                    grid = new List<DialogGUIBase>((Math.Min(LinesPerPage, scoreBodies.Count) + 1) * (scoreRecordNames.Count + 1));
                     grid.Add(new DialogGUILabel($"<color=\"white\">{Localizer.Format("#SpaceAge_UI_Body")}</color>"));
                     grid.AddRange(scoreRecordNames.Select(srn => new DialogGUILabel($"<color=\"white\">{srn}</color>")));
                     for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, scoreBodies.Count); i++)
@@ -723,7 +709,7 @@ namespace SpaceAge
                         false,
                         new DialogGUIButton<Tab>(Localizer.Format("#SpaceAge_UI_Chronicle"), SelectTab, Tab.Chronicle, () => currentTab != Tab.Chronicle, true),
                         new DialogGUIButton<Tab>(Localizer.Format("#SpaceAge_UI_Achievements"), SelectTab, Tab.Achievements, () => currentTab != Tab.Achievements && achievements.Count > 0, true),
-                        new DialogGUIButton<Tab>(Localizer.Format("#SpaceAge_UI_Score"), SelectTab, Tab.Score, () => currentTab != Tab.Score, true)),
+                        new DialogGUIButton<Tab>(Localizer.Format("#SpaceAge_UI_Score"), SelectTab, Tab.Score, () => currentTab != Tab.Score && score != 0, true)),
                     PageCount > 1
                     ? new DialogGUIHorizontalLayout(
                         true,
@@ -855,6 +841,13 @@ namespace SpaceAge
         void SelectTab(Tab t)
         {
             currentTab = t;
+            Invalidate();
+        }
+
+        void ClearInput()
+        {
+            searchQuery = textInput = "";
+            CurrentPage = 1;
             Invalidate();
         }
 
