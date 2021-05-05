@@ -218,7 +218,7 @@ namespace SpaceAge
                     try
                     {
                         achievements.Add(a.FullName, a);
-                        if (a.Proto.Score > 0)
+                        if (a.Proto.Score != 0)
                             Core.Log($"{a.FullDisplayValue}: {a.Score} points.");
                         score += a.Score;
                     }
@@ -299,6 +299,10 @@ namespace SpaceAge
 
         #region CHRONICLE
 
+        /// <summary>
+        /// Adds a new event to the Chronicle, including all relevant vessel records, and displays a notification, if necessary
+        /// </summary>
+        /// <param name="e"></param>
         public void AddChronicleEvent(ChronicleEvent e)
         {
             chronicle.Add(e);
@@ -312,6 +316,10 @@ namespace SpaceAge
             Invalidate();
         }
 
+        /// <summary>
+        /// Adds a new VesselRecord if it is unique
+        /// </summary>
+        /// <param name="vesselRecord"></param>
         public void AddVesselRecord(VesselRecord vesselRecord)
         {
             if (vesselRecord.Valid && !vessels.ContainsKey(vesselRecord.Id))
@@ -411,7 +419,7 @@ namespace SpaceAge
                 Achievement ach = new Achievement(pa, body, vessel, value, hero);
                 if (ach.Register())
                 {
-                    if (ach.Proto.Score > 0)
+                    if (ach.Proto.Score != 0)
                     {
                         scored = true;
                         double score = ach.Score;
@@ -475,9 +483,9 @@ namespace SpaceAge
         {
             Core.Log("Updating score achievements...");
             scoreRecordNames.AddRange(protoAchievements
-                .Where(pa => pa.Score > 0 && !scoreRecordNames.Contains(pa.ScoreName))
+                .Where(pa => pa.Score != 0 && !scoreRecordNames.Contains(pa.ScoreName))
                 .Select(pa => pa.ScoreName));
-            scoreAchievements = new List<Achievement>(achievements.Values.Where(a => a.Proto.Score > 0));
+            scoreAchievements = new List<Achievement>(achievements.Values.Where(a => a.Proto.Score != 0));
             score = scoreAchievements.Sum(a => a.Score);
             scoreBodies = new List<string>(FlightGlobals.Bodies
                 .Where(b => scoreAchievements.Exists(a => a.Body == b.name || (!a.Proto.IsBodySpecific && b == FlightGlobals.GetHomeBody())))
@@ -548,7 +556,25 @@ namespace SpaceAge
             }
         }
 
-        public void DisplayData()
+        public void Invalidate()
+        {
+            if (window != null)
+            {
+                UndisplayData();
+                DisplayData();
+            }
+        }
+
+        public void RemoveChronicleItem(int i)
+        {
+            chronicle.Remove(displayChronicle[i]);
+            if (displayChronicle != chronicle)
+                displayChronicle.RemoveAt(i);
+            DeleteUnusedVesselRecords();
+            Invalidate();
+        }
+
+        void DisplayData()
         {
             Core.Log("DisplayData", LogLevel.Important);
             CheckTakeoff(false);
@@ -635,7 +661,7 @@ namespace SpaceAge
                             grid.Add(new DialogGUILabel($"<align=\"center\"><color=\"white\"><b>{Localizer.Format("<<1>>", Core.GetBodyDisplayName(body))}</b></color></align>", true));
                             grid.Add(new DialogGUILabel("", true));
                         }
-                        grid.Add(new DialogGUILabel(a.Proto.Score > 0 ? Localizer.Format("#SpaceAge_UI_AchievementScore", a.Title, a.Score) : a.Title, true));
+                        grid.Add(new DialogGUILabel(a.Proto.Score != 0 ? Localizer.Format("#SpaceAge_UI_AchievementScore", a.Title, a.Score) : a.Title, true));
                         grid.Add(new DialogGUILabel(a.FullDisplayValue, true));
                         grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.DateTimeFormatter.PrintDateCompact(a.Time, false) : "", true));
                     }
@@ -726,7 +752,7 @@ namespace SpaceAge
                 false);
         }
 
-        public void UndisplayData()
+        void UndisplayData()
         {
             if (window != null)
             {
@@ -736,42 +762,33 @@ namespace SpaceAge
             }
         }
 
-        public void Invalidate()
-        {
-            if (window != null)
-            {
-                UndisplayData();
-                DisplayData();
-            }
-        }
-
-        public void PageUp()
+        void PageUp()
         {
             if (CurrentPage > 1)
                 CurrentPage--;
             Invalidate();
         }
 
-        public void FirstPage()
+        void FirstPage()
         {
             CurrentPage = 1;
             Invalidate();
         }
 
-        public void PageDown()
+        void PageDown()
         {
             if (CurrentPage < PageCount)
                 CurrentPage++;
             Invalidate();
         }
 
-        public void LastPage()
+        void LastPage()
         {
             CurrentPage = PageCount;
             Invalidate();
         }
 
-        public void SwitchTimeFormat()
+        void SwitchTimeFormat()
         {
             if (logTimeFormat == TimeFormat.UT)
                 logTimeFormat = TimeFormat.MET;
@@ -779,7 +796,7 @@ namespace SpaceAge
             Invalidate();
         }
 
-        public void ShowShipLog(ChronicleEvent ev)
+        void ShowShipLog(ChronicleEvent ev)
         {
             if (ev == null)
             {
@@ -802,7 +819,7 @@ namespace SpaceAge
             Invalidate();
         }
 
-        public void HideShipLog()
+        void HideShipLog()
         {
             logVessel = null;
             if (chroniclePage > 0)
@@ -810,15 +827,6 @@ namespace SpaceAge
                 CurrentPage = chroniclePage;
                 chroniclePage = 0;
             }
-            Invalidate();
-        }
-
-        public void RemoveChronicleItem(int i)
-        {
-            chronicle.Remove(displayChronicle[i]);
-            if (displayChronicle != chronicle)
-                displayChronicle.RemoveAt(i);
-            DeleteUnusedVesselRecords();
             Invalidate();
         }
 
@@ -865,6 +873,7 @@ namespace SpaceAge
             if (textInput.Trim().Length != 0)
                 AddChronicleEvent(new ChronicleEvent(ChronicleEvent.Custom, "description", textInput));
             textInput = "";
+            Invalidate();
         }
 
         void ExportChronicle()
