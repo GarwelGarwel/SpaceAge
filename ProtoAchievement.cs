@@ -5,6 +5,7 @@ namespace SpaceAge
 {
     public enum AchievementType
     {
+        Undefined = 0,
         Max,
         Total,
         First
@@ -18,7 +19,8 @@ namespace SpaceAge
         PartsCount,
         CrewCount,
         TotalAssignedCrew,
-        Funds
+        Funds,
+        Science
     };
 
     public enum HomeConditionType
@@ -40,7 +42,7 @@ namespace SpaceAge
             set => title = value;
         }
 
-        public AchievementType Type { get; set; }
+        public AchievementType Type { get; set; } = AchievementType.Undefined;
 
         public bool HasValue => Type == AchievementType.Max || Type == AchievementType.Total;
 
@@ -64,6 +66,8 @@ namespace SpaceAge
 
         public double Score { get; set; }
 
+        public bool Valid => Type != AchievementType.Undefined || string.IsNullOrEmpty(Name);
+
         public ProtoAchievement(string name) => Name = name;
 
         public ProtoAchievement(ConfigNode node) => Load(node);
@@ -72,8 +76,8 @@ namespace SpaceAge
         {
             try
             {
-                Core.Log($"Loading protoachievement {node.GetValue("name")}...");
-                Name = node.GetValue("name");
+                Name = node.GetString("name");
+                Core.Log($"Loading protoachievement {Name ?? "N/A"}...");
                 Title = node.GetString("title");
                 Type = (AchievementType)Enum.Parse(typeof(AchievementType), node.GetValue("type"), true);
                 if (node.HasValue("valueType"))

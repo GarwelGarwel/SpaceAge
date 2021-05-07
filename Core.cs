@@ -1,5 +1,7 @@
-﻿using KSP.Localization;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace SpaceAge
@@ -73,6 +75,35 @@ namespace SpaceAge
 
         public static bool GetBool(this ConfigNode n, string key, bool defaultValue = false) =>
             bool.TryParse(n.GetValue(key), out bool val) ? val : defaultValue;
+
+        public static IEnumerable<string> SplitIntoTerms(this string query)
+        {
+            string res;
+            int i;
+            while (query.Length > 0)
+            {
+                if (query[0] == '\"')
+                {
+                    i = query.IndexOf('\"', 1);
+                    if (i == -1)
+                        i = query.Length;
+                    res = query.Substring(1, i - 1);
+                }
+                else
+                {
+                    i = query.IndexOf(' ');
+                    if (i == -1)
+                        i = query.Length;
+                    res = query.Substring(0, i);
+                }
+                query = query.Substring(i).Trim();
+                yield return res.Trim();
+            }
+        }
+
+        public static bool ContainsTerm(this string text, string searchTerm) =>
+            Regex.IsMatch(text, $@"\b{Regex.Escape(searchTerm)}\b", RegexOptions.IgnoreCase);
+        //text.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0;
 
         /// <summary>
         /// Write into KSP.log

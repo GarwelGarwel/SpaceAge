@@ -1,10 +1,10 @@
 # SpaceAge
 
-Space Age is a mod for Kerbal Space Program, which lets you see important events and achievements of your playthrough.
+Space Age is a mod for Kerbal Space Program, which creates a detailed log of your exploits and tracks and rewards important achievements.
 
 **Chronicle**
 
-The Chronicle shows a history of notable events in the playthrough (adjustable via Difficulty Settings):
+The Chronicle shows a history of notable events in your game (adjustable via Difficulty Settings):
 - launches
 - reaching space
 - orbiting
@@ -22,7 +22,9 @@ The Chronicle shows a history of notable events in the playthrough (adjustable v
 - tech nodes discoveries
 - changes of SOI
 
-You can find (filter) specific events and manually add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
+You can find (filter) specific events by using the search box in the bottom (only available in the KSC scene). Use quotation marks to looks for phrases.
+
+You can also manually add your own events (like *"Construction of Space Station Alpha has begun."*) by entering its description and clicking `Add`. In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
 
 **Ship Log**
 
@@ -34,6 +36,7 @@ Achievements tab shows your playthrough's statistics, records, and firsts. Unlik
 
 Currently, the module tracks this data:
 - total (lifetime) income
+- total science collected
 - number of launched and lost vessels and kerbals
 - total mass of vessels launched
 - number of unique vessels that reached space
@@ -93,6 +96,7 @@ The following events are available for `onEvent` field (for events in *italic* y
 - `TechnologyResearched`
 - `Income`
 - `Expense`
+- `ScienceAdded`
 
 **Score**
 
@@ -104,7 +108,7 @@ Achievements in the following categories award score:
 - First reaching orbit
 - First flyby of a celestial body
 - First orbiting a celestial body
-- First docking in a SOI of a celestial body (this category that doesn't distinguish between manned and unmanned vessels)
+- First docking in a SOI of a celestial body (this category doesn't distinguish between manned and unmanned vessels)
 - First landing on a celestial body
 - First return from orbit of a celestial body
 - First return from the surface of a celestial body
@@ -113,15 +117,11 @@ Earned score is displayed in the Score tab for each category and each (unlocked)
 
 You can set the game to award you funds, science and/or reputation for gaining score. Just set the desired amounts per score point in the difficulty settings. These values can also be set by third-party mods using Module Manager (but still can be amended manually in-game).
 
-To define your own score categories or change base score values, you may edit the Achievements.cfg file or use Module Manager. See chapter Achievements for details.
-
-**Future Plans**
-
-- More events, achievements and data to track (requests sought!)
-- Tracking unique kerbals in more cases
-- Average values tracking
+To define your own score categories or change base score values, you may edit the `Achievements.cfg` file or use Module Manager. See chapter Achievements for details.
 
 **Supported Mods & Known Issues**
+
+Space Age doesn't need any mods to run, but it supports features of these ones:
 
 - [KSP-AVC](https://forum.kerbalspaceprogram.com/index.php?/topic/72169-12-ksp-avc-add-on-version-checker-plugin-1162-miniavc-ksp-avc-online-2016-10-13/)
 - [Blizzy's Toolbar](https://forum.kerbalspaceprogram.com/index.php?/topic/55420-120-toolbar-1713-common-api-for-draggableresizable-buttons-toolbar/)

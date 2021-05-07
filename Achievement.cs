@@ -66,6 +66,9 @@ namespace SpaceAge
 
                     case ValueType.PartsCount:
                         return Localizer.Format("#SpaceAge_Unit_Parts", Value.ToString("N0"));
+
+                    case ValueType.Science:
+                        return Localizer.Format("#SpaceAge_Unit_Science", Value.ToString("N1"));
                 }
                 return Value.ToString("N0");
             }
@@ -161,6 +164,7 @@ namespace SpaceAge
                         break;
 
                     case ValueType.Funds:
+                    case ValueType.Science:
                         Value = value;
                         break;
 
