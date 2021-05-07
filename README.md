@@ -4,7 +4,7 @@ Space Age is a mod for Kerbal Space Program, which creates a detailed log of you
 
 **Chronicle**
 
-The Chronicle shows a history of notable events in the playthrough (adjustable via Difficulty Settings):
+The Chronicle shows a history of notable events in your game (adjustable via Difficulty Settings):
 - launches
 - reaching space
 - orbiting
@@ -22,7 +22,9 @@ The Chronicle shows a history of notable events in the playthrough (adjustable v
 - tech nodes discoveries
 - changes of SOI
 
-You can find (filter) specific events and manually add your own events (like *"Construction of Space Station Alpha has begun."*). In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
+You can find (filter) specific events by using the search box in the bottom (only available in the KSC scene). Use quotation marks to looks for phrases.
+
+You can also manually add your own events (like *"Construction of Space Station Alpha has begun."*) by entering its description and clicking `Add`. In addition, you can export the Chronicle into a file, located at *<your KSP install>/GameData/SpaceAge/PluginData/SpaceAge*.
 
 **Ship Log**
 
