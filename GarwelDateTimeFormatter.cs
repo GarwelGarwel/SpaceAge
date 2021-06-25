@@ -100,6 +100,8 @@ namespace SpaceAge
 
         public string PrintDateDeltaCompact(double time, bool includeTime, bool includeSeconds, bool useAbs) => throw new NotImplementedException();
 
+        public string PrintDateDeltaCompact(double time, bool includeTime, bool includeSeconds, bool useAbs, int interestedPlaces) => throw new NotImplementedException();
+
         public string PrintDate(double time, bool includeTime, bool includeSeconds = false) => throw new NotImplementedException();
 
         public string PrintDateNew(double time, bool includeTime) => throw new NotImplementedException();
