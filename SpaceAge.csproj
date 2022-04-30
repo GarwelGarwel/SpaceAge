@@ -111,6 +111,7 @@
   <ItemGroup>
     <Compile Include="Achievement.cs" />
     <Compile Include="GarwelDateTimeFormatter.cs" />
+    <Compile Include="IterationTimer.cs" />
     <Compile Include="ProtoAchievement.cs" />
     <Compile Include="ChronicleEvent.cs" />
     <Compile Include="Core.cs" />

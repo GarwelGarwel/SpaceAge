@@ -149,15 +149,15 @@ namespace SpaceAge
         {
             Core.Log($"Constructing {type} event with {data.Length} params.");
             Type = type;
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 1; i <= data.Length; i++)
                 switch (data[i])
                 {
                     case null:
-                        Core.Log($"Parameter #{i + 1} for chronicle event {Type} is unexpectedly null.", LogLevel.Important);
+                        Core.Log($"Parameter #{i} for chronicle event {Type} is unexpectedly null.", LogLevel.Important);
                         continue;
 
                     case string s:
-                        AddData(s, data[i + 1]);
+                        AddData(s, data[i]);
                         i++;
                         break;
 
@@ -172,7 +172,7 @@ namespace SpaceAge
                         break;
 
                     default:
-                        Core.Log($"Unrecognized parameter #{i + 1} for chronicle event {Type}: {data} (type: {data.GetType()})", LogLevel.Error);
+                        Core.Log($"Unrecognized parameter #{i} for chronicle event {Type}: {data} (type: {data.GetType()})", LogLevel.Error);
                         break;
                 }
         }

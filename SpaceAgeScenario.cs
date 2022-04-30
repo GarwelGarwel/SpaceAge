@@ -295,9 +295,9 @@ namespace SpaceAge
                 burnStarted = double.NaN;
         }
 
-        #endregion LIFE CYCLE
+#endregion LIFE CYCLE
 
-        #region CHRONICLE
+#region CHRONICLE
 
         /// <summary>
         /// Adds a new event to the Chronicle, including all relevant vessel records, and displays a notification, if necessary
@@ -332,9 +332,9 @@ namespace SpaceAge
                 vessels.Remove(id);
         }
 
-        #endregion CHRONICLE
+#endregion CHRONICLE
 
-        #region ACHIEVEMENTS
+#region ACHIEVEMENTS
 
         int achievementsImported = 0;
 
@@ -495,9 +495,9 @@ namespace SpaceAge
                 Invalidate();
         }
 
-        #endregion ACHIEVEMENTS
+#endregion ACHIEVEMENTS
 
-        #region UI METHODS
+#region UI METHODS
 
         const float windowWidth = 600;
 
@@ -891,9 +891,9 @@ namespace SpaceAge
             Invalidate();
         }
 
-        #endregion UI METHODS
+#endregion UI METHODS
 
-        #region EVENT HANDLERS
+#region EVENT HANDLERS
 
         ChronicleEvent takeoff;
         double burnStarted = double.NaN;
