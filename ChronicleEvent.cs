@@ -195,9 +195,9 @@ namespace SpaceAge
             Time = node.GetLongOrDouble("time", -1);
             Type = node.GetValue("type");
             LogOnly = node.GetBool("logOnly");
-            foreach (ConfigNode.Value v in node.values)
-                if (v.name != "time" && v.name != "type" && v.name != "logOnly" && v.value.Length != 0)
-                    AddData(v.name, v.value);
+            for (int i = 0; i < node.CountValues; i++)
+                if (node.values[i].name != "time" && node.values[i].name != "type" && node.values[i].name != "logOnly" && node.values[i].value.Length != 0)
+                    AddData(node.values[i].name, node.values[i].value);
         }
 
         public void AddData(string key, object value)

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -103,7 +102,6 @@ namespace SpaceAge
 
         public static bool ContainsTerm(this string text, string searchTerm) =>
             Regex.IsMatch(text, $@"\b{Regex.Escape(searchTerm)}\b", RegexOptions.IgnoreCase);
-        //text.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0;
 
         /// <summary>
         /// Write into KSP.log

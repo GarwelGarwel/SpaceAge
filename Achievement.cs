@@ -198,7 +198,6 @@ namespace SpaceAge
 
         public void Load(ConfigNode node)
         {
-            Core.Log($"Loading '{node.GetValue("name")}' achievement...");
             Proto = SpaceAgeScenario.FindProtoAchievement(node.GetValue("name"));
             if (!Valid)
                 return;

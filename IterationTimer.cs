@@ -27,7 +27,7 @@ namespace SpaceAge
             if (counter % reportPeriod == 0)
                 Report();
         }
-        
+
         public void Report() =>
             Core.Log($"Timer {name}: {counter} iterations, {(float)timer.ElapsedMilliseconds / counter:F2} ms per iteration.", LogLevel.Important);
     }
