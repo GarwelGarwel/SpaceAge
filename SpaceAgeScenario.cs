@@ -137,7 +137,7 @@ namespace SpaceAge
             GameEvents.onVesselDocking.Remove(OnVesselDocking);
             GameEvents.onVesselsUndocking.Remove(OnVesselsUndocking);
             GameEvents.OnFundsChanged.Remove(OnFundsChanged);
-            GameEvents.OnScienceChanged.Add(OnScienceChanged);
+            GameEvents.OnScienceChanged.Remove(OnScienceChanged);
             GameEvents.OnProgressComplete.Remove(OnProgressCompleted);
 
             // Removing Toolbar & AppLauncher buttons
