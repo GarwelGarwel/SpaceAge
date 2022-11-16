@@ -42,7 +42,13 @@ namespace SpaceAge
 
         public static SpaceAgeScenario Instance { get; private set; }
 
-        #region LIFE CYCLE
+#if DEBUG
+        IterationTimer saveTimer = new IterationTimer("SAVE");
+        IterationTimer loadTimer = new IterationTimer("LOAD");
+        int items, cycles;
+#endif
+
+#region LIFE CYCLE
 
         const string Node_Chronicle = "CHRONICLE";
         const string Node_Event = "EVENT";
@@ -137,12 +143,11 @@ namespace SpaceAge
             GameEvents.onVesselDocking.Remove(OnVesselDocking);
             GameEvents.onVesselsUndocking.Remove(OnVesselsUndocking);
             GameEvents.OnFundsChanged.Remove(OnFundsChanged);
-            GameEvents.OnScienceChanged.Add(OnScienceChanged);
+            GameEvents.OnScienceChanged.Remove(OnScienceChanged);
             GameEvents.OnProgressComplete.Remove(OnProgressCompleted);
 
             // Removing Toolbar & AppLauncher buttons
-            if (toolbarButton != null)
-                toolbarButton.Destroy();
+            toolbarButton?.Destroy();
             UnregisterAppLauncherButton();
 
             Instance = null;
@@ -151,13 +156,16 @@ namespace SpaceAge
         public override void OnSave(ConfigNode node)
         {
             Core.Log("SpaceAgeScenario.OnSave", LogLevel.Important);
+#if DEBUG
+            saveTimer.Start();
+#endif
             ConfigNode n1 = new ConfigNode(Node_Chronicle);
 
             n1.AddValue("logTimeFormat", logTimeFormat);
             ConfigNode n2;
-            foreach (ChronicleEvent e in chronicle)
+            for (int i = 0; i < chronicle.Count; i++)
             {
-                e.Save(n2 = new ConfigNode(Node_Event));
+                chronicle[i].Save(n2 = new ConfigNode(Node_Event));
                 n1.AddNode(n2);
             }
             node.AddNode(n1);
@@ -180,11 +188,21 @@ namespace SpaceAge
             }
             node.AddNode(n1);
             Core.Log($"{n1.CountNodes} achievements saved.");
+
+#if DEBUG
+            saveTimer.Stop();
+            items += chronicle.Count;
+            cycles++;
+            Core.Log($"Average {(float)items / cycles:N0} Chronicle items.");
+#endif
         }
 
         public override void OnLoad(ConfigNode node)
         {
             Core.Log("SpaceAgeScenario.OnLoad", LogLevel.Important);
+#if DEBUG
+            loadTimer.Start();
+#endif
             InitializeDatabase();
 
             if (node.HasValue("logTimeFormat"))
@@ -195,7 +213,12 @@ namespace SpaceAge
             {
                 ConfigNode[] chronicleNodes = node.GetNode(Node_Chronicle).GetNodes(Node_Event);
                 Core.Log($"{chronicleNodes.Length} nodes found in {Node_Chronicle}.");
-                chronicle.AddRange(chronicleNodes.Select(n => new ChronicleEvent(n)).Where(e => e.Valid));
+                for (int i = 0; i < chronicleNodes.Length; i++)
+                {
+                    ChronicleEvent e = new ChronicleEvent(chronicleNodes[i]);
+                    if (e.Valid)
+                        chronicle.Add(e);
+                }    
             }
             displayChronicle = chronicle;
 
@@ -219,17 +242,23 @@ namespace SpaceAge
                     {
                         achievements.Add(a.FullName, a);
                         if (a.Proto.Score != 0)
-                            Core.Log($"{a.FullDisplayValue}: {a.Score} points.");
+                            Core.Log($"{a.Title}: {a.Score} points ({a.Hero}).");
                         score += a.Score;
                     }
                     catch (ArgumentException e)
                     {
-                        Core.Log(e.Message);
+                        Core.Log(e.Message, LogLevel.Error);
                     }
                 Core.Log($"Total score: {score} points.");
             }
 
             UpdateScoreAchievements();
+#if DEBUG
+            loadTimer.Stop();
+            items += chronicle.Count;
+            cycles++;
+            Core.Log($"Average {(float)items / cycles:N0} Chronicle items.");
+#endif
         }
 
         public void FixedUpdate()
@@ -295,9 +324,9 @@ namespace SpaceAge
                 burnStarted = double.NaN;
         }
 
-        #endregion LIFE CYCLE
+#endregion LIFE CYCLE
 
-        #region CHRONICLE
+#region CHRONICLE
 
         /// <summary>
         /// Adds a new event to the Chronicle, including all relevant vessel records, and displays a notification, if necessary
@@ -317,9 +346,23 @@ namespace SpaceAge
         }
 
         /// <summary>
+        /// Removes i-th event in the display chronicle
+        /// </summary>
+        /// <param name="i">0-based index in the display chronicle</param>
+        public void RemoveChronicleItem(int i)
+        {
+            ChronicleEvent ce = displayChronicle[i];
+            chronicle.Remove(ce);
+            if (displayChronicle != chronicle)
+                displayChronicle.RemoveAt(i);
+            foreach (string vesselId in ce.VesselIds.Where(vesselId => !chronicle.Exists(ce2 => ce2.HasVesselId(vesselId))))
+                vessels.Remove(vesselId);
+            Invalidate();
+        }
+
+        /// <summary>
         /// Adds a new VesselRecord if it is unique
         /// </summary>
-        /// <param name="vesselRecord"></param>
         public void AddVesselRecord(VesselRecord vesselRecord)
         {
             if (vesselRecord.Valid && !vessels.ContainsKey(vesselRecord.Id))
@@ -332,9 +375,9 @@ namespace SpaceAge
                 vessels.Remove(id);
         }
 
-        #endregion CHRONICLE
+#endregion CHRONICLE
 
-        #region ACHIEVEMENTS
+#region ACHIEVEMENTS
 
         int achievementsImported = 0;
 
@@ -495,11 +538,12 @@ namespace SpaceAge
                 Invalidate();
         }
 
-        #endregion ACHIEVEMENTS
+#endregion ACHIEVEMENTS
 
-        #region UI METHODS
+#region UI METHODS
 
         const float windowWidth = 600;
+        static readonly DialogGUILabel emptyLabel = new DialogGUILabel("", true);
 
         Tab currentTab = Tab.Chronicle;
         int[] pages = new int[3] { 1, 1, 1 };
@@ -565,15 +609,6 @@ namespace SpaceAge
             }
         }
 
-        public void RemoveChronicleItem(int i)
-        {
-            chronicle.Remove(displayChronicle[i]);
-            if (displayChronicle != chronicle)
-                displayChronicle.RemoveAt(i);
-            DeleteUnusedVesselRecords();
-            Invalidate();
-        }
-
         void DisplayData()
         {
             Core.Log("DisplayData", LogLevel.Important);
@@ -614,7 +649,7 @@ namespace SpaceAge
                 case Tab.Chronicle:
                     grid = new List<DialogGUIBase>(LinesPerPage);
                     Core.Log($"Displaying events {startingIndex + 1} to {Math.Min(startingIndex + LinesPerPage, displayChronicle.Count)}...");
-                    for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, displayChronicle.Count); i++)
+                    for (int i = startingIndex; i < startingIndex + LinesPerPage && i < displayChronicle.Count; i++)
                     {
                         ChronicleEvent ce = displayChronicle[ChronicleIndex(i)];
                         grid.Add(
@@ -651,19 +686,23 @@ namespace SpaceAge
                     grid = new List<DialogGUIBase>(LinesPerPage * 3);
                     Core.Log($"Displaying achievements starting from {startingIndex} out of {achievements.Count}...");
                     string body = null;
-                    foreach (Achievement a in SortedAchievements.GetRange(startingIndex, Math.Min(LinesPerPage, achievements.Count - startingIndex)))
+                    List<Achievement> sortedAchievements = SortedAchievements;
+                    for (int i = startingIndex; i < startingIndex + LinesPerPage && i < sortedAchievements.Count; i++)
                     {
+                        Achievement a = sortedAchievements[i];
                         // Achievement for a new body => display the body's name on a new line
                         if (a.Body != body && a.Body.Length != 0)
                         {
                             body = a.Body;
-                            grid.Add(new DialogGUILabel("", true));
+                            grid.Add(emptyLabel);
                             grid.Add(new DialogGUILabel($"<align=\"center\"><color=\"white\"><b>{Localizer.Format("<<1>>", Core.GetBodyDisplayName(body))}</b></color></align>", true));
-                            grid.Add(new DialogGUILabel("", true));
+                            grid.Add(emptyLabel);
                         }
                         grid.Add(new DialogGUILabel(a.Proto.Score != 0 ? Localizer.Format("#SpaceAge_UI_AchievementScore", a.Title, a.Score) : a.Title, true));
                         grid.Add(new DialogGUILabel(a.FullDisplayValue, true));
-                        grid.Add(new DialogGUILabel(a.Proto.HasTime ? Core.DateTimeFormatter.PrintDateCompact(a.Time, false) : "", true));
+                        if (a.Proto.HasTime)
+                            grid.Add(new DialogGUILabel(Core.DateTimeFormatter.PrintDateCompact(a.Time, false), true));
+                        else grid.Add(emptyLabel);
                     }
                     windowContent = new DialogGUIGridLayout(
                         new RectOffset(5, 5, 0, 0),
@@ -682,7 +721,7 @@ namespace SpaceAge
                     grid = new List<DialogGUIBase>((Math.Min(LinesPerPage, scoreBodies.Count) + 1) * (scoreRecordNames.Count + 1));
                     grid.Add(new DialogGUILabel($"<color=\"white\">{Localizer.Format("#SpaceAge_UI_Body")}</color>"));
                     grid.AddRange(scoreRecordNames.Select(srn => new DialogGUILabel($"<color=\"white\">{srn}</color>")));
-                    for (int i = startingIndex; i < Math.Min(startingIndex + LinesPerPage, scoreBodies.Count); i++)
+                    for (int i = startingIndex; i < startingIndex + LinesPerPage && i < scoreBodies.Count; i++)
                     {
                         grid.Add(new DialogGUILabel($"<color=\"white\">{Localizer.Format("<<1>>", Core.GetBodyDisplayName(scoreBodies[i]))}</color>"));
                         foreach (string srn in scoreRecordNames)
@@ -840,8 +879,8 @@ namespace SpaceAge
 
         void UnregisterAppLauncherButton()
         {
-            if (appLauncherButton != null && ApplicationLauncher.Instance != null)
-                ApplicationLauncher.Instance.RemoveModApplication(appLauncherButton);
+            if (appLauncherButton != null)
+                ApplicationLauncher.Instance?.RemoveModApplication(appLauncherButton);
         }
 
         int ChronicleIndex(int i) => SpaceAgeChronicleSettings.Instance.NewestFirst ? (displayChronicle.Count - i - 1) : i;
@@ -891,9 +930,9 @@ namespace SpaceAge
             Invalidate();
         }
 
-        #endregion UI METHODS
+#endregion UI METHODS
 
-        #region EVENT HANDLERS
+#region EVENT HANDLERS
 
         ChronicleEvent takeoff;
         double burnStarted = double.NaN;
