@@ -699,10 +699,10 @@ namespace SpaceAge
                             grid.Add(emptyLabel);
                         }
                         grid.Add(new DialogGUILabel(a.Proto.Score != 0 ? Localizer.Format("#SpaceAge_UI_AchievementScore", a.Title, a.Score) : a.Title, true));
-                        grid.Add(new DialogGUILabel(a.FullDisplayValue, true));
                         if (a.Proto.HasTime)
                             grid.Add(new DialogGUILabel(Core.DateTimeFormatter.PrintDateCompact(a.Time, false), true));
                         else grid.Add(emptyLabel);
+                        grid.Add(new DialogGUIHorizontalLayout(true, false, new DialogGUILabel(a.FullDisplayValue, true), new DialogGUIButton("...", () => ShowAchievmentDetais(a))));
                     }
                     windowContent = new DialogGUIGridLayout(
                         new RectOffset(5, 5, 0, 0),
@@ -867,6 +867,12 @@ namespace SpaceAge
                 chroniclePage = 0;
             }
             Invalidate();
+        }
+
+        // TODO: Show dialog with a list of kerbals (if any) for the achievement + a button to reset the achievement
+        void ShowAchievmentDetais(Achievement achievement)
+        {
+            PopupDialog.SpawnPopupDialog(new MultiOptionDialog("Achievement Details", $"{achievement.FullName}: {achievement.FullDisplayValue}", "Achievement Details", HighLogic.UISkin), false, HighLogic.UISkin);
         }
 
         void RegisterAppLauncherButton()
