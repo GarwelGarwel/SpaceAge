@@ -671,7 +671,14 @@ namespace SpaceAge
                         : new DialogGUIBase(),
                         new DialogGUIVerticalLayout(windowWidth - 10, 0, 5, new RectOffset(5, 5, 0, 0), TextAnchor.UpperLeft, grid.ToArray()),
                         HighLogic.LoadedSceneIsFlight
-                        ? new DialogGUIBase()
+                        ? new DialogGUIHorizontalLayout(
+                            true,
+                            true,
+                            new DialogGUIButton(
+                                Localizer.Format("#SpaceAge_UI_ActiveVesselLog"),
+                                () => ShowShipLog(new VesselRecord(FlightGlobals.ActiveVessel)),
+                                () => FlightGlobals.ActiveVessel != null && FlightGlobals.ActiveVessel.id != logVessel?.Guid,
+                                false))
                         : new DialogGUIHorizontalLayout(
                             windowWidth - 20,
                             10,
@@ -835,6 +842,18 @@ namespace SpaceAge
             Invalidate();
         }
 
+        void ShowShipLog(VesselRecord vesselRecord)
+        {
+            if (vesselRecord?.Id == null)
+                return;
+            Core.Log($"Showing log for vessel {vesselRecord.Name} [{vesselRecord.Id}].");
+            if (chroniclePage == 0)
+                chroniclePage = CurrentPage;
+            logVessel = vesselRecord;
+            CurrentPage = 1;
+            Invalidate();
+        }
+
         void ShowShipLog(ChronicleEvent ev)
         {
             if (ev == null)
@@ -850,12 +869,7 @@ namespace SpaceAge
                 HideShipLog();
                 return;
             }
-            Core.Log($"Showing log for vessel id [{id}].");
-            if (chroniclePage == 0)
-                chroniclePage = CurrentPage;
-            logVessel = vessels[id];
-            CurrentPage = 1;
-            Invalidate();
+            ShowShipLog(vessels[id]);
         }
 
         void HideShipLog()
